@@ -51,8 +51,10 @@ public class SpringBootConfiguration {
 
         String mode = loadApplicationProperty(MODE_PROPERTY_NAME, MODE_DEFAULT);
         if (SpringBootConfiguration.Mode.FULL.getValue().equalsIgnoreCase(mode)) {
+          log.debug("init via full Spring Boot setup");
             return fullSpringBootSetup(app);
         } else if (SpringBootConfiguration.Mode.MINIMAL.getValue().equalsIgnoreCase(mode)) {
+            log.debug("init via minimal Spring  setup");
             return minimalSpringContainerSetup(app);
         } else {
             throw new RuntimeException("Invalid mode: " + mode);

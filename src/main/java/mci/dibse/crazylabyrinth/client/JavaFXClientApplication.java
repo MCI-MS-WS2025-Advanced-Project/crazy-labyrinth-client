@@ -41,8 +41,8 @@ public class JavaFXClientApplication extends Application {
     @Override
     public void start(Stage stage) {
         log.debug("Starting JavaFX application...");
-        ViewConfiguration viewConfig = applicationContext.getBean(ViewConfiguration.class);
-        viewConfig.setPrimaryStage(stage);
-        viewConfig.showMainScreen();
+        NavigationController navigationController = applicationContext.getBean(NavigationController.class);
+        navigationController.setPrimaryStage(stage);
+        navigationController.showMainScreen();
     }
 }

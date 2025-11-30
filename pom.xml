@@ -33,6 +33,7 @@
 		<javafx.version>25.0.1</javafx.version>
 		<maven.failsafe.version>3.5.4</maven.failsafe.version>
 		<maven.javadoc.version>3.6.3</maven.javadoc.version>
+		<shared.model.version>1.0.0</shared.model.version>
 	</properties>
 
 
@@ -98,6 +99,13 @@
 			<artifactId>javafx-fxml</artifactId>
 			<version>${javafx.version}</version>
 			<classifier>${javafx.platform}</classifier>
+		</dependency>
+		<dependency>
+			<groupId>mci.dibse.crazylabyrinth</groupId>
+			<artifactId>shared-model</artifactId>
+			<version>${shared.model.version}</version>
+			<scope>system</scope>
+			<systemPath>${project.basedir}/lib/shared-model-${shared.model.version}.jar</systemPath>
 		</dependency>
 	</dependencies>
 
