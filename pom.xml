@@ -34,6 +34,8 @@
 		<maven.failsafe.version>3.5.4</maven.failsafe.version>
 		<maven.javadoc.version>3.6.3</maven.javadoc.version>
 		<shared.model.version>1.0.0</shared.model.version>
+        <jakarta.validation.version>3.1.1</jakarta.validation.version>
+        <hibernate.validation.version>8.0.3.Final</hibernate.validation.version>
 	</properties>
 
 
@@ -100,14 +102,36 @@
 			<version>${javafx.version}</version>
 			<classifier>${javafx.platform}</classifier>
 		</dependency>
+
+
 		<dependency>
 			<groupId>mci.dibse.crazylabyrinth</groupId>
 			<artifactId>shared-model</artifactId>
 			<version>${shared.model.version}</version>
-			<scope>system</scope>
-			<systemPath>${project.basedir}/lib/shared-model-${shared.model.version}.jar</systemPath>
 		</dependency>
-	</dependencies>
+		<!-- install jar in local repo
+			 mvn install:install-file \
+				-Dfile=/path/to/shared-model-1.0.0.jar \
+				-DgroupId=mci.dibse.crazylabyrinth \
+				-DartifactId=shared-model \
+				-Dversion=1.0.0 \
+				-Dpackaging=jar
+		 -->
+
+
+        <!-- https://mvnrepository.com/artifact/jakarta.validation/jakarta.validation-api -->
+        <dependency>
+            <groupId>jakarta.validation</groupId>
+            <artifactId>jakarta.validation-api</artifactId>
+            <version>${jakarta.validation.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.hibernate.validator</groupId>
+            <artifactId>hibernate-validator</artifactId>
+            <version>${hibernate.validation.version}</version>
+        </dependency>
+
+    </dependencies>
 
 	<build>
 		<plugins>
