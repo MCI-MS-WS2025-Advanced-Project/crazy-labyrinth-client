@@ -6,6 +6,7 @@ import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.stage.Stage;
 import lombok.extern.slf4j.Slf4j;
+import mci.dibse.crazylabyrinth.client.view.viewmodel.navigation.NavigationStateViewModel;
 import org.springframework.context.ConfigurableApplicationContext;
 
 /**
@@ -19,6 +20,7 @@ import org.springframework.context.ConfigurableApplicationContext;
  * <p>
  * When the application shuts down, the Spring context is closed cleanly and
  * the JavaFX platform is terminated.
+ * @author Julian Janetschek
  */
 @Slf4j
 public class JavaFXClientApplication extends Application {
@@ -41,7 +43,8 @@ public class JavaFXClientApplication extends Application {
     @Override
     public void start(Stage stage) {
         log.debug("Starting JavaFX application...");
-        NavigationController navigationController = applicationContext.getBean(NavigationController.class);
+        NavigationController navigationController =
+                applicationContext.getBean(NavigationController.class);
         navigationController.setPrimaryStage(stage);
         navigationController.showMainScreen();
     }

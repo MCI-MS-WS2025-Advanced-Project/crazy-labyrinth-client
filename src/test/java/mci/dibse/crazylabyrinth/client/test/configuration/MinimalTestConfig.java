@@ -15,7 +15,9 @@ import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.io.support.ResourcePropertySource;
 import org.springframework.util.ReflectionUtils;
-
+/**
+ *  @author Julian Janetschek
+ */
 @TestConfiguration
 @ComponentScan(BASE_PACKAGE)
 public class MinimalTestConfig {

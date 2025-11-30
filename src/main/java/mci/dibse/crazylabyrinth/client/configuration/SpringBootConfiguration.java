@@ -24,9 +24,10 @@ import org.springframework.core.io.support.ResourcePropertySource;
  * {@code application.properties}. The hybrid design allows the client to run
  * without the full Boot stack when only a minimal container is required while
  * still supporting complete Boot features are needed.
+ *
+ * @author Julian Janetschek
  */
 @Slf4j
-@Configuration
 public class SpringBootConfiguration {
 
     public static final String BASE_PACKAGE = "mci.dibse.crazylabyrinth.client";
@@ -51,7 +52,7 @@ public class SpringBootConfiguration {
 
         String mode = loadApplicationProperty(MODE_PROPERTY_NAME, MODE_DEFAULT);
         if (SpringBootConfiguration.Mode.FULL.getValue().equalsIgnoreCase(mode)) {
-          log.debug("init via full Spring Boot setup");
+            log.debug("init via full Spring Boot setup");
             return fullSpringBootSetup(app);
         } else if (SpringBootConfiguration.Mode.MINIMAL.getValue().equalsIgnoreCase(mode)) {
             log.debug("init via minimal Spring  setup");
@@ -75,7 +76,7 @@ public class SpringBootConfiguration {
 
     private static ConfigurableApplicationContext minimalSpringContainerSetup(
             JavaFXClientApplication app) throws IOException {
-        log.info("Minimal Spring Container setup");
+        log.debug("Minimal Spring Container setup");
         GenericApplicationContext ctx = new GenericApplicationContext();
         AnnotationConfigUtils.registerAnnotationConfigProcessors(ctx);
         setupEnvironmentForMinimalSetup(ctx);
@@ -90,7 +91,7 @@ public class SpringBootConfiguration {
     }
 
     private static ConfigurableApplicationContext fullSpringBootSetup(JavaFXClientApplication app) {
-        log.info("Full Spring Boot setup");
+        log.debug("Full Spring Boot setup");
         return new SpringApplicationBuilder()
                 .sources(MainApplication.class)
                 .initializers(new JavaFXSpringApplicationInitializer(app))
