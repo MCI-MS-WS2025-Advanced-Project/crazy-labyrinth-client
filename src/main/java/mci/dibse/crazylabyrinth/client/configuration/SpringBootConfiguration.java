@@ -26,7 +26,6 @@ import org.springframework.core.io.support.ResourcePropertySource;
  * still supporting complete Boot features are needed.
  */
 @Slf4j
-@Configuration
 public class SpringBootConfiguration {
 
     public static final String BASE_PACKAGE = "mci.dibse.crazylabyrinth.client";
