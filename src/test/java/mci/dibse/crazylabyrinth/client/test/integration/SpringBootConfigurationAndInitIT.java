@@ -1,54 +1,32 @@
 package mci.dibse.crazylabyrinth.client.test.integration;
 
-import static org.assertj.core.api.Assertions.assertThatNoException;
+
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import javafx.application.Application;
 import mci.dibse.crazylabyrinth.client.JavaFXClientApplication;
 import mci.dibse.crazylabyrinth.client.configuration.SpringBootConfiguration;
-import mci.dibse.crazylabyrinth.client.test.configuration.SpringInitTestConfig;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.env.Environment;
-import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ConfigurableApplicationContext;
 
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-@SpringJUnitConfig(SpringInitTestConfig.class)
-@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
+@ExtendWith(MockitoExtension.class)
 class SpringBootConfigurationAndInitIT {
 
-    @Value("${spring.application.name}")
-    private String applicationName;
 
-    @Autowired
-    private Environment environment;
+    private final Application javaFXClientApplication = mock(JavaFXClientApplication.class);
 
-    @Autowired
-    private Application javaFXClientApplication;
 
+    @DisplayName( "Full Spring boot setup should not throw an exception")
     @Test
-    void environmetPropsAreVisible() {
-        assertNotNull(environment.getProperty("spring.application.name"));
-    }
-
-   @Test
-    void propertiesAreVisible() {
-        assertNotNull(applicationName);
-    }
-
-    @Test
-    public void test() throws Exception {
-        setFullModePreservingFormatting("full");
+    public void full_spring_setup() {
+        System.setProperty("app.spring.mode", "full");
         doReturn(new Application.Parameters() {
 
                      @Override
@@ -65,39 +43,31 @@ class SpringBootConfigurationAndInitIT {
                      }
                  }
         ).when(javaFXClientApplication).getParameters();
+        try (ConfigurableApplicationContext ctx =
+                     SpringBootConfiguration.initSpringBasedOnProperties((JavaFXClientApplication) javaFXClientApplication)) {
 
-        assertThatNoException().isThrownBy( () ->
-        SpringBootConfiguration.initSpringBasedOnProperties((JavaFXClientApplication) javaFXClientApplication)
-        );
+
+            assertNotNull(ctx.getEnvironment().getProperty("spring.application.name"));
+            assertEquals("full", ctx.getEnvironment().getProperty("app.spring.mode"));
+        } catch (Exception e) {
+            fail("Exception thrown: " + e.getMessage());
+        } finally {
+            System.clearProperty("app.spring.mode");
+        }
     }
 
+    @DisplayName( "Minimal Spring container setup should not throw an exception")
     @Test
-    public void test2() throws Exception {
-        setFullModePreservingFormatting("minimal");
-        assertThatNoException().isThrownBy( () ->
-                SpringBootConfiguration.initSpringBasedOnProperties((JavaFXClientApplication) javaFXClientApplication)
-        );
+    public void minimal_spring_setup() {
+        System.setProperty("app.spring.mode", "minimal");
+        try (ConfigurableApplicationContext ctx =
+                     SpringBootConfiguration.initSpringBasedOnProperties((JavaFXClientApplication) javaFXClientApplication)) {
+            assertNotNull(ctx.getEnvironment().getProperty("spring.application.name"));
+            assertEquals("minimal", ctx.getEnvironment().getProperty("app.spring.mode"));
+        } catch (Exception e) {
+            fail("Exception thrown: " + e.getMessage());
+        } finally {
+            System.clearProperty("app.spring.mode");
+        }
     }
-
-
-      void setFullModePreservingFormatting(String springMode) throws Exception {
-        Path props = Paths.get("src/test/resources/application.properties");
-        setOrAppendPropertyLine(props, "app.spring.mode", springMode);
-      }
-
-      void setOrAppendPropertyLine(Path props, String key, String value) throws Exception {
-          List<String> lines = Files.exists(props)
-                  ? Files.readAllLines(props, StandardCharsets.UTF_8)
-                  : new ArrayList<>();
-
-          for (int i = 0; i < lines.size(); i++) {
-              String line = lines.get(i);
-              if (line.strip().startsWith("#") || line.strip().isEmpty()) continue;
-              if (line.startsWith(key + "=") || line.startsWith(key + " =")) {
-                  lines.set(i, key + "=" + value);
-                  break;
-              }
-          }
-          Files.write(props, lines, StandardCharsets.UTF_8);
-      }
 }
