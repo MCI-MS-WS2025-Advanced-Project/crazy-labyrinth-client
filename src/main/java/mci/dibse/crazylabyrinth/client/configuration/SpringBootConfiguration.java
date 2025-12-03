@@ -48,7 +48,8 @@ public class SpringBootConfiguration {
     private static ConfigurableApplicationContext checkSpringModeInProperties(
             JavaFXClientApplication app) throws IOException {
 
-        String mode = loadApplicationProperty(MODE_PROPERTY_NAME, MODE_DEFAULT);
+        String mode = loadApplicationProperty();
+        System.out.println("DEBUG MODE: " + mode);
         if (SpringBootConfiguration.Mode.FULL.getValue().equalsIgnoreCase(mode)) {
           log.debug("init via full Spring Boot setup");
             return fullSpringBootSetup(app);
@@ -60,7 +61,10 @@ public class SpringBootConfiguration {
         }
     }
 
-    private static String loadApplicationProperty(String property, String defaultValue) {
+    private static String loadApplicationProperty() {
+        String v = System.getProperty(MODE_PROPERTY_NAME);
+        if (v != null) return v;
+
         Properties props = new Properties();
         try (var is =
                 SpringBootConfiguration.class.getResourceAsStream(
@@ -69,7 +73,7 @@ public class SpringBootConfiguration {
         } catch (IOException e) {
             throw new RuntimeException("Configuration load failed", e);
         }
-        return props.getProperty(property, defaultValue);
+        return props.getProperty(MODE_PROPERTY_NAME, MODE_DEFAULT);
     }
 
     private static ConfigurableApplicationContext minimalSpringContainerSetup(
