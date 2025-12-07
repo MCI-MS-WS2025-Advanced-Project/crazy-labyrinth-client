@@ -14,6 +14,7 @@ import javafx.collections.transformation.SortedList;
 import lombok.Getter;
 import mci.dibse.crazylabyrinth.client.domain.model.GameServer;
 import mci.dibse.crazylabyrinth.client.domain.model.enums.GameStatus;
+import mci.dibse.crazylabyrinth.client.domain.model.record.GameInfoRecord;
 import mci.dibse.crazylabyrinth.client.infrastructure.exceptions.GeneralUiException;
 import mci.dibse.crazylabyrinth.client.service.ClientCommandService;
 import mci.dibse.crazylabyrinth.client.service.GameServerManagementService;
@@ -41,15 +42,13 @@ public class GameServerDashboardViewModel implements GameServerUpdateListener {
     private final BooleanProperty onlyJoinable = new SimpleBooleanProperty(false);
 
     private final GameServerManagementService managementServiceservice;
-    private final GameServerSocketService socketService;
     private final ClientCommandService commandService;
 
     @Autowired
-    public GameServerDashboardViewModel(GameServerManagementService service, GameServerSocketService socketService, ClientCommandService commandService) {
+    public GameServerDashboardViewModel(GameServerManagementService service, ClientCommandService commandService) {
         this.managementServiceservice = service;
         this.commandService = commandService;
         this.managementServiceservice.addListener(this);
-        this.socketService = socketService;
         items =
                 FXCollections.observableArrayList(
                         item ->
@@ -103,11 +102,8 @@ public class GameServerDashboardViewModel implements GameServerUpdateListener {
         }
     }
 
-    public void joinSelectedServer(URI uri, String playerName) {
-        String serverUri = uri.toString();
-        commandService.sendConnectCommand(serverUri, playerName);
-
-
+    public void joinSelectedServer(GameInfoRecord gameInfo) {
+        commandService.sendConnectCommand(gameInfo);
     }
 
 

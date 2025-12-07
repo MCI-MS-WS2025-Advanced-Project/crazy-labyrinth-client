@@ -62,7 +62,6 @@ public class GameServerManagementService {
     public void refreshGameServerList() throws GeneralUiException {
         try {
             String jsonString = client.getGameServers();
-            System.out.println(jsonString);
 
             processGameServerResponseBody(jsonString.getBytes(StandardCharsets.UTF_8));
         } catch (GameManagementServerException e) {
