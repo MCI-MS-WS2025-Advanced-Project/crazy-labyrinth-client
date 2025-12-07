@@ -8,6 +8,7 @@ import javafx.beans.binding.Bindings;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
+import mci.dibse.crazylabyrinth.client.domain.model.record.GameInfoRecord;
 import mci.dibse.crazylabyrinth.client.view.viewmodel.GameServerDashboardViewModel;
 import mci.dibse.crazylabyrinth.client.view.viewmodel.item.GameServerItem;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -232,7 +233,9 @@ public class GameServerDashboardController {
                 if (!playerName.isEmpty()) {
 
                     // Call your actual join method here with the player name
-                    viewModel.joinSelectedServer(serverItem.getUri().get(), playerName);
+
+                    GameInfoRecord gameInfo = new GameInfoRecord(serverItem.getUri().getValue(), serverItem.getId().toString(), playerName);
+                    viewModel.joinSelectedServer(gameInfo);
                     // You might want to pass the playerName to your join method as well
                 }
             });
