@@ -12,6 +12,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  * the application start through JavaFX rather than the standard
  * Spring Boot launcher. Spring Boot remains available for component
  * scanning and dependency injection within the JavaFX context.
+ * @author Julian Janetschek
  */
 @SpringBootApplication
 public class MainApplication {
