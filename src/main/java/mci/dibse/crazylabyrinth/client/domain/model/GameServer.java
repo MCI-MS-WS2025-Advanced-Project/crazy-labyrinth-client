@@ -31,8 +31,8 @@ import mci.dibse.crazylabyrinth.client.infrastructure.api.dto.GameServerDTO;
 @Getter
 public class GameServer {
 
-
-    private final PropertyChangeSupport propertyChangeSupport = new PropertyChangeSupport(this);
+    //TODO notewendig?
+  //  private final PropertyChangeSupport propertyChangeSupport = new PropertyChangeSupport(this);
 
 
     private UUID id;
@@ -103,64 +103,61 @@ public class GameServer {
         this.lastSeen = lastSeen;
     }
 
-
+/*
     public void addListener(PropertyChangeListener l) {
         propertyChangeSupport.addPropertyChangeListener(l);
     }
-
-
     public void removeListener(PropertyChangeListener l) {
         propertyChangeSupport.removePropertyChangeListener(l);
     }
-
+*/
 
     public void setName(String name) {
         String oldValue = this.name;
         this.name = name;
-        propertyChangeSupport.firePropertyChange("name", oldValue, name);
+     //   propertyChangeSupport.firePropertyChange("name", oldValue, name);
     }
 
 
     public void setUri(URI uri) {
         URI oldValue = this.uri;
         this.uri = uri;
-        propertyChangeSupport.firePropertyChange("uri", oldValue, uri);
+        //  propertyChangeSupport.firePropertyChange("uri", oldValue, uri);
     }
 
 
     public void setMaxPlayers(int maxPlayers) {
         int oldValue = this.maxPlayers;
         this.maxPlayers = maxPlayers;
-        propertyChangeSupport.firePropertyChange("maxPlayers", oldValue, maxPlayers);
+        //   propertyChangeSupport.firePropertyChange("maxPlayers", oldValue, maxPlayers);
     }
 
 
     public void setCurrentPlayerCount(int currentPlayerCount) {
         int oldValue = this.currentPlayerCount;
         this.currentPlayerCount = currentPlayerCount;
-        propertyChangeSupport.firePropertyChange(
-                "currentPlayerCount", oldValue, currentPlayerCount);
+        //    propertyChangeSupport.firePropertyChange("currentPlayerCount", oldValue, currentPlayerCount);
     }
 
 
     public void setStatus(GameStatus status) {
         GameStatus oldValue = this.status;
         this.status = status;
-        propertyChangeSupport.firePropertyChange("status", oldValue, status);
+        //propertyChangeSupport.firePropertyChange("status", oldValue, status);
     }
 
 
     public void setId(UUID id) {
         UUID oldValue = this.id;
         this.id = id;
-        propertyChangeSupport.firePropertyChange("id", oldValue, id);
+        // propertyChangeSupport.firePropertyChange("id", oldValue, id);
     }
 
 
     public void setLastSeen(Instant lastSeen) {
         Instant oldValue = this.lastSeen;
         this.lastSeen = lastSeen;
-        propertyChangeSupport.firePropertyChange("lastSeen", oldValue, lastSeen);
+        //propertyChangeSupport.firePropertyChange("lastSeen", oldValue, lastSeen);
     }
 
 

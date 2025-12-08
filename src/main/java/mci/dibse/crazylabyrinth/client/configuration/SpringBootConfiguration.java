@@ -51,7 +51,6 @@ public class SpringBootConfiguration {
             JavaFXClientApplication app) throws IOException {
 
         String mode = loadApplicationProperty();
-        System.out.println("DEBUG MODE: " + mode);
         if (SpringBootConfiguration.Mode.FULL.getValue().equalsIgnoreCase(mode)) {
             log.debug("init via full Spring Boot setup");
             return fullSpringBootSetup(app);
@@ -80,7 +79,7 @@ public class SpringBootConfiguration {
 
     private static ConfigurableApplicationContext minimalSpringContainerSetup(
             JavaFXClientApplication app) throws IOException {
-        log.info("Minimal Spring Container setup");
+        log.debug("Minimal Spring Container setup");
         GenericApplicationContext ctx = new GenericApplicationContext();
         AnnotationConfigUtils.registerAnnotationConfigProcessors(ctx);
         setupEnvironmentForMinimalSetup(ctx);
@@ -95,7 +94,7 @@ public class SpringBootConfiguration {
     }
 
     private static ConfigurableApplicationContext fullSpringBootSetup(JavaFXClientApplication app) {
-        log.info("Full Spring Boot setup");
+        log.debug("Full Spring Boot setup");
         return new SpringApplicationBuilder()
                 .sources(MainApplication.class)
                 .initializers(new JavaFXSpringApplicationInitializer(app))

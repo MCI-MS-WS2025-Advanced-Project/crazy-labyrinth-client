@@ -1,5 +1,6 @@
 package mci.dibse.crazylabyrinth.client.view.viewmodel;
 
+import java.net.URI;
 import java.util.*;
 import javafx.application.Platform;
 import javafx.beans.Observable;
@@ -13,8 +14,11 @@ import javafx.collections.transformation.SortedList;
 import lombok.Getter;
 import mci.dibse.crazylabyrinth.client.domain.model.GameServer;
 import mci.dibse.crazylabyrinth.client.domain.model.enums.GameStatus;
+import mci.dibse.crazylabyrinth.client.domain.model.record.GameInfoRecord;
 import mci.dibse.crazylabyrinth.client.infrastructure.exceptions.GeneralUiException;
+import mci.dibse.crazylabyrinth.client.service.ClientCommandService;
 import mci.dibse.crazylabyrinth.client.service.GameServerManagementService;
+import mci.dibse.crazylabyrinth.client.service.GameServerSocketService;
 import mci.dibse.crazylabyrinth.client.service.GameServerUpdateListener;
 import mci.dibse.crazylabyrinth.client.view.viewmodel.item.GameServerItem;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,12 +41,14 @@ public class GameServerDashboardViewModel implements GameServerUpdateListener {
 
     private final BooleanProperty onlyJoinable = new SimpleBooleanProperty(false);
 
-    private final GameServerManagementService service;
+    private final GameServerManagementService managementServiceservice;
+    private final ClientCommandService commandService;
 
     @Autowired
-    public GameServerDashboardViewModel(GameServerManagementService service) {
-        this.service = service;
-        this.service.addListener(this);
+    public GameServerDashboardViewModel(GameServerManagementService service, ClientCommandService commandService) {
+        this.managementServiceservice = service;
+        this.commandService = commandService;
+        this.managementServiceservice.addListener(this);
         items =
                 FXCollections.observableArrayList(
                         item ->
@@ -88,12 +94,16 @@ public class GameServerDashboardViewModel implements GameServerUpdateListener {
     public void refreshServerList() {
         setRefreshing(true);
         try {
-            service.refreshGameServerList();
+            managementServiceservice.refreshGameServerList();
             setRefreshing(false);
         } catch (GeneralUiException e) {
             clearByIdMap();
             setError(e.getMessage());
         }
+    }
+
+    public void joinSelectedServer(GameInfoRecord gameInfo) {
+        commandService.sendConnectCommand(gameInfo);
     }
 
 
