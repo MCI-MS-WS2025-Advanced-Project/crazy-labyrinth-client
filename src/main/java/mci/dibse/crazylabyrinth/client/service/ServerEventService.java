@@ -6,17 +6,11 @@ import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import labyrinth.contracts.models.*;
 import lombok.extern.slf4j.Slf4j;
-import mci.dibse.crazylabyrinth.client.domain.context.ClientInfo;
-import mci.dibse.crazylabyrinth.client.domain.model.ClientPlayer;
-import mci.dibse.crazylabyrinth.client.domain.model.LobbyState;
-import mci.dibse.crazylabyrinth.client.domain.model.PlayerInfo;
 import mci.dibse.crazylabyrinth.client.infrastructure.util.ObjectMapperConfig;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
-import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 
 @Slf4j
@@ -55,6 +49,7 @@ public class ServerEventService {
             case GameStateUpdateEventPayload gameState -> handleGameState(gameState);
             case GameStartedEventPayload gameStarted -> handleGameStarted(gameStarted);
             case LobbyStateEventPayload lobbyState -> handleLobbyState(lobbyState);
+            case ActionErrorEventPayload errorState -> handleErrorState(errorState);
             default -> log.warn("Unknown event type: {}", event.getClass().getSimpleName());
         }
     }
@@ -97,6 +92,12 @@ public class ServerEventService {
         log.debug("Lobby state updated: {}", lobbyState);
         // {"type":"LOBBY_STATE","players":[{"id":"7c561a10-1220-4bf1-a8c4-4fbdc77b55f9","name":"Julian","color":"RED","isAdmin":true,"isAiControlled":false}]}
         lobbyService.handleLobbyState( lobbyState);
+    }
+
+    private void handleErrorState(ActionErrorEventPayload errorState) {
+        log.debug("Action error: {}", errorState);
+        //TODO impl
+       // errorHandler.handleErrorState(errorState);
     }
 
 

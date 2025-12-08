@@ -71,6 +71,7 @@ public class GameServerSocketClient {
             log.debug("Message sent successfully: {}", message);
 
 
+            //TODO impl erro handling
         } catch (IOException e) {
             throw new RuntimeException(e);
         } catch (IllegalStateException e) {

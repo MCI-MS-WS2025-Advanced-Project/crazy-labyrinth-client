@@ -4,13 +4,10 @@ import labyrinth.contracts.models.ConnectAckEventPayload;
 import labyrinth.contracts.models.LobbyStateEventPayload;
 import mci.dibse.crazylabyrinth.client.domain.model.ClientPlayer;
 import mci.dibse.crazylabyrinth.client.domain.model.LobbyState;
-import mci.dibse.crazylabyrinth.client.domain.model.PlayerInfo;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+
 import java.util.concurrent.CopyOnWriteArrayList;
 
 @Service
@@ -19,8 +16,6 @@ public class LobbyService {
 
     private final List<LobbyStateUpdateListener> lobbyStateListeners = new CopyOnWriteArrayList<>();
     private final List<PlayerConnectedAckListener> playerConnectedListener = new CopyOnWriteArrayList<>();
-
-    private Map<String, PlayerInfo> playersById = new ConcurrentHashMap<>();
 
 
     public void addLobbyListener(LobbyStateUpdateListener l) {
@@ -63,8 +58,6 @@ public class LobbyService {
         LobbyState lobbyState = new LobbyState(lobbyStatePayload);
         lobbyStateListeners.forEach(l -> l.onLobbyStateUpdated(lobbyState));
     }
-
-
 
 
 }

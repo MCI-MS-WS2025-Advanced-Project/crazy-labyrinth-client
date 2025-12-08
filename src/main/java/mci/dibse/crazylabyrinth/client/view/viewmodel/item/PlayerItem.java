@@ -15,7 +15,10 @@ public class PlayerItem {
 
     private final java.util.concurrent.atomic.AtomicBoolean pendingUpdate =
             new java.util.concurrent.atomic.AtomicBoolean(false);
-    private final java.beans.PropertyChangeListener strongListener;
+
+
+    //TODO remove?
+//    private final java.beans.PropertyChangeListener strongListener;
 
 
 
@@ -29,15 +32,18 @@ public class PlayerItem {
     public PlayerItem(PlayerInfo source) {
         this.id.set(source.getId());
         updateFrom(source);
+        /*
         this.strongListener = (event) -> updateFrom(source);
         source.addListener(strongListener);
 
-    }
+         */
 
+    }
+/*
     public void dispose(PlayerInfo source) {
         source.removeListener(strongListener);
     }
-
+ */
     public void updateFrom(PlayerInfo source) {
         if (pendingUpdate.compareAndSet(false, true)) {
             if (javafx.application.Platform.isFxApplicationThread()) {
