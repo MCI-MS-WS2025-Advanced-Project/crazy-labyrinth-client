@@ -23,6 +23,9 @@ public class NavigationStateViewModel {
             new SimpleObjectProperty<>(ScreenId.MAIN);
 
     public void navigateTo(ScreenId screen) {
-        currentScreen.set(screen);
+        Runnable task = () -> currentScreen.set(screen);
+        if (javafx.application.Platform.isFxApplicationThread()) task.run();
+        else javafx.application.Platform.runLater(task);
     }
 }
+
