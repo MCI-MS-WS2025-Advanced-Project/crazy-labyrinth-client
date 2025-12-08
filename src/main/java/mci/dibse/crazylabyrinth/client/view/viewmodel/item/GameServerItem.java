@@ -62,10 +62,6 @@ public class GameServerItem {
         return name;
     }
 
-    public ObjectProperty<URI> uriProperty() {
-        return uri;
-    }
-
     public IntegerProperty maxPlayersProperty() {
         return maxPlayers;
     }

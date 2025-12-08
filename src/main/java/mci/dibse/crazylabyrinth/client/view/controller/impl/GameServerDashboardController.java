@@ -1,11 +1,14 @@
 package mci.dibse.crazylabyrinth.client.view.controller.impl;
 
 import java.time.format.DateTimeFormatter;
+import java.util.Optional;
+
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
+import mci.dibse.crazylabyrinth.client.domain.model.record.GameInfoRecord;
 import mci.dibse.crazylabyrinth.client.view.viewmodel.GameServerDashboardViewModel;
 import mci.dibse.crazylabyrinth.client.view.viewmodel.item.GameServerItem;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,8 +35,6 @@ public class GameServerDashboardController {
     @FXML public TableColumn<GameServerItem, String> currentPlayersCol;
     @FXML public TableColumn<GameServerItem, String> lastSeenCol;
     @FXML public TableColumn<GameServerItem, String> actionCol;
-    @FXML public ContextMenu tableContextMenu;
-    @FXML public MenuItem joinMenuItem;
 
     @Autowired
     public GameServerDashboardController(GameServerDashboardViewModel vm) {
@@ -112,6 +113,9 @@ public class GameServerDashboardController {
                                             if (item != null) {
                                                 System.out.println(item.getName());
                                                 // TODO: call your actual join method here
+                                               // viewModel.joinSelectedServer(item.getUri().get());
+                                                showPlayerNameInputModal(item);
+
                                             }
                                         });
                                 joinBtn.setMinWidth(70);
@@ -148,8 +152,8 @@ public class GameServerDashboardController {
                                 GameServerItem item = row.getItem();
                                 if (item != null) {
                                     // TODO impl join feature
-                                    System.out.println(
-                                            item.getName()); // or item.nameProperty().get()
+                                    showPlayerNameInputModal(item);
+
                                 }
                             });
 
@@ -198,6 +202,52 @@ public class GameServerDashboardController {
                         });
 
     }
+
+    private void showPlayerNameInputModal(GameServerItem serverItem) {
+        Runnable showDialog = () -> {
+            TextInputDialog dialog = new TextInputDialog();
+            dialog.setTitle("Join Game Server");
+            dialog.setHeaderText("Join " + serverItem.getName().getValue());
+            dialog.setContentText("Please enter your player name:");
+            dialog.setGraphic(null);
+
+            // Set default focus on the text field
+            dialog.getEditor().requestFocus();
+
+            // Validate input - don't allow empty names
+            Button okButton = (Button) dialog.getDialogPane().lookupButton(ButtonType.OK);
+            okButton.disableProperty().bind(
+                    dialog.getEditor().textProperty().isEmpty().or(
+                            dialog.getEditor().textProperty().isEqualTo("").or(
+                                    Bindings.createBooleanBinding(
+                                            () -> dialog.getEditor().getText().trim().isEmpty(),
+                                            dialog.getEditor().textProperty()
+                                    )
+                            )
+                    )
+            );
+
+            Optional<String> result = dialog.showAndWait();
+            result.ifPresent(playerName -> {
+                playerName = playerName.trim();
+                if (!playerName.isEmpty()) {
+
+                    // Call your actual join method here with the player name
+
+                    GameInfoRecord gameInfo = new GameInfoRecord(serverItem.getUri().getValue(), serverItem.getId().toString(), playerName);
+                    viewModel.joinSelectedServer(gameInfo);
+                    // You might want to pass the playerName to your join method as well
+                }
+            });
+        };
+
+        if (Platform.isFxApplicationThread()) {
+            showDialog.run();
+        } else {
+            Platform.runLater(showDialog);
+        }
+    }
+
 
     private void showAlertModal(String title, String header, String content) {
         Runnable apply =
