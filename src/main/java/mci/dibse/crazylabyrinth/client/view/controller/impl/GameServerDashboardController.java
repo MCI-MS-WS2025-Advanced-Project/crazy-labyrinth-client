@@ -43,6 +43,8 @@ public class GameServerDashboardController {
 
     @FXML
     public void initialize() {
+
+        System.out.println("GameServerDashboardController initialized");
         serversTable.setItems(viewModel.getSorted());
 
         viewModel.getSorted().comparatorProperty().bind(serversTable.comparatorProperty());
@@ -203,6 +205,9 @@ public class GameServerDashboardController {
 
     }
 
+    //TODO impl cleanup
+
+
     private void showPlayerNameInputModal(GameServerItem serverItem) {
         Runnable showDialog = () -> {
             TextInputDialog dialog = new TextInputDialog();
@@ -234,7 +239,7 @@ public class GameServerDashboardController {
 
                     // Call your actual join method here with the player name
 
-                    GameInfoRecord gameInfo = new GameInfoRecord(serverItem.getUri().getValue(), serverItem.getId().toString(), playerName);
+                    GameInfoRecord gameInfo = new GameInfoRecord(serverItem.getUri().getValue(), playerName, serverItem.getName().getValue(), String.valueOf(serverItem.getMaxPlayers().getValue()));
                     viewModel.joinSelectedServer(gameInfo);
                     // You might want to pass the playerName to your join method as well
                 }
