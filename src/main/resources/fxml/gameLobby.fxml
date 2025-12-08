@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.*?>
+<?import java.util.*?>
+<?import javafx.scene.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            stylesheets="@/styles/lobby.css"
+            prefHeight="400" prefWidth="800"
+            fx:controller="mci.dibse.crazylabyrinth.client.view.controller.impl.LobbyController">
+
+    <top>
+        <Label fx:id="gameNameLabel" styleClass="server-name" alignment="CENTER" BorderPane.alignment="CENTER"/>
+    </top>
+
+    <left>
+        <!-- Admin Settings  managed="${controller.isAdmin}"-->
+        <VBox fx:id="adminSettings" spacing="10" >
+            <Label text="Admin Settings" styleClass="section-header"/>
+            <CheckBox fx:id="bonusEnabledCheck" text="Enable Bonus"/>
+            <ComboBox fx:id="boardSizeCombo" promptText="Board Size"/>
+            <!--Spinner fx:id="gameCountSpinner"/-->
+            <Button fx:id="startGameButton" onAction="#onStartButtonClick" text="Start Game"/>
+        </VBox>
+    </left>
+
+    <center>
+        <TableView fx:id="playerTable">
+            <columns>
+                <TableColumn fx:id="playerNameColumn" text="Player"/>
+                <TableColumn fx:id="colorColumn" text="Color"/>
+                <TableColumn fx:id="adminColumn" text="Admin"/>
+            </columns>
+        </TableView>
+    </center>
+
+    <right>
+        <VBox spacing="10">
+            <Label text="Game Statistics" styleClass="section-header"/>
+            <HBox>
+                <Label  text="Max Players: "/>
+                <Label fx:id="maxPlayers" />
+            </HBox>
+            <HBox>
+                <Label text="Connected: "/>
+                <Label fx:id="connectedPlayers"/>
+            </HBox>
+            <HBox>
+                <Label text="Starting in: "/>
+                <Label fx:id="countdown"/>
+            </HBox>
+        </VBox>
+    </right>
+
+</BorderPane>
