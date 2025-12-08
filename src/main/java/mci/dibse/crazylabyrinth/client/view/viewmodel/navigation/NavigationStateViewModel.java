@@ -4,10 +4,12 @@ import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import lombok.Getter;
 import org.springframework.stereotype.Component;
-
+/**
+ *  View Model for the navigation state
+ *  @author Julian Janetschek
+ */
 @Component
 public class NavigationStateViewModel {
-
 
     public enum ScreenId {
         MAIN,
@@ -17,10 +19,10 @@ public class NavigationStateViewModel {
     }
 
     @Getter
-    private final ObjectProperty<ScreenId> currentScreen = new SimpleObjectProperty<>(ScreenId.MAIN);
+    private final ObjectProperty<ScreenId> currentScreen =
+            new SimpleObjectProperty<>(ScreenId.MAIN);
 
     public void navigateTo(ScreenId screen) {
         currentScreen.set(screen);
     }
-
 }
