@@ -12,6 +12,7 @@ import javafx.collections.ObservableMap;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
 import lombok.Getter;
+import mci.dibse.crazylabyrinth.client.domain.context.ApplicationEvents;
 import mci.dibse.crazylabyrinth.client.domain.model.GameServer;
 import mci.dibse.crazylabyrinth.client.domain.model.enums.GameStatus;
 import mci.dibse.crazylabyrinth.client.domain.model.record.GameInfoRecord;
@@ -21,8 +22,13 @@ import mci.dibse.crazylabyrinth.client.service.GameServerManagementService;
 import mci.dibse.crazylabyrinth.client.service.GameServerSocketService;
 import mci.dibse.crazylabyrinth.client.service.GameServerUpdateListener;
 import mci.dibse.crazylabyrinth.client.view.viewmodel.item.GameServerItem;
+import mci.dibse.crazylabyrinth.client.view.viewmodel.navigation.NavigationStateViewModel;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
+
+import static mci.dibse.crazylabyrinth.client.domain.context.ApplicationEvents.BACK_TO_GAME_SERVER_DASHBOARD;
+
 /**
  *  @author Julian Janetschek
  */
@@ -104,6 +110,13 @@ public class GameServerDashboardViewModel implements GameServerUpdateListener {
 
     public void joinSelectedServer(GameInfoRecord gameInfo) {
         commandService.sendConnectCommand(gameInfo);
+    }
+
+    @EventListener
+    public void handleLobbyNavigationEvent(ApplicationEvents event) {
+        if (event == BACK_TO_GAME_SERVER_DASHBOARD) {
+                refreshServerList();
+        }
     }
 
 
