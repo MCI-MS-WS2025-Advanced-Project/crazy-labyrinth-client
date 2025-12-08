@@ -13,9 +13,11 @@ import javafx.collections.ObservableMap;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import mci.dibse.crazylabyrinth.client.NavigationController;
+import mci.dibse.crazylabyrinth.client.domain.context.ApplicationEvents;
 import mci.dibse.crazylabyrinth.client.domain.model.ClientPlayer;
 import mci.dibse.crazylabyrinth.client.domain.model.LobbyState;
 import mci.dibse.crazylabyrinth.client.domain.model.record.GameInfoRecord;
+import mci.dibse.crazylabyrinth.client.domain.model.record.StartGameRecord;
 import mci.dibse.crazylabyrinth.client.service.*;
 import mci.dibse.crazylabyrinth.client.view.viewmodel.item.GameServerItem;
 import mci.dibse.crazylabyrinth.client.view.viewmodel.item.LobbyStateItem;
@@ -29,23 +31,29 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 import java.util.UUID;
 
+import static mci.dibse.crazylabyrinth.client.domain.context.ApplicationEvents.BACK_TO_GAME_SERVER_DASHBOARD;
+
 @Component
 @Slf4j
 @NoArgsConstructor
 public class LobbyViewModel implements LobbyStateUpdateListener, PlayerConnectedAckListener {
 
+
+
+    //TODO defaults!?
     @Value("${game.default.bonus.enabled:false}")
     private boolean GAME_DEFAULT_BONUS_ENABLED;
     @Value("${game.default.board.size:7}")
     private int GAME_DEFAULT_BOARD_SIZE;
-    @Value("${game.default.timer:60}")
+    @Value("${game.default.timer.ifEnabled:3600}")
     private int GAME_DEFAULT_TIMER;
+    @Value("${game.default.timer.setting.enabled:false}")
+    private boolean GAME_DEFAULT_TIMER_ENABLED;
 
 
 
     @Autowired
     private ClientCommandService commandService;
-
     @Autowired
     private NavigationStateViewModel navState;
     @Autowired
@@ -55,14 +63,12 @@ public class LobbyViewModel implements LobbyStateUpdateListener, PlayerConnected
 
     private ClientPlayer clientPlayer;
 
-
     private GameInfoRecord gameInfo;
 
     @PostConstruct
     public void init(){
         lobbyService.addPlayerListener(this);
         lobbyService.addLobbyListener(this);
-
     }
 
     public void setUpLobby(LobbyStateItem lobbyStateItem){
@@ -105,18 +111,46 @@ public class LobbyViewModel implements LobbyStateUpdateListener, PlayerConnected
         this.gameInfo = gameInfo;
     }
 
+    @EventListener
+    public void handleLobbyNavigationEvent(ApplicationEvents event) {
+        if (event == BACK_TO_GAME_SERVER_DASHBOARD) {
+            this.clientPlayer = null;
+            lobbyStateItem.dispose();
+            this.lobbyStateItem = null;
+            navState.navigateTo(NavigationStateViewModel.ScreenId.MAIN);
+        }
+    }
+
+
+
     @Override
     public void onPlayerConnected(ClientPlayer clientPlayer) {
         this.clientPlayer = clientPlayer;
     }
 
-    public void startGame() {
-        commandService.sendStartGameCommand();
+    public void startGame(StartGameRecord startGameRecord) {
+        commandService.sendStartGameCommand(startGameRecord);
+    }
+    public void leaveLobby() {commandService.sendDisconnectCommand();}
+
+    public boolean isDefaultBonusEnabled() {
+        return GAME_DEFAULT_BONUS_ENABLED;
+    }
+    public int getDefaultBoardSize() {
+        return GAME_DEFAULT_BOARD_SIZE;
+    }
+    public int getDefaultTimer() {
+        return GAME_DEFAULT_TIMER;
+    }
+    public boolean isDefaultTimerEnabled() {
+        return GAME_DEFAULT_TIMER_ENABLED;
     }
 
     private void setUpGameInfo() {
         lobbyStateItem.updateFromGameInfo(gameInfo);
     }
+
+
 
 
     private void checkAndSetIfClientIsAdmin(LobbyState lobbyState) {

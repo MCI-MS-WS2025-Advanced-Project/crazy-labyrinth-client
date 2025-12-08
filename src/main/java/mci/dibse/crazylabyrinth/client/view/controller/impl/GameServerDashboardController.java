@@ -43,6 +43,8 @@ public class GameServerDashboardController {
 
     @FXML
     public void initialize() {
+
+        System.out.println("GameServerDashboardController initialized");
         serversTable.setItems(viewModel.getSorted());
 
         viewModel.getSorted().comparatorProperty().bind(serversTable.comparatorProperty());
@@ -202,6 +204,9 @@ public class GameServerDashboardController {
                         });
 
     }
+
+    //TODO impl cleanup
+
 
     private void showPlayerNameInputModal(GameServerItem serverItem) {
         Runnable showDialog = () -> {
