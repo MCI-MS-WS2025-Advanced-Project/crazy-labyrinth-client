@@ -20,7 +20,7 @@ import mci.dibse.crazylabyrinth.client.infrastructure.api.dto.GameServerDTO;
 import mci.dibse.crazylabyrinth.client.infrastructure.exceptions.GameManagementServerException;
 import mci.dibse.crazylabyrinth.client.infrastructure.exceptions.GeneralUiException;
 import mci.dibse.crazylabyrinth.client.infrastructure.management.ManagementServerClient;
-import mci.dibse.crazylabyrinth.client.infrastructure.util.ObejctMapperConfig;
+import mci.dibse.crazylabyrinth.client.infrastructure.util.ObjectMapperConfig;
 import mci.dibse.crazylabyrinth.client.infrastructure.util.ValidatorConfig;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -55,10 +55,14 @@ public class GameServerManagementService {
     public Collection<GameServer> getServers() {
         return Collections.unmodifiableCollection(servers.values());
     }
+    public GameServer getServerById(UUID id) {
+        return servers.get(id);
+    }
 
     public void refreshGameServerList() throws GeneralUiException {
         try {
             String jsonString = client.getGameServers();
+
             processGameServerResponseBody(jsonString.getBytes(StandardCharsets.UTF_8));
         } catch (GameManagementServerException e) {
             log.error("Failed to retrieve game server list from management server", e);
@@ -91,7 +95,7 @@ public class GameServerManagementService {
     }
 
     private List<GameServerDTO> parseGameServerDTOsFromBytes(byte[] raw) throws IOException {
-        ObjectMapper mapper = ObejctMapperConfig.createCustomObjectMapper();
+        ObjectMapper mapper = ObjectMapperConfig.createCustomObjectMapper();
         List<GameServerDTO> gameServersDTO = mapper.readValue(raw, new TypeReference<List<GameServerDTO>>() {});
         return gameServersDTO;
     }

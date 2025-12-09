@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.*?>
+<?import java.util.*?>
+<?import javafx.scene.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            stylesheets="@/styles/lobby.css">
+
+    <top>
+        <Label fx:id="serverNameLabel" styleClass="server-name"/>
+    </top>
+
+    <left>
+        <!-- Admin Settings -->
+        <VBox fx:id="adminSettings" spacing="10" visible="${controller.isAdmin}" managed="${controller.isAdmin}">
+            <Label text="Admin Settings" styleClass="section-header"/>
+            <CheckBox fx:id="bonusEnabledCheck" text="Enable Bonus"/>
+            <ComboBox fx:id="boardSizeCombo" promptText="Board Size"/>
+            <Spinner fx:id="gameCountSpinner"/>
+            <Button fx:id="startGameButton" text="Start Game"/>
+        </VBox>
+    </left>
+
+    <center>
+        <TableView fx:id="playerTable">
+            <columns>
+                <TableColumn fx:id="playerNameColumn" text="Player"/>
+                <TableColumn fx:id="colorColumn" text="Color"/>
+                <TableColumn fx:id="adminColumn" text="Admin"/>
+            </columns>
+        </TableView>
+    </center>
+
+    <right>
+        <VBox spacing="10">
+            <Label text="Game Statistics" styleClass="section-header"/>
+            <Label fx:id="maxPlayersLabel" text="Max Players: "/>
+            <Label fx:id="connectedPlayersLabel" text="Connected: "/>
+            <Label fx:id="countdownLabel" text="Starting in: "/>
+        </VBox>
+    </right>
+
+</BorderPane>

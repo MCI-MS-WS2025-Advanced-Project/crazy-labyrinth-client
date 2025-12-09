@@ -5,8 +5,11 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import javafx.application.Application;
+import javafx.application.Platform;
 import mci.dibse.crazylabyrinth.client.JavaFXClientApplication;
 import mci.dibse.crazylabyrinth.client.configuration.SpringBootConfiguration;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -21,6 +24,24 @@ class SpringBootConfigurationAndInitIT {
 
 
     private final Application javaFXClientApplication = mock(JavaFXClientApplication.class);
+
+
+    @BeforeAll
+    static void initJavaFX() {
+        // Initialize JavaFX toolkit in headless mode for testing
+        System.setProperty("java.awt.headless", "true");
+
+        try {
+            Platform.startup(() -> {});
+        } catch (IllegalStateException e) {
+            // Platform already initialized
+        }
+    }
+
+    @AfterAll
+    static void cleanupJavaFX() {
+        Platform.runLater(() -> Platform.exit());
+    }
 
 
     @DisplayName( "Full Spring boot setup should not throw an exception")
