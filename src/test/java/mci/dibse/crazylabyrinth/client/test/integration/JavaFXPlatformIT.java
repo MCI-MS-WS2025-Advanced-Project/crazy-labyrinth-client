@@ -16,10 +16,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
-
-import static org.junit.jupiter.api.Assertions.*;
-
-@SpringJUnitConfig({SpringInitTestConfig.class, JavaFXPlatformTestConfig.class})
+/**
+ *  @author Julian Janetschek
+ */
+@SpringJUnitConfig({MinimalTestConfig.class, JavaFXPlatformTestConfig.class})
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 public class JavaFXPlatformIT {
 

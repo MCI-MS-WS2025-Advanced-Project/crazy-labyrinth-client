@@ -9,22 +9,19 @@ import mci.dibse.crazylabyrinth.client.view.viewmodel.HelloJavaFXViewModel;
 import mci.dibse.crazylabyrinth.client.view.viewmodel.navigation.NavigationStateViewModel;
 import org.springframework.stereotype.Component;
 
-
-//TODO Remove + helloJavaFX.fxml & helloJavaFX2.fxml
+// TODO Remove + helloJavaFX.fxml & helloJavaFX2.fxml
 @Component
 @RequiredArgsConstructor
 public class HelloJavaFXController extends ViewControllerImpl {
 
-
     private final HelloJavaFXViewModel viewModel;
     private final NavigationStateViewModel navState;
-
 
     @FXML private VBox box;
     @FXML private Label field;
 
-
-    @FXML private void onClick() {
+    @FXML
+    private void onClick() {
         viewModel.onButtonClicked();
     }
 
@@ -32,7 +29,6 @@ public class HelloJavaFXController extends ViewControllerImpl {
     private void initialize() {
         field.textProperty().bind(viewModel.getMessage());
     }
-
 
     @FXML
     public void onClick2(ActionEvent actionEvent) {
