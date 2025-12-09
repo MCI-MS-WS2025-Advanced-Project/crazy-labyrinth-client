@@ -133,6 +133,7 @@ public class LobbyController {
     public void onStartButtonClick() {
         startGameButton.setDisable(true);
         int treasureCardCount = treasureCardsSpinner.getValue();
+        treasureCardCount = treasureCardCount * Integer.parseInt(connectedPlayers.getText());
         //TODO impl
         int totalBonusCount = bonusEnabledCheck.isSelected() ? 1 : 0;
         //TODO rework after API specs & Lastenheft
