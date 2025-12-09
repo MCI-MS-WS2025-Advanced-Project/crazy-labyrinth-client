@@ -29,7 +29,7 @@ public class JavaFXClientApplication extends Application {
     @Override
     public void init() {
         log.debug("Initializing JavaFX application...");
-        applicationContext = initSpringBasedOnProperties(JavaFXClientApplication.this);
+
     }
 
     @Override
@@ -41,6 +41,8 @@ public class JavaFXClientApplication extends Application {
 
     @Override
     public void start(Stage stage) {
+        log.debug("Init spring ...");
+        applicationContext = initSpringBasedOnProperties(JavaFXClientApplication.this);
         log.debug("Starting JavaFX application...");
         NavigationController navigationController =
                 applicationContext.getBean(NavigationController.class);
