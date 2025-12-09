@@ -12,7 +12,7 @@ import mci.dibse.crazylabyrinth.client.domain.model.enums.GameStatus;
  *  UI representation of GameServer
  *  @author Julian Janetschek
  */
-public class GameServerItem {
+public class GameServerItem  implements Disposable{
 
     private final java.util.concurrent.atomic.AtomicBoolean pendingUpdate =
             new java.util.concurrent.atomic.AtomicBoolean(false);
@@ -53,6 +53,7 @@ public class GameServerItem {
     }
 
     private void updateItemFromSource(GameServer source) {
+
         name.set(source.getName());
         uri.set(source.getUri());
         maxPlayers.set(source.getMaxPlayers());
@@ -79,5 +80,10 @@ public class GameServerItem {
 
     public ObjectProperty<Instant> lastSeenProperty() {
         return lastSeen;
+    }
+
+    @Override
+    public void dispose() {
+        //TODO something to do?
     }
 }

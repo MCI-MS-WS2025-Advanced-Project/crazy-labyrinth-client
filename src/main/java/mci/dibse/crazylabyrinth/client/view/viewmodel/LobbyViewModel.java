@@ -1,27 +1,17 @@
 package mci.dibse.crazylabyrinth.client.view.viewmodel;
 
 import jakarta.annotation.PostConstruct;
-import javafx.beans.Observable;
-import javafx.beans.property.IntegerProperty;
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.StringProperty;
-import javafx.collections.FXCollections;
-import javafx.collections.MapChangeListener;
-import javafx.collections.ObservableList;
-import javafx.collections.ObservableMap;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import mci.dibse.crazylabyrinth.client.NavigationController;
 import mci.dibse.crazylabyrinth.client.domain.context.ApplicationEvents;
 import mci.dibse.crazylabyrinth.client.domain.model.ClientPlayer;
 import mci.dibse.crazylabyrinth.client.domain.model.LobbyState;
 import mci.dibse.crazylabyrinth.client.domain.model.record.GameInfoRecord;
 import mci.dibse.crazylabyrinth.client.domain.model.record.StartGameRecord;
 import mci.dibse.crazylabyrinth.client.service.*;
-import mci.dibse.crazylabyrinth.client.view.viewmodel.item.GameServerItem;
 import mci.dibse.crazylabyrinth.client.view.viewmodel.item.LobbyStateItem;
-import mci.dibse.crazylabyrinth.client.view.viewmodel.item.PlayerItem;
+import mci.dibse.crazylabyrinth.client.view.viewmodel.item.PlayerInfoItem;
 import mci.dibse.crazylabyrinth.client.view.viewmodel.navigation.NavigationStateViewModel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -29,7 +19,6 @@ import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
-import java.util.UUID;
 
 import static mci.dibse.crazylabyrinth.client.domain.context.ApplicationEvents.BACK_TO_GAME_SERVER_DASHBOARD;
 
@@ -76,7 +65,7 @@ public class LobbyViewModel implements LobbyStateUpdateListener, PlayerConnected
         navState.navigateTo(NavigationStateViewModel.ScreenId.LOBBY);
     }
 
-    public List<PlayerItem> getPlayers() {
+    public List<PlayerInfoItem> getPlayers() {
         return lobbyStateItem.getPlayerList();
     }
     public StringProperty getGameNameProperty() {
