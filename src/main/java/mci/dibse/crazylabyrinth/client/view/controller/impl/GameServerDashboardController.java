@@ -11,6 +11,7 @@ import javafx.scene.control.*;
 import mci.dibse.crazylabyrinth.client.domain.model.record.GameInfoRecord;
 import mci.dibse.crazylabyrinth.client.view.viewmodel.GameServerDashboardViewModel;
 import mci.dibse.crazylabyrinth.client.view.viewmodel.item.GameServerItem;
+import mci.dibse.crazylabyrinth.client.view.ViewCleanup;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -18,7 +19,7 @@ import org.springframework.stereotype.Component;
  *  @author Julian Janetschek
  */
 @Component
-public class GameServerDashboardController {
+public class GameServerDashboardController implements ViewCleanup {
 
     private GameServerDashboardViewModel viewModel;
     private final DateTimeFormatter lastSeenFormatter =
@@ -265,6 +266,11 @@ public class GameServerDashboardController {
                 };
         if (Platform.isFxApplicationThread()) apply.run();
         else Platform.runLater(apply);
+    }
+
+    @Override
+    public void cleanup() {
+
     }
 }
 

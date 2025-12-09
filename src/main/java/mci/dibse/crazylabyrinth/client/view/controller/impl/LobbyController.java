@@ -13,12 +13,13 @@ import labyrinth.contracts.models.PlayerColor;
 
 import mci.dibse.crazylabyrinth.client.domain.model.record.StartGameRecord;
 import mci.dibse.crazylabyrinth.client.view.viewmodel.LobbyViewModel;
-import mci.dibse.crazylabyrinth.client.view.viewmodel.item.PlayerItem;
+import mci.dibse.crazylabyrinth.client.view.viewmodel.item.PlayerInfoItem;
+import mci.dibse.crazylabyrinth.client.view.ViewCleanup;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Component
-public class LobbyController {
+public class LobbyController implements ViewCleanup {
 
 
     private final String SMALL_GAME_BOARD_SIZE = "Klein (5x5)";
@@ -30,10 +31,10 @@ public class LobbyController {
 
     private LobbyViewModel lobbyViewModel;
 
-    @FXML public TableView<PlayerItem> playerTable;
-    @FXML public TableColumn<PlayerItem, String> playerNameColumn;
-    @FXML public TableColumn<PlayerItem, String> colorColumn;
-    @FXML public TableColumn<PlayerItem, Boolean> adminColumn;
+    @FXML public TableView<PlayerInfoItem> playerTable;
+    @FXML public TableColumn<PlayerInfoItem, String> playerNameColumn;
+    @FXML public TableColumn<PlayerInfoItem, String> colorColumn;
+    @FXML public TableColumn<PlayerInfoItem, Boolean> adminColumn;
     @FXML public VBox adminSettings;
     @FXML public Label gameNameLabel;
     @FXML public Label maxPlayers;
@@ -69,7 +70,7 @@ public class LobbyController {
     @FXML
     public void initialize() {
         System.out.println("LobbyController initialized");
-        playerTable.setItems((ObservableList<PlayerItem>) lobbyViewModel.getPlayers());
+        playerTable.setItems((ObservableList<PlayerInfoItem>) lobbyViewModel.getPlayers());
         setUpTableColumns();
         startGameButton.setDisable(false);
 
@@ -95,6 +96,7 @@ public class LobbyController {
         gameTimerSpinner.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(1, 120, defaultTimerInMinutes));
     }
 
+    @Override
     public void cleanup() {
         // 1. Clear property bindings
         // 2. Clear event handlers
@@ -159,7 +161,7 @@ public class LobbyController {
 
 
         // Add custom cell factory to display the text in the actual color
-        colorColumn.setCellFactory(column -> new TableCell<PlayerItem, String>() {
+        colorColumn.setCellFactory(column -> new TableCell<PlayerInfoItem, String>() {
             @Override
             protected void updateItem(String colorString, boolean empty) {
                 super.updateItem(colorString, empty);
@@ -171,9 +173,9 @@ public class LobbyController {
                     setText(colorString);
 
                     // Get the actual PlayerColor object from the row item
-                    PlayerItem playerItem = getTableRow().getItem();
-                    if (playerItem != null && playerItem.colorProperty().get() != null) {
-                        PlayerColor playerColor = playerItem.colorProperty().get();
+                    PlayerInfoItem playerInfoItem = getTableRow().getItem();
+                    if (playerInfoItem != null && playerInfoItem.colorProperty().get() != null) {
+                        PlayerColor playerColor = playerInfoItem.colorProperty().get();
 
                         // Set text color to match the actual color
                         Color fxColor = convertPlayerColorToFxColor(playerColor);

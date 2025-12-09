@@ -3,15 +3,9 @@ package mci.dibse.crazylabyrinth.client.view.viewmodel.item;
 import javafx.application.Platform;
 import javafx.beans.property.*;
 import labyrinth.contracts.models.PlayerColor;
-import lombok.Getter;
-import mci.dibse.crazylabyrinth.client.domain.model.ClientPlayer;
-import mci.dibse.crazylabyrinth.client.domain.model.GameServer;
 import mci.dibse.crazylabyrinth.client.domain.model.PlayerInfo;
 
-import java.util.Map;
-import java.util.UUID;
-
-public class PlayerItem {
+public class PlayerInfoItem implements Disposable {
 
     private final java.util.concurrent.atomic.AtomicBoolean pendingUpdate =
             new java.util.concurrent.atomic.AtomicBoolean(false);
@@ -28,9 +22,9 @@ public class PlayerItem {
     private final BooleanProperty isAdmin = new SimpleBooleanProperty();
     private final BooleanProperty isAiControlled = new SimpleBooleanProperty();
 
+    //TODO remove mci.dibse.crazylabyrinth.client.domain.model.PlayerInfo and replace with labyrinth.contracts.models.PlayerInfo --> Workaound second constructor
+    public PlayerInfoItem(PlayerInfo source) {
 
-    public PlayerItem(PlayerInfo source) {
-        this.id.set(source.getId());
         updateFrom(source);
         /*
         this.strongListener = (event) -> updateFrom(source);
@@ -39,11 +33,7 @@ public class PlayerItem {
          */
 
     }
-/*
-    public void dispose(PlayerInfo source) {
-        source.removeListener(strongListener);
-    }
- */
+
     public void updateFrom(PlayerInfo source) {
         if (pendingUpdate.compareAndSet(false, true)) {
             if (javafx.application.Platform.isFxApplicationThread()) {
@@ -55,13 +45,37 @@ public class PlayerItem {
             }
         }
     }
-
     private void updateItemFromSource(PlayerInfo source) {
+        this.id.set(source.getId());
         name.set(source.getName());
         color.set(source.getColor());
         isAdmin.set(source.getIsAdmin());
         isAiControlled.set(source.getIsAiControlled());
     }
+
+
+    public PlayerInfoItem(labyrinth.contracts.models.PlayerInfo source) {
+        this.id.set(source.getId());
+        updateFrom(source);
+    }
+    public void updateFrom(labyrinth.contracts.models.PlayerInfo source) {
+        if (pendingUpdate.compareAndSet(false, true)) {
+            if (javafx.application.Platform.isFxApplicationThread()) {
+                updateItemFromSource(source);
+                pendingUpdate.set(false);
+            } else {
+                Platform.runLater(() -> updateItemFromSource(source));
+                pendingUpdate.set(false);
+            }
+        }
+    }
+    private void updateItemFromSource(labyrinth.contracts.models.PlayerInfo source) {
+        name.set(source.getName());
+        color.set(source.getColor());
+        isAdmin.set(source.getIsAdmin());
+        isAiControlled.set(source.getIsAiControlled());
+    }
+
 
     public String getId() {
         return id.get();
@@ -101,6 +115,11 @@ public class PlayerItem {
 
     public javafx.beans.property.BooleanProperty isAiControlledProperty() {
         return isAiControlled;
+    }
+
+    @Override
+    public void dispose() {
+        //TODO something to do?
     }
 
 }
