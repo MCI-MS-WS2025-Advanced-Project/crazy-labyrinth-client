@@ -107,11 +107,16 @@ public class LobbyStateItem {
     }
 
     private void updateItemFromSource(LobbyState source) {
-       List<PlayerInfo> playerInfos =  source.getPlayers();
+        System.out.println("LobbyStateItem: updateFromSource");
+        List<PlayerInfo> playerInfos = source.getPlayers();
+        // Remove players that are no longer in the source list
+        byId.keySet().removeIf(playerId ->
+                playerInfos.stream().noneMatch(info -> info.getId().equals(playerId)));
+       System.out.println("LobbyStateItem: playerInfos: " + playerInfos.size());
         this.playerCount.set(String.valueOf(playerInfos.size()));
         playerInfos.stream()
                 .map(this::playerItemFromPlayerInfo)
-                .forEach(item -> {byId.put(item.getId(), item);});
+                .forEach(item -> {byId.putIfAbsent(item.getId(), item);});
 
         additionalProperties.set(source.getAdditionalProperties());
     }
