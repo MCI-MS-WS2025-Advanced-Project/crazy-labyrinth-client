@@ -85,7 +85,7 @@ public class GameServerDashboardViewModel implements GameServerUpdateListener {
                                         });
                             }
                         });
-        refreshServerList();
+        //refreshServerList();
     }
 
     public BooleanProperty onlyJoinableProperty() {
@@ -112,12 +112,14 @@ public class GameServerDashboardViewModel implements GameServerUpdateListener {
         commandService.sendConnectCommand(gameInfo);
     }
 
+/* too early
     @EventListener
     public void handleLobbyNavigationEvent(ApplicationEvents event) {
         if (event == BACK_TO_GAME_SERVER_DASHBOARD) {
                 refreshServerList();
         }
     }
+ */
 
 
     private void applyServer(Collection<GameServer> servers) {

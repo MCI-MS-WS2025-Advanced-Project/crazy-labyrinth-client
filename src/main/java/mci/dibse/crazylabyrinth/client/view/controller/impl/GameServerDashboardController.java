@@ -202,7 +202,7 @@ public class GameServerDashboardController {
                                         "Something went wrong. Please try again later.");
                             }
                         });
-
+        viewModel.refreshServerList();
     }
 
     //TODO impl cleanup
