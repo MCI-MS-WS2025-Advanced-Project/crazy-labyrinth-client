@@ -5,7 +5,8 @@ import java.net.URI;
 public record GameInfoRecord(
         URI uri,
         String playerName,
-        String serverName
+        String serverName,
+        String maxPlayers
 ) {
 }
 

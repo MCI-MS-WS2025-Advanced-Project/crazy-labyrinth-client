@@ -25,12 +25,12 @@ public class PlayerInfo {
     private Boolean isAiControlled;
     private Map<String, Object> additionalProperties;
 
+    //TODO notwendig?
     private final PropertyChangeSupport propertyChangeSupport = new PropertyChangeSupport(this);
 
     public void addListener(PropertyChangeListener l) {
         propertyChangeSupport.addPropertyChangeListener(l);
     }
-
     public void removeListener(PropertyChangeListener l) {
         propertyChangeSupport.removePropertyChangeListener(l);
     }

@@ -16,7 +16,7 @@ public class GameServerItem {
 
     private final java.util.concurrent.atomic.AtomicBoolean pendingUpdate =
             new java.util.concurrent.atomic.AtomicBoolean(false);
-    private final java.beans.PropertyChangeListener strongListener;
+//    private final java.beans.PropertyChangeListener strongListener;
     @Getter private final UUID id;
 
     @Getter private final StringProperty name = new SimpleStringProperty();
@@ -29,13 +29,16 @@ public class GameServerItem {
     public GameServerItem(GameServer source) {
         this.id = source.getId();
         updateFrom(source);
-        this.strongListener = evt -> updateFrom(source);
-        source.addListener(strongListener);
+        // TODO notwendig? es wird eh immer ganze liste an view model gegeben bei refresh
+       // this.strongListener = evt -> updateFrom(source);
+       // source.addListener(strongListener);
     }
-
+/*
     public void dispose(GameServer source) {
         source.removeListener(strongListener);
     }
+
+ */
 
     public void updateFrom(GameServer source) {
         if (pendingUpdate.compareAndSet(false, true)) {
