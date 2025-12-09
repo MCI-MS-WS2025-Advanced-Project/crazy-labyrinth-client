@@ -21,6 +21,7 @@ public class GameServerSocketClient {
     //private WebSocketSession session;
 
     private static final String GAME_PATH = "/game";
+    private static final int DELAY_AFTER_FIRST_CONNECT = 1;
 
     private final ClientWebSocketHandler webSocketHandler;
 
@@ -56,7 +57,7 @@ public class GameServerSocketClient {
             log.warn("Cannot send message: WebSocket is not connected");
             // TODO: impl reconnect and resend logic
             // reconnect();
-            sendMessageWithDelay(message, 5);
+            sendMessageWithDelay(message, DELAY_AFTER_FIRST_CONNECT);
         }
 
         try {
@@ -70,6 +71,7 @@ public class GameServerSocketClient {
             log.debug("Message sent successfully: {}", message);
 
 
+            //TODO impl erro handling
         } catch (IOException e) {
             throw new RuntimeException(e);
         } catch (IllegalStateException e) {

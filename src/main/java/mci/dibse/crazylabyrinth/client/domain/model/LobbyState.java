@@ -35,6 +35,5 @@ public class LobbyState {
             playerInfo.setAdditionalProperties(p.getAdditionalProperties());
             return playerInfo;
         }).collect(java.util.stream.Collectors.toList());
-
     }
 }
