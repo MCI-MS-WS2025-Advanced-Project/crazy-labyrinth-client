@@ -15,7 +15,7 @@ public class GameBoardItem implements Disposable {
 
     private final IntegerProperty rows = new SimpleIntegerProperty();
     private final IntegerProperty cols = new SimpleIntegerProperty();
-    private final ObjectProperty<Tile[][]> tiles = new SimpleObjectProperty<>();
+    private final ObjectProperty<TileItem[][]> tiles = new SimpleObjectProperty<>();
     private final ObjectProperty<PushActionInfo> lastPush = new SimpleObjectProperty<>();
     private final ObjectProperty<Map<String, Object>> additionalProperties = new SimpleObjectProperty<>();
 
@@ -24,7 +24,15 @@ public class GameBoardItem implements Disposable {
 
             this.rows.set(source.getRows());
             this.cols.set(source.getCols());
-            this.tiles.set(source.getTiles());
+
+            TileItem[][] tileItems = new TileItem[source.getRows()][source.getCols()];
+            Tile[][] sourceTiles = source.getTiles();
+            for (int row = 0; row < source.getRows(); row++) {
+                for (int col = 0; col < source.getCols(); col++) {
+                    tileItems[row][col] = new TileItem(sourceTiles[row][col]);
+                }
+            }
+            this.tiles.set(tileItems);
             this.lastPush.set(source.getLastPush());
             this.additionalProperties.set(source.getAdditionalProperties());
         };
@@ -59,15 +67,15 @@ public class GameBoardItem implements Disposable {
     }
 
 
-    public Tile[][] getTiles() {
+    public TileItem[][] getTiles() {
         return tiles.get();
     }
 
-    public void setTiles(Tile[][] value) {
+    public void setTiles(TileItem[][] value) {
         tiles.set(value);
     }
 
-    public ObjectProperty<Tile[][]> tilesProperty() {
+    public ObjectProperty<TileItem[][]> tilesProperty() {
         return tiles;
     }
 
@@ -112,7 +120,16 @@ public class GameBoardItem implements Disposable {
 
     public void updateFrom(GameBoard source) {
         Runnable apply = () -> {
-            setTiles(source.getTiles());
+
+            TileItem[][] tileItems = new TileItem[source.getRows()][source.getCols()];
+            Tile[][] sourceTiles = source.getTiles();
+            for (int row = 0; row < source.getRows(); row++) {
+                for (int col = 0; col < source.getCols(); col++) {
+                        tileItems[row][col] = new TileItem(sourceTiles[row][col]);
+                }
+            }
+            this.tiles.set(tileItems);
+
             setLastPush(source.getLastPush());
             setAdditionalProperties(source.getAdditionalProperties());
         };

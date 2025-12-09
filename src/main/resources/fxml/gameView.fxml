@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.*?>
+<?import java.util.*?>
+<?import javafx.scene.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.shape.Circle?>
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="mci.dibse.crazylabyrinth.client.view.controller.GameStateController"
+            prefHeight="1200" prefWidth="100">
+
+    <!-- ================== OUTER AREAS ================== -->
+    <top>
+        <HBox alignment="CENTER" prefHeight="40" style="-fx-background-color: #c1b2b2">
+            <padding><Insets top="8" bottom="8"/></padding>
+            <Label fx:id="playerTurnLabel" style="-fx-font-size: 16px; -fx-font-weight: bold;"/>
+        </HBox>
+    </top>
+
+    <bottom>
+        <HBox alignment="CENTER" prefHeight="40" style="-fx-background-color: #c1b2b2">
+            <padding>
+                <Insets top="8" bottom="8"/>
+            </padding>
+            <Label text="Spiel Timer:" style="-fx-font-size:16px; -fx-font-weight:bold;"/>
+            <Label fx:id="gameCounterLabel"
+                   style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #2c3e50; -fx-background-color: #ecf0f1; -fx-padding: 5 15; -fx-background-radius: 5;"/>
+        </HBox>
+    </bottom>
+
+    <left>
+        <VBox spacing="20" alignment="TOP_CENTER" prefWidth="200"
+              style="-fx-padding:20;">
+            <Label text="Nächster Schatz" style="-fx-font-size:16px; -fx-font-weight:bold;"/>
+            <StackPane style="-fx-padding:8;">
+                <ImageView fx:id="nextTreasure"
+                           fitWidth="120" fitHeight="120"
+                           style="-fx-background-color:#fafafa; -fx-border-color:#bbbbbb; -fx-border-radius:10; -fx-background-radius:10;"/>
+            </StackPane>
+        </VBox>
+    </left>
+
+
+    <right>
+        <VBox spacing="20" alignment="TOP_CENTER" prefWidth="220"
+              style="-fx-padding:20;">
+            <Label text="Spieler" style="-fx-font-size:16px; -fx-font-weight:bold;"/>
+
+            
+            <!-- Players -->
+            <VBox spacing="10" alignment="CENTER_LEFT">
+                <HBox spacing="10">
+                    <Circle radius="7" fill="red"/>
+                    <Label fx:id="player1"  style="-fx-font-size:14px;"/>
+                </HBox>
+                <HBox spacing="10">
+                    <Circle radius="7" fill="blue"/>
+                    <Label  fx:id="player2" style="-fx-font-size:14px;"/>
+                </HBox>
+                <HBox spacing="10">
+                    <Circle radius="7" fill="green"/>
+                    <Label  fx:id="player3" style="-fx-font-size:14px;"/>
+                </HBox>
+                <HBox spacing="10">
+                    <Circle radius="7" fill="yellow"/>
+                    <Label  fx:id="player4" style="-fx-font-size:14px;"/>
+                </HBox>
+            </VBox>
+            <Region VBox.vgrow="ALWAYS"/>
+
+            <Label text="Gang Karte" style="-fx-font-size:16px; -fx-font-weight:bold;"/>
+            <ImageView fx:id="extraTile"
+                       fitWidth="110" fitHeight="110"
+                       style="-fx-background-color:#fafafa; -fx-border-color:#bbbbbb; -fx-border-radius:10; -fx-background-radius:10;"/>
+
+            <HBox spacing="15" alignment="CENTER">
+                <Button fx:id="rotateLeftButton" text="⟲" prefWidth="45"
+                        style="-fx-background-radius:50; -fx-font-size:18px;"/>
+                <Button fx:id="rotateRightButton" text="⟳" prefWidth="45"
+                        style="-fx-background-radius:50; -fx-font-size:18px;"/>
+            </HBox>
+        </VBox>
+    </right>
+
+
+    !-- ================== MAIN GAME AREA ================== -->
+    <center>
+        <BorderPane prefWidth="600" prefHeight="600"
+                    style="-fx-padding:10;">
+
+
+
+            <center>
+                <StackPane style="-fx-background-color:#d0d0d0; -fx-padding:10; -fx-background-radius:15;">
+                    <GridPane fx:id="boardGrid"
+                              hgap="2" vgap="2"
+                              alignment="CENTER"
+                              style="-fx-background-color:#b0b0b0; -fx-padding:10; -fx-background-radius:15;">
+                        <columnConstraints>
+                            <ColumnConstraints percentWidth="14.28"/>
+                            <ColumnConstraints percentWidth="14.28"/>
+                            <ColumnConstraints percentWidth="14.28"/>
+                            <ColumnConstraints percentWidth="14.28"/>
+                            <ColumnConstraints percentWidth="14.28"/>
+                            <ColumnConstraints percentWidth="14.28"/>
+                            <ColumnConstraints percentWidth="14.28"/>
+                        </columnConstraints>
+                        <rowConstraints>
+                            <RowConstraints percentHeight="14.28"/>
+                            <RowConstraints percentHeight="14.28"/>
+                            <RowConstraints percentHeight="14.28"/>
+                            <RowConstraints percentHeight="14.28"/>
+                            <RowConstraints percentHeight="14.28"/>
+                            <RowConstraints percentHeight="14.28"/>
+                            <RowConstraints percentHeight="14.28"/>
+                        </rowConstraints>
+                    </GridPane>
+                </StackPane>
+            </center>
+            <top>
+                <HBox alignment="CENTER" fillHeight="false" prefHeight="40">
+                    <Region HBox.hgrow="ALWAYS"/>
+                    <Button fx:id="arrowTop1" text="↓"/>
+                    <Region HBox.hgrow="ALWAYS"/>
+                    <Button fx:id="arrowTop3" text="↓"/>
+                    <Region HBox.hgrow="ALWAYS"/>
+                    <Button fx:id="arrowTop5" text="↓"/>
+                    <Region HBox.hgrow="ALWAYS"/>
+                </HBox>
+            </top>
+            <bottom>
+                <HBox alignment="CENTER" fillHeight="false" prefHeight="40">
+                    <Region HBox.hgrow="ALWAYS"/>
+                    <Button fx:id="arrowBottom1" text="↑"/>
+                    <Region HBox.hgrow="ALWAYS"/>
+                    <Button fx:id="arrowBottom3" text="↑"/>
+                    <Region HBox.hgrow="ALWAYS"/>
+                    <Button fx:id="arrowBottom" text="↑"/>
+                    <Region HBox.hgrow="ALWAYS"/>
+                </HBox>
+            </bottom>
+            <left>
+                <VBox alignment="CENTER" fillWidth="false" prefWidth="40">
+                    <Region VBox.vgrow="ALWAYS"/>
+                    <Button fx:id="arrowLeft1" text="→" style="-fx-background-radius:50;"/>
+                    <Region VBox.vgrow="ALWAYS"/>
+                    <Button fx:id="arrowLeft3" text="→" style="-fx-background-radius:50;"/>
+                    <Region VBox.vgrow="ALWAYS"/>
+                    <Button fx:id="arrowLeft5" text="→" style="-fx-background-radius:50;"/>
+                    <Region VBox.vgrow="ALWAYS"/>
+                </VBox>
+            </left>
+            <right>
+                <VBox alignment="CENTER" fillWidth="false" prefWidth="40">
+                    <Region VBox.vgrow="ALWAYS"/>
+                    <Button fx:id="arrowRight1" text="←" style="-fx-background-radius:50;"/>
+                    <Region VBox.vgrow="ALWAYS"/>
+                    <Button fx:id="arrowRight3" text="←" style="-fx-background-radius:50;"/>
+                    <Region VBox.vgrow="ALWAYS"/>
+                    <Button fx:id="arrowRight5" text="←" style="-fx-background-radius:50;"/>
+                    <Region VBox.vgrow="ALWAYS"/>
+                </VBox>
+            </right>
+        </BorderPane>
+    </center>
+
+
+
+
+</BorderPane>
