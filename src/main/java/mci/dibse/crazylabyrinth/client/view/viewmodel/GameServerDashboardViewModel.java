@@ -85,7 +85,7 @@ public class GameServerDashboardViewModel implements GameServerUpdateListener {
                                         });
                             }
                         });
-        refreshServerList();
+        //refreshServerList();
     }
 
     public BooleanProperty onlyJoinableProperty() {
