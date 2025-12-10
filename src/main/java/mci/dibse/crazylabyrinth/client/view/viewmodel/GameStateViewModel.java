@@ -6,19 +6,22 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import labyrinth.contracts.models.*;
 import lombok.Getter;
+import lombok.Setter;
+import mci.dibse.crazylabyrinth.client.domain.model.ClientPlayer;
+import mci.dibse.crazylabyrinth.client.service.LobbyService;
+import mci.dibse.crazylabyrinth.client.service.PlayerConnectedAckListener;
 import mci.dibse.crazylabyrinth.client.view.ViewCleanup;
 import mci.dibse.crazylabyrinth.client.view.viewmodel.item.*;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static labyrinth.contracts.models.TurnState.*;
 
 @Component
-public class GameStateViewModel implements ViewCleanup {
+public class GameStateViewModel implements ViewCleanup, PlayerConnectedAckListener {
 
     //TODO put into subViewModel GameBoardViewModel?? turnViewModel?
 
@@ -27,10 +30,14 @@ public class GameStateViewModel implements ViewCleanup {
     private final String WAITING_FOR_MOVE_LABEL = "bewegt seine Spielfigur";
 
 
-
+    private final LobbyService lobbyService;
 
     @Getter private GameBoardItem gameBoardItem;
-    @Getter private List<PlayerStateItem> playerStates;
+    @Getter
+    private  List<PlayerStateItem> playerStates = new ArrayList<>();
+    @Setter
+    @Getter
+    private ClientPlayer clientPlayer;
 
     @Getter private final SimpleObjectProperty<Map<String, Object>> additionalProperties = new SimpleObjectProperty<>();
     @Getter private final SimpleObjectProperty<TreasureItem> nextTeasure = new SimpleObjectProperty<>();
@@ -45,7 +52,13 @@ public class GameStateViewModel implements ViewCleanup {
         private final SimpleStringProperty playerTurnId = new SimpleStringProperty();
         private final SimpleObjectProperty<TileItem> extraTile = new SimpleObjectProperty<>();
         private final SimpleIntegerProperty turnTimeLimitSeconds = new SimpleIntegerProperty();
-       // private final SimpleObjectProperty<Map<String, Object>> additionalProperties = new SimpleObjectProperty<>();
+
+    @Autowired
+    public GameStateViewModel(LobbyService lobbyService) {
+        this.lobbyService = lobbyService;
+        lobbyService.addPlayerListener(this);
+    }
+    // private final SimpleObjectProperty<Map<String, Object>> additionalProperties = new SimpleObjectProperty<>();
 
 
     @EventListener
@@ -54,6 +67,10 @@ public class GameStateViewModel implements ViewCleanup {
         gameBoardItem = new GameBoardItem(initialBoard);
 
         Arrays.stream(gameStarted.getPlayers()).map(PlayerStateItem::new).forEach(playerStates::add);
+        //sort client player first then the rest according to id
+        playerStates.sort(Comparator.comparing((PlayerStateItem p) ->
+                        !p.getPlayerInfo().getId().equals(clientPlayer.getId()))
+                .thenComparing(p -> p.getPlayerInfo().getId()));
 
         additionalProperties.set(gameStarted.getAdditionalProperties());
     }
@@ -108,6 +125,62 @@ public class GameStateViewModel implements ViewCleanup {
             case WAITING_FOR_PUSH -> WAITING_FOR_PUSH_LABEL;
         };
     }
-}
+
+    @Override
+    public void onPlayerConnected(ClientPlayer clientPlayer) {
+        this.clientPlayer = clientPlayer;
+    }
+
+    public String mapDirectionsToTile(Direction[] direction) {
+        List<Direction> l = new ArrayList<>(Arrays.asList(direction));
+        l.sort(Comparator.comparingInt(Direction::ordinal));
+        switch (l.size()) {
+            case 2 -> {
+                if (l.contains(Direction.UP) && l.contains(Direction.DOWN)) {
+                        // up_down_px.png
+                } else if (l.contains(Direction.LEFT) && l.contains(Direction.RIGHT)) {
+                        // left_right_px.png
+                }  else if ((l.contains(Direction.UP) && l.contains(Direction.RIGHT)) ||
+                    (l.contains(Direction.DOWN) && l.contains(Direction.LEFT)) ||
+                    (l.contains(Direction.UP) && l.contains(Direction.LEFT)) ||
+                    (l.contains(Direction.DOWN) && l.contains(Direction.RIGHT))) {
+                // Corner pieces - you might want to handle rotation here
+                return getCornerTileWithRotation(l);
+            }
+        }   case 3 -> {
+                if (l.contains(Direction.UP) && l.contains(Direction.DOWN) && l.contains(Direction.LEFT)) {
+
+                } else if (l.contains(Direction.UP) && l.contains(Direction.DOWN) && l.contains(Direction.RIGHT)) {
+
+                } else if (l.contains(Direction.LEFT) && l.contains(Direction.RIGHT) && l.contains(Direction.UP)) {
+
+                } else if (l.contains(Direction.LEFT) && l.contains(Direction.RIGHT) && l.contains(Direction.DOWN)) {
+
+                }
+        }
+    }
+
+        public ImageView createTileImageView(String baseTilePath, double rotationAngle) {
+            Image image = new Image(baseTilePath);
+            ImageView imageView = new ImageView(image);
+            if (rotationAngle != 0) {
+                imageView.setRotate(rotationAngle);
+            }
+            return imageView;
+        }
+
+
+        public ImageView createImageViewFromResources(String resourcePath) {
+            URL resourceUrl = getClass().getResource(resourcePath);
+            if (resourceUrl == null) {
+                throw new IllegalArgumentException("Resource not found: " + resourcePath);
+            }
+
+            Image image = new Image(resourceUrl.toExternalForm());
+            return new ImageView(image);
+        }
+
+
+    }
 
 
