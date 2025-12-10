@@ -133,6 +133,10 @@ public class GameStateController implements ViewCleanup {
                     && vm.getCurrentTurnState().get().equals(TurnState.WAITING_FOR_PUSH));
                 },vm.getCurrentPlayerId(), vm.getCurrentTurnState()
         ));
+        extraTile.
+
+
+
         public ImageView extraTile;
         @FXML
         public Button rotateLeftButton;

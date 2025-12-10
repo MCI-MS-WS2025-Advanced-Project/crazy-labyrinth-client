@@ -3,10 +3,12 @@ package mci.dibse.crazylabyrinth.client.view.viewmodel.item;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.scene.image.Image;
 import labyrinth.contracts.models.Bonus;
 import labyrinth.contracts.models.Direction;
 import labyrinth.contracts.models.Tile;
 import lombok.Getter;
+import mci.dibse.crazylabyrinth.client.infrastructure.util.ImageResourceLoader;
 
 import java.util.*;
 
@@ -20,6 +22,7 @@ public class TileItem implements Disposable {
     @Getter private final String internalId = UUID.randomUUID().toString();
     @Getter private final List<Direction> directions;
 
+    @Getter private final SimpleObjectProperty<Image> tileImage = new SimpleObjectProperty<>();
     @Getter private final SimpleObjectProperty<TreasureItem> treasure = new SimpleObjectProperty<>();
     @Getter private final SimpleObjectProperty<Bonus> bonus = new SimpleObjectProperty<>();
     @Getter private SimpleBooleanProperty isFixed = new SimpleBooleanProperty();
@@ -33,6 +36,13 @@ public class TileItem implements Disposable {
         this.directions = directionList;
 
         Runnable apply = () -> {
+
+            ImageResourceLoader loader = new ImageResourceLoader();
+            loader.loadImage()
+
+            tileImage.set();
+
+
             if (source.getTreasure() != null) {
                 this.treasure.set(new TreasureItem(source.getTreasure()));
             } else {
