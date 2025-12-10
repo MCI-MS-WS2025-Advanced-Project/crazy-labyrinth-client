@@ -16,88 +16,85 @@ import java.util.*;
 public class ImageResourceLoader {
 
 
+    private final String UP_DOWN = "up_down_512px.png";
+    private final String UP_RIGHT = "up_left_512px.png";
+    private final String UP_DOWN_LEFT = "up_down_left_512px";
+
     private static final String TILE_IMAGES_PATH = "/tiles/";
     private static final Map<String, Image> imageCache = new HashMap<>();
 
-    /**
-     * Load image from resources with caching
-     */
-    public static Image loadImage(String resourcePath) {
-        return imageCache.computeIfAbsent(resourcePath, path -> {
-            try (InputStream inputStream = ImageResourceLoader.class.getResourceAsStream(path)) {
-                if (inputStream == null) {
-                    log.error("Resource not found: {}", path);
-                    return null;
-                }
-                log.debug("Loading image: {}", path);
-                return new Image(inputStream);
-            } catch (Exception e) {
-                log.error("Failed to load image: {}", path, e);
-                return null;
-            }
-        });
-    }
-
-
-    public static ImageView createTileImageView(String tileName) {
-        String fullPath = TILE_IMAGES_PATH + tileName;
-        Image image = loadImage(fullPath);
-
-        if (image == null) {
-            log.warn("Using fallback for missing tile: {}", tileName);
-            // Return a placeholder or default tile
-            image = loadImage(TILE_IMAGES_PATH + "default_tile.png");
-        }
-
-        return new ImageView(image);
-    }
-
-    public static ImageView createRotatedTileImageView(String tileName, double rotationAngle) {
-        ImageView imageView = createTileImageView(tileName);
-        if (rotationAngle != 0) {
-            imageView.setRotate(rotationAngle);
-        }
-        return imageView;
-    }
-
-    public static void clearCache() {
-        imageCache.clear();
-        log.debug("Image cache cleared");
-    }
 
 
 
-
-    public  static  String mapDirectionsToTile(Direction[] direction) {
+    public static Image mapDirectionsToTile(Direction[] direction) {
         List<Direction> l = new ArrayList<>(Arrays.asList(direction));
         l.sort(Comparator.comparingInt(Direction::ordinal));
         switch (l.size()) {
             case 2 -> {
                 if (l.contains(Direction.UP) && l.contains(Direction.DOWN)) {
-                    // up_down_px.png
+                    // straight_vertical.png
+                     return loadImage();
                 } else if (l.contains(Direction.LEFT) && l.contains(Direction.RIGHT)) {
-                    // left_right_px.png
-                }  else if ((l.contains(Direction.UP) && l.contains(Direction.RIGHT)) ||
-                        (l.contains(Direction.DOWN) && l.contains(Direction.LEFT)) ||
-                        (l.contains(Direction.UP) && l.contains(Direction.LEFT)) ||
-                        (l.contains(Direction.DOWN) && l.contains(Direction.RIGHT))) {
-                    // Corner pieces - you might want to handle rotation here
-                    return getCornerTileWithRotation(l);
+                    // rotate --> straight_vertical.png + 90 C°
+                }  else if ((l.contains(Direction.UP) && l.contains(Direction.RIGHT)) {
+                    // up_left.png
+                } else if (l.contains(Direction.DOWN) && l.contains(Direction.LEFT)) {
+                    // rotate --> up_left.png + 180 C°
+                } else if (l.contains(Direction.UP) && l.contains(Direction.LEFT)) {
+                    // rotate -->  up_left.png - 90 C°
+                } else if (l.contains(Direction.DOWN) && l.contains(Direction.RIGHT))) {
+                    // rotate --> up_left.png + 90 C°
                 }
+
             }   case 3 -> {
                 if (l.contains(Direction.UP) && l.contains(Direction.DOWN) && l.contains(Direction.LEFT)) {
-
+                    // up_down_left.png
                 } else if (l.contains(Direction.UP) && l.contains(Direction.DOWN) && l.contains(Direction.RIGHT)) {
-
+                    // rotate up_down_left.png + 180 C°
                 } else if (l.contains(Direction.LEFT) && l.contains(Direction.RIGHT) && l.contains(Direction.UP)) {
-
+                    // rotate up_down_left.png + 90 C°
                 } else if (l.contains(Direction.LEFT) && l.contains(Direction.RIGHT) && l.contains(Direction.DOWN)) {
-
+                    // rotate up_down_left.png - 90 C°
                 }
             }
         }
 
+        /**
+         * Load image from resources with caching
+         */
+        public static Image loadImage(String resourcePath) {
+            return imageCache.computeIfAbsent(resourcePath, path -> {
+                try (InputStream inputStream = ImageResourceLoader.class.getResourceAsStream(path)) {
+                    if (inputStream == null) {
+                        log.error("Resource not found: {}", path);
+                        return null;
+                    }
+                    log.debug("Loading image: {}", path);
+                    return new Image(inputStream);
+                } catch (Exception e) {
+                    log.error("Failed to load image: {}", path, e);
+                    return null;
+                }
+            });
+        }
 
+
+        public static ImageView createRotatedTileImageView(String tileName, double rotationAngle) {
+            ImageView imageView = createTileImageView(tileName);
+            if (rotationAngle != 0) {
+                imageView.setRotate(rotationAngle);
+            }
+            return imageView;
+        }
+
+        public static void clearCache() {
+            imageCache.clear();
+            log.debug("Image cache cleared");
+        }
+
+
+        private Image loadAndRotate()
+/*
         public static ImageView createTileImageView(String baseTilePath, double rotationAngle) {
             Image image = new Image(baseTilePath);
             ImageView imageView = new ImageView(image);
@@ -118,10 +115,12 @@ public class ImageResourceLoader {
             return new ImageView(image);
         }
 
+ */
+
 }
 
 // Java
-try (var in = getClass().getResourceAsStream("/tiles/straight_vertical_512px.png")) {
+try (var in = getClass().getResourceAsStream("/tiles/up_down_512px.png")) {
         javafx.scene.image.Image img = new javafx.scene.image.Image(in);
         extraTile.setImage(img);
     }
@@ -153,7 +152,7 @@ try (var in = getClass().getResourceAsStream("/tiles/straight_vertical_512px.png
 
   // Java
   ImageView iv = new ImageView(new javafx.scene.image.Image(
-      getClass().getResource("/tiles/straight_vertical_512px.png").toExternalForm()
+      getClass().getResource("/tiles/up_down_512px.png").toExternalForm()
   ));
   iv.setFitWidth(110);
   iv.setFitHeight(110);
@@ -163,7 +162,7 @@ try (var in = getClass().getResourceAsStream("/tiles/straight_vertical_512px.png
 
     // Java
   javafx.scene.image.Image img = new javafx.scene.image.Image(
-      getClass().getResource("/tiles/straight_vertical_512px.png").toExternalForm()
+      getClass().getResource("/tiles/up_down_512px.png").toExternalForm()
   );
   extraTile.setImage(img);
   extraTile.setFitWidth(110);
