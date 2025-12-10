@@ -15,10 +15,19 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+import static labyrinth.contracts.models.TurnState.*;
+
 @Component
 public class GameStateViewModel implements ViewCleanup {
 
     //TODO put into subViewModel GameBoardViewModel?? turnViewModel?
+
+    private final String WAITING_FOR_BONUS_LABEL = "setzt einen Bonus ein";
+    private final String WAITING_FOR_PUSH_LABEL = "verschiebt einen Gang";
+    private final String WAITING_FOR_MOVE_LABEL = "bewegt seine Spielfigur";
+
+
+
 
     @Getter private GameBoardItem gameBoardItem;
     @Getter private List<PlayerStateItem> playerStates;
@@ -90,6 +99,14 @@ public class GameStateViewModel implements ViewCleanup {
         this.gameBoardItem = null;
         this.playerStates = null;
         //TODO something to do here?
+    }
+
+    public String mapTurnStateToLabel(TurnState turnState){
+        return switch(turnState) {
+            case WAITING_FOR_BONUS -> WAITING_FOR_BONUS_LABEL;
+            case WAITING_FOR_MOVE -> WAITING_FOR_MOVE_LABEL;
+            case WAITING_FOR_PUSH -> WAITING_FOR_PUSH_LABEL;
+        };
     }
 }
 

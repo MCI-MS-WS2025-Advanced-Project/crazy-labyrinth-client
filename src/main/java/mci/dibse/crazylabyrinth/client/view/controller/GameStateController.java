@@ -6,10 +6,18 @@ import javafx.scene.control.Label;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.GridPane;
 import mci.dibse.crazylabyrinth.client.view.ViewCleanup;
+import mci.dibse.crazylabyrinth.client.view.viewmodel.GameStateViewModel;
+import mci.dibse.crazylabyrinth.client.view.viewmodel.item.PlayerStateItem;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
+import javax.script.Bindings;
 
 @Component
 public class GameStateController implements ViewCleanup {
+
+    @Autowired
+    private  GameStateViewModel vm;
 
 
     @FXML
@@ -61,8 +69,22 @@ public class GameStateController implements ViewCleanup {
 
     @FXML
     public void initialize() {
+        playerTurnLabel.textProperty().bind(javafx.beans.binding.Bindings.createStringBinding(
+                () -> {
+                    String currentId = vm.getCurrentPlayerId().get();
+                    PlayerStateItem playerState =  vm.getPlayerStates().stream().filter(playerItem -> playerItem.getPlayerInfo().getId().equals(currentId)).findFirst().get();
+                    String name = playerState.getPlayerInfo().nameProperty().get();
+                    String turnLabel = vm.mapTurnStateToLabel(vm.getCurrentTurnState().get());
+                    return name + " " + turnLabel;
+
+                },vm.getCurrentPlayerId(),vm.getCurrentTurnState()
+                ));
+
+
 
     }
+
+
 
     @Override
     public void cleanup() {
