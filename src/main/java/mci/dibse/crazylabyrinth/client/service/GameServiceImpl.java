@@ -18,7 +18,9 @@ public class GameServiceImpl implements GameService {
     private ApplicationEventPublisher eventListener;
 
     @Autowired
-    public GameServiceImpl(ApplicationEventPublisher eventListener) {}
+    public GameServiceImpl(ApplicationEventPublisher eventListener) {
+        this.eventListener = eventListener;
+    }
 
 
     public void handleGameEvent(GameStartedEventPayload gameStarted) {

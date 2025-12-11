@@ -34,6 +34,8 @@ public class PlayerStateItem implements Disposable {
         Runnable apply = () -> {
 
             this.playerInfo.set(new PlayerInfoItem(source.getPlayerInfo()));
+            System.out.println("playerInfoItem created" + source.getPlayerInfo().toString());
+
             this.currentPosition.set(new CoordinatesItem(source.getCurrentPosition()));
             this.homePosition.set(new CoordinatesItem(source.getHomePosition()));
 
@@ -41,9 +43,7 @@ public class PlayerStateItem implements Disposable {
 
             this.remainingTreasureCount.set(source.getRemainingTreasureCount());
 
-
             this.achievementTypes.set(FXCollections.observableArrayList(achievements));
-
 
             this.availableBonusTypes.set(FXCollections.observableArrayList(bonuses));
         };

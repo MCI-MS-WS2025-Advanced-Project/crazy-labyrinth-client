@@ -79,6 +79,7 @@ public class ServerEventService {
     private void handleServerInfo(ServerInfoPayload serverInfo) {
         log.debug("Received server info: {}", serverInfo);
         //TODO save server info here
+        // snyc client with server time
     }
 
     private void handleConnectAck(ConnectAckEventPayload connectAck) {
@@ -97,7 +98,7 @@ public class ServerEventService {
     }
 
     private void handleGameStarted(GameStartedEventPayload gameStarted) {
-        log.debug("Game started: {}", gameStarted);
+        log.debug("Game started event arrived: {}", gameStarted);
         gameService.handleGameEvent(gameStarted);
     }
 
@@ -108,7 +109,7 @@ public class ServerEventService {
 
 
     private void handlePlayerTurnEvent(PlayerTurnEventPayload playerTurn) {
-        log.debug("PLayer turn: {}", playerTurn);
+        log.debug("PLayer turn event arrived: {}", playerTurn);
         gameService.handleGameEvent(playerTurn);
     }
 

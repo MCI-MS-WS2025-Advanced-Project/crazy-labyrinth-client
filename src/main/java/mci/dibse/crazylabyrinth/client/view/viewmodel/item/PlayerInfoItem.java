@@ -2,6 +2,7 @@ package mci.dibse.crazylabyrinth.client.view.viewmodel.item;
 
 import javafx.application.Platform;
 import javafx.beans.property.*;
+import javafx.scene.paint.Color;
 import labyrinth.contracts.models.PlayerColor;
 import mci.dibse.crazylabyrinth.client.domain.model.PlayerInfo;
 
@@ -55,6 +56,7 @@ public class PlayerInfoItem implements Disposable {
 
 
     public PlayerInfoItem(labyrinth.contracts.models.PlayerInfo source) {
+        System.out.println("PlayerInfoItem: source: " + source);
         this.id.set(source.getId());
         updateFrom(source);
     }
@@ -116,6 +118,8 @@ public class PlayerInfoItem implements Disposable {
     public javafx.beans.property.BooleanProperty isAiControlledProperty() {
         return isAiControlled;
     }
+
+
 
     @Override
     public void dispose() {

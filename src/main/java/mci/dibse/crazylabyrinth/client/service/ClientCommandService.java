@@ -85,6 +85,38 @@ public class ClientCommandService {
 
     }
 
+
+    public void sendPushTileCommand(int index, Direction pushDirection, Direction[] extraTileEntrances) {
+        PushTileCommandPayload command = new PushTileCommandPayload();
+        command.setType(CommandType.PUSH_TILE);
+        command.setDirection(pushDirection);
+        command.setTileEntrances(extraTileEntrances);
+        command.setRowOrColIndex(index);
+        try {
+            String json = mapCommandToMessage(CommandType.PUSH_TILE, command);
+            gameServerSocketService.sendCommand(json);
+        } catch (JsonProcessingException e) {
+            log.error("Failed to map disconnect command to json", e);
+        }
+    }
+
+    public void sendMovePawnCommand(int finalRow, int finalCol) {
+        MovePawnCommandPayload command = new MovePawnCommandPayload();
+        command.setType(CommandType.MOVE_PAWN);
+        Coordinates coordinates = new Coordinates();
+        coordinates.setX(finalRow);
+        coordinates.setY(finalCol);
+        command.setTargetCoordinates(coordinates);
+        try {
+            String json = mapCommandToMessage(CommandType.MOVE_PAWN, command);
+            gameServerSocketService.sendCommand(json);
+        } catch (JsonProcessingException e) {
+            log.error("Failed to map disconnect command to json", e);
+        }
+
+    }
+
+
     //TODO
     private String mapCommandToMessage(CommandType command, Object payload) throws JsonProcessingException {
         ObjectMapper mapper = ObjectMapperConfig.createCustomObjectMapper();
@@ -92,6 +124,8 @@ public class ClientCommandService {
             case CommandType.CONNECT -> mapper.writeValueAsString((ConnectCommandPayload) payload);
             case CommandType.START_GAME -> mapper.writeValueAsString((StartGameCommandPayload) payload);
             case CommandType.DISCONNECT -> mapper.writeValueAsString((DisconnectCommandPayload) payload);
+            case CommandType.PUSH_TILE -> mapper.writeValueAsString((PushTileCommandPayload) payload);
+            case CommandType.MOVE_PAWN -> mapper.writeValueAsString((MovePawnCommandPayload) payload);
             default -> throw new IllegalStateException("Unexpected value: " + command);
         };
 
