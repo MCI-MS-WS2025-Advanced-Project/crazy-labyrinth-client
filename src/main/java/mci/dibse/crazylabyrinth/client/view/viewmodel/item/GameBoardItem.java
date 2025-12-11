@@ -4,6 +4,7 @@ import javafx.beans.property.*;
 import labyrinth.contracts.models.GameBoard;
 import labyrinth.contracts.models.PushActionInfo;
 import labyrinth.contracts.models.Tile;
+import lombok.Getter;
 
 import java.util.Map;
 
@@ -15,7 +16,7 @@ public class GameBoardItem implements Disposable {
 
     private final IntegerProperty rows = new SimpleIntegerProperty();
     private final IntegerProperty cols = new SimpleIntegerProperty();
-    private final ObjectProperty<TileItem[][]> tiles = new SimpleObjectProperty<>();
+    @Getter  private final ObjectProperty<TileItem[][]> tiles = new SimpleObjectProperty<>();
     private final ObjectProperty<PushActionInfo> lastPush = new SimpleObjectProperty<>();
     private final ObjectProperty<Map<String, Object>> additionalProperties = new SimpleObjectProperty<>();
 
@@ -135,7 +136,5 @@ public class GameBoardItem implements Disposable {
         };
         if (javafx.application.Platform.isFxApplicationThread()) apply.run();
         else javafx.application.Platform.runLater(apply);
-
-
     }
 }

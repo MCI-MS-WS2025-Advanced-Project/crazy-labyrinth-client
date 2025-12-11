@@ -26,7 +26,7 @@ public class NavigationController {
 
     private static final String MAIN_VIEW = "gameServerDashboard.fxml";
     private static final String LOBBY_VIEW = "gameLobby.fxml";
-    private static final String GAMEBOARD_VIEW = "";
+    private static final String GAMEBOARD_VIEW = "gameView.fxml";
     private static final String RESULTS_VIEW = "";
 
     @Autowired private NavigationStateViewModel navState;

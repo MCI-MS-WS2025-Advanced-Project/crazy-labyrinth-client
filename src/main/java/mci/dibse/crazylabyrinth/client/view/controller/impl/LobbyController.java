@@ -129,7 +129,6 @@ public class LobbyController implements ViewCleanup {
         int totalBonusCount,
         int gameDurationInSeconds,
         int boardSiz
-
      */
     @FXML
     public void onStartButtonClick() {
