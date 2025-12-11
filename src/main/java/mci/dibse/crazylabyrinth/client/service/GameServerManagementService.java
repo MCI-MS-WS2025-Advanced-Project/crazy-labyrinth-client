@@ -32,7 +32,9 @@ import org.springframework.stereotype.Service;
  */
 @Slf4j
 @Service
-public class GameServerManagementService {
+public class GameServerManagementService  {
+//todo implements GameServerManagementService
+
 
     private final ManagementServerClient client;
 
