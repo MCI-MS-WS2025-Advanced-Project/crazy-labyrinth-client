@@ -6,28 +6,25 @@ import javafx.collections.FXCollections;
 import javafx.collections.MapChangeListener;
 import javafx.collections.ObservableList;
 import javafx.collections.ObservableMap;
-import labyrinth.contracts.models.EventType;
 import lombok.Getter;
 import lombok.Setter;
-import mci.dibse.crazylabyrinth.client.domain.model.GameServer;
 import mci.dibse.crazylabyrinth.client.domain.model.LobbyState;
 import mci.dibse.crazylabyrinth.client.domain.model.PlayerInfo;
 import mci.dibse.crazylabyrinth.client.domain.model.record.GameInfoRecord;
 
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
-public class LobbyStateItem {
+public class LobbyStateItem implements Disposable{
 
     private final java.util.concurrent.atomic.AtomicBoolean pendingUpdate =
             new java.util.concurrent.atomic.AtomicBoolean(false);
 
 
-    private final ObservableMap<String, PlayerItem> byId = FXCollections.observableHashMap();
+    private final ObservableMap<String, PlayerInfoItem> byId = FXCollections.observableHashMap();
 
     @Setter @Getter
-    private ObservableList<PlayerItem> playerList = FXCollections.observableArrayList(item -> new Observable[] {
+    private ObservableList<PlayerInfoItem> playerList = FXCollections.observableArrayList(item -> new Observable[] {
             item.idProperty(),
             item.nameProperty(),
             item.colorProperty(),
@@ -44,12 +41,12 @@ public class LobbyStateItem {
     private final StringProperty maxPlayers = new SimpleStringProperty();
     @Getter
     private final StringProperty serverName = new SimpleStringProperty();
-    private MapChangeListener<String, PlayerItem> mapChangeListener;
+    private MapChangeListener<String, PlayerInfoItem> mapChangeListener;
 
 
 
     public LobbyStateItem(LobbyState source) {
-        mapChangeListener = (MapChangeListener<String, PlayerItem>) change -> {
+        mapChangeListener = (MapChangeListener<String, PlayerInfoItem>) change -> {
             Runnable apply = () -> {
                 if (change.wasAdded()) playerList.add(change.getValueAdded());
                 if (change.wasRemoved()) playerList.remove(change.getValueRemoved());
@@ -68,7 +65,7 @@ public class LobbyStateItem {
       // source.addListener(strongListener);
     }
 
-
+    @Override
     public void dispose() {
         // Remove listener to prevent memory leaks
         byId.removeListener(mapChangeListener);
@@ -121,8 +118,8 @@ public class LobbyStateItem {
         additionalProperties.set(source.getAdditionalProperties());
     }
 
-    private PlayerItem playerItemFromPlayerInfo(PlayerInfo playerInfo){
-        return new PlayerItem(playerInfo);
+    private PlayerInfoItem playerItemFromPlayerInfo(PlayerInfo playerInfo){
+        return new PlayerInfoItem(playerInfo);
     }
 
 

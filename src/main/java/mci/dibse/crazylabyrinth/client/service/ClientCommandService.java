@@ -12,6 +12,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 
+import java.util.HashMap;
+
 import static mci.dibse.crazylabyrinth.client.domain.context.ApplicationEvents.BACK_TO_GAME_SERVER_DASHBOARD;
 
 
@@ -85,6 +87,40 @@ public class ClientCommandService {
 
     }
 
+
+    public void sendPushTileCommand(int index, Direction pushDirection, Direction[] extraTileEntrances) {
+        PushTileCommandPayload command = new PushTileCommandPayload();
+        command.setType(CommandType.PUSH_TILE);
+        command.setDirection(pushDirection);
+        command.setTileEntrances(extraTileEntrances);
+        command.setRowOrColIndex(index);
+        try {
+            String json = mapCommandToMessage(CommandType.PUSH_TILE, command);
+            gameServerSocketService.sendCommand(json);
+        } catch (JsonProcessingException e) {
+            log.error("Failed to map disconnect command to json", e);
+        }
+    }
+
+    public void sendMovePawnCommand(int finalRow, int finalCol) {
+        MovePawnCommandPayload command = new MovePawnCommandPayload();
+        command.setType(CommandType.MOVE_PAWN);
+        Coordinates coordinates = new Coordinates();
+        coordinates.setX(finalRow);
+        coordinates.setY(finalCol);
+        coordinates.setAdditionalProperties(new HashMap<>());
+        command.setTargetCoordinates(coordinates);
+        command.setAdditionalProperties(new HashMap<>());
+        try {
+            String json = mapCommandToMessage(CommandType.MOVE_PAWN, command);
+            gameServerSocketService.sendCommand(json);
+        } catch (JsonProcessingException e) {
+            log.error("Failed to map disconnect command to json", e);
+        }
+
+    }
+
+
     //TODO
     private String mapCommandToMessage(CommandType command, Object payload) throws JsonProcessingException {
         ObjectMapper mapper = ObjectMapperConfig.createCustomObjectMapper();
@@ -92,6 +128,8 @@ public class ClientCommandService {
             case CommandType.CONNECT -> mapper.writeValueAsString((ConnectCommandPayload) payload);
             case CommandType.START_GAME -> mapper.writeValueAsString((StartGameCommandPayload) payload);
             case CommandType.DISCONNECT -> mapper.writeValueAsString((DisconnectCommandPayload) payload);
+            case CommandType.PUSH_TILE -> mapper.writeValueAsString((PushTileCommandPayload) payload);
+            case CommandType.MOVE_PAWN -> mapper.writeValueAsString((MovePawnCommandPayload) payload);
             default -> throw new IllegalStateException("Unexpected value: " + command);
         };
 

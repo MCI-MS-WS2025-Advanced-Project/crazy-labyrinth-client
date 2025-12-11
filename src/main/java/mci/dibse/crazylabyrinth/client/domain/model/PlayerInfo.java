@@ -13,7 +13,7 @@ import java.net.URI;
 import java.util.Map;
 
 
-
+//TODO remove?
 @Setter @Getter
 public class PlayerInfo {
 
