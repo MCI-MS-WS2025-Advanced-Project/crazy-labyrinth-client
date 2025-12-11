@@ -187,33 +187,63 @@ public class GameStateController implements ViewCleanup {
                     && vm.getCurrentTurnState().get().equals(TurnState.WAITING_FOR_PUSH));
                 },vm.getCurrentPlayerId(), vm.getCurrentTurnState()
         ));
-
          */
         extraTileWrapper.visibleProperty().set(true);
       //  extraTileTreasureLabel.visibleProperty().bind(vm.getExtraTile().get().getTreasure().isNotNull());
         extraTileTreasureLabel.visibleProperty().set(true);
-        extraTileTreasureLabel.textProperty().bind(Bindings.createStringBinding(
-                () -> {
-                    if (vm.getExtraTile().get().getTreasure() != null) {
-                        return String.valueOf(vm.getExtraTile().get().getTreasure().get().getId().get());
+
+        extraTileTreasureLabel.textProperty().bind(
+                Bindings.createStringBinding(() -> {
+                    TileItem tile = vm.getExtraTile().get();
+                    if (tile != null && tile.getTreasure().get() != null) {
+                        return String.valueOf(tile.getTreasure().get().getId().get());
                     } else {
                         return "";
                     }
-                }
-        ));
+                }, vm.getExtraTile())
+        );
 
 
-        extraTile.imageProperty().bind(
-                javafx.beans.binding.Bindings.createObjectBinding(
-                        () -> vm.getExtraTile().get().getTileImage().get(), vm.getExtraTile(),
-                        vm.getExtraTile()
-        ));
-        extraTile.rotateProperty().bindBidirectional(vm.getExtraTile().get().getRotation());
+
+        vm.getExtraTile().addListener((observable, oldValue, newValue) -> {
+            System.out.println("extra tile changed");
+            if (oldValue != null) {
+                oldValue.dispose();
+            }
+            extraTile.imageProperty().unbind();
+            extraTile.rotateProperty().unbind();
+            // Add null check for newValue
+            if (newValue != null) {
+                extraTile.imageProperty().bind(
+                        javafx.beans.binding.Bindings.createObjectBinding(
+                                () -> {
+                                    System.out.println("extra tile image binding");
+                                    return newValue.getTileImage().get();
+                                }, vm.getExtraTile(), newValue.getRotation()
+                        ));
+                extraTile.rotateProperty().bindBidirectional(newValue.getRotation());
+            }
+        });
+        if (vm.getExtraTile().get() != null) {
+            TileItem currentTile = vm.getExtraTile().get();
+            extraTile.imageProperty().bind(
+                    javafx.beans.binding.Bindings.createObjectBinding(
+                            () -> currentTile.getTileImage().get(),
+                            vm.getExtraTile(), currentTile.getRotation()
+                    ));
+            extraTile.rotateProperty().bindBidirectional(currentTile.getRotation());
+        }
+
+
+
+        // extraTile.setImage(vm.getExtraTile().get().getTileImage().get());
+       // extraTile.setRotate(vm.getExtraTile().get().getRotation().get().doubleValue());
+
 
         rotateLeftButton.visibleProperty().bind(Bindings.createBooleanBinding(
                 () -> {
                     String playerId = playerStateClient.getPlayerInfo().getId();
-                    if( vm.getCurrentTurnState().get() != null){
+                    if(!vm.getCurrentTurnState().isNull().get()){
                         return  (playerId.equals(vm.getCurrentPlayerId().get())
                                 && vm.getCurrentTurnState().get().equals(TurnState.WAITING_FOR_PUSH));
                     } else {
@@ -223,12 +253,12 @@ public class GameStateController implements ViewCleanup {
                             return false;
                         }
                     }
-                }
+                },vm.getCurrentPlayerId(), vm.getCurrentTurnState()
         ));
         rotateRightButton.visibleProperty().bind(Bindings.createBooleanBinding(
                 () -> {
                     String playerId = playerStateClient.getPlayerInfo().getId();
-                    if( vm.getCurrentTurnState().get() != null){
+                    if(!vm.getCurrentTurnState().isNull().get()) {
                         return  (playerId.equals(vm.getCurrentPlayerId().get())
                                 && vm.getCurrentTurnState().get().equals(TurnState.WAITING_FOR_PUSH));
                     } else {
@@ -238,18 +268,27 @@ public class GameStateController implements ViewCleanup {
                             return false;
                         }
                     }
-                }
+                },vm.getCurrentPlayerId(), vm.getCurrentTurnState()
         ));
 
         rotateLeftButton.setOnAction(
                 _ ->  vm.getExtraTile().get().onLeftRotation()
         );
         rotateRightButton.setOnAction(
-                _ ->  vm.getExtraTile().get().onRightRotation()
+                _ ->  {
+                    vm.getExtraTile().get().onRightRotation();
+                }
         );
 
         initGameGrid();
+        /*
         vm.getGameBoardItem().tilesProperty().addListener((observable, oldValue, newValue) -> {
+            initGameGrid();
+        });
+
+         */
+
+        vm.getCurrentTurnState().addListener((observable, oldValue, newValue) -> {
             initGameGrid();
         });
 
@@ -364,6 +403,7 @@ public class GameStateController implements ViewCleanup {
                     // Add to the grid at the specified column and row
                     cellContainer.getChildren().add(imageView);
 
+
                     //todo use decicated treasure image
                     //    ImageView treasureImage = new ImageView(new Image());
                     if (tile.getTreasure().get() != null) {
@@ -379,6 +419,7 @@ public class GameStateController implements ViewCleanup {
                             && player.getCurrentPosition().getX().get() == finalRow).findFirst();
                     if (playerStateItemOptional.isPresent()) {
                         PlayerColor playerColor = playerStateItemOptional.get().getPlayerInfo().colorProperty().get();
+                        System.out.println("Player found at: " + playerStateItemOptional.get().getPlayerInfo().getName()+ " -> x: " + finalRow + ", y:" + finalCol);
                         Circle playerPawn = new Circle(10, PlayerPawnUtils.mapPlayerColorToFxColor(playerColor));
                         cellContainer.getChildren().add(playerPawn);
                     }
@@ -391,7 +432,8 @@ public class GameStateController implements ViewCleanup {
                     });
                     BooleanBinding isMyTurnAndMovePhase = Bindings.createBooleanBinding(
                             () -> {
-                                return vm.getPlayerTurnId().get().equals(vm.getClientPlayer().getId()) && ( vm.getCurrentTurnState() != null && vm.getCurrentTurnState().get().equals(TurnState.WAITING_FOR_MOVE));
+                                return vm.getPlayerTurnId().get().equals(vm.getClientPlayer().getId())
+                                        && ( vm.getCurrentTurnState().get() != null && vm.getCurrentTurnState().get().equals(TurnState.WAITING_FOR_MOVE));
                             }, vm.getCurrentPlayerId(), vm.getCurrentTurnState()
                     );
                     boardGrid.add(cellContainer, col, row);
@@ -439,6 +481,8 @@ public class GameStateController implements ViewCleanup {
             vm.pushTileCommand(index, pushDirection, extraTileEntrances);
         }
     }
+
+
 
     //todo rework
     private void initNextTreasure() {

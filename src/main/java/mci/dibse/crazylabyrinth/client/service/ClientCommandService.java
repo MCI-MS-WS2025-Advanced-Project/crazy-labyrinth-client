@@ -12,6 +12,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 
+import java.util.HashMap;
+
 import static mci.dibse.crazylabyrinth.client.domain.context.ApplicationEvents.BACK_TO_GAME_SERVER_DASHBOARD;
 
 
@@ -106,7 +108,9 @@ public class ClientCommandService {
         Coordinates coordinates = new Coordinates();
         coordinates.setX(finalRow);
         coordinates.setY(finalCol);
+        coordinates.setAdditionalProperties(new HashMap<>());
         command.setTargetCoordinates(coordinates);
+        command.setAdditionalProperties(new HashMap<>());
         try {
             String json = mapCommandToMessage(CommandType.MOVE_PAWN, command);
             gameServerSocketService.sendCommand(json);

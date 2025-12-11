@@ -76,8 +76,6 @@ public class GameStateViewModel implements ViewCleanup, PlayerConnectedAckListen
             GameBoard initialBoard = gameStarted.getInitialBoard();
             gameBoardItem = new GameBoardItem(initialBoard);
             Arrays.stream(gameStarted.getPlayers()).map(PlayerStateItem::new).forEach(playerStates::add);
-            System.out.println("after game start event and creation of PLayerStateItems " + playerStates.size());
-            System.out.println("id first palyer in list: " + playerStates.get(0).getPlayerInfo().getId());
             //sort client player first then the rest according to id
             playerStates.sort(Comparator.comparing((PlayerStateItem p) ->
                             !p.getPlayerInfo().getId().equals(clientPlayer.getId()))
@@ -118,8 +116,6 @@ public class GameStateViewModel implements ViewCleanup, PlayerConnectedAckListen
             });
             this.currentTurnState.set(gameStateUpdate.getCurrentTurnState());
             this.currentPlayerId.set(gameStateUpdate.getCurrentPlayerId());
-            System.out.println("current turn state: " + this.currentTurnState.get());
-            System.out.println("current player id: " + this.currentPlayerId.get());
             //TODO additional properties
         };
         if (javafx.application.Platform.isFxApplicationThread()) task.run();
@@ -131,6 +127,7 @@ public class GameStateViewModel implements ViewCleanup, PlayerConnectedAckListen
     public void handlePlayerTurnEvent(PlayerTurnEventPayload playerTurn) {
         Runnable task = () -> {
             playerTurnId.set(playerTurn.getPlayerId());
+            extraTile.unbind();
             extraTile.set(new TileItem(playerTurn.getExtraTile()));
             System.out.println("extraTile: rotation: " + extraTile.get().getRotation().get()  + "   ,directions: " + extraTile.get().getDirections());
             this.turnTimeLimitSeconds.set(playerTurn.getTurnTimeLimitSeconds());

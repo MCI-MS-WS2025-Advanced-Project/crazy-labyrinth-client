@@ -57,6 +57,7 @@ public class PlayerStateItem implements Disposable {
                 .filter(t -> !this.treasuresFound.get().stream().map(i -> i.getId().get()).toList().contains(t.getId())).map(TreasureItem::new)
                 .toList();
         Runnable apply = () -> {
+            System.out.println("PlayerStateItem: currentPosition: " + source.getPlayerInfo().getName() +"  " + source.getCurrentPosition().toString() + "");
             this.currentPosition.get().updateFrom(source.getCurrentPosition());
             this.treasuresFound.addAll(notExistingTreasures);
             this.playerInfo.get().updateFrom(source.getPlayerInfo());

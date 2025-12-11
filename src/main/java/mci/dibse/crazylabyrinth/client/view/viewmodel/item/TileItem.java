@@ -69,6 +69,9 @@ public class TileItem implements Disposable {
     public void updateFrom(Tile source) {
         Runnable apply = () -> {
             this.isFixed.set(source.getIsFixed());
+            List<Direction> directionList = new ArrayList<>(Arrays.asList(source.getEntrances()));
+            this.rotation.set(ImageResourceLoader.getRotationAngleForDirection(directionList));
+
 
             if ( this.treasure.get() != null) {
                 this.treasure.get().updateFrom(source.getTreasure());
@@ -222,10 +225,11 @@ public class TileItem implements Disposable {
 
     @Override
     public void dispose() {
+        tileImage.unbind();
+        rotation.unbind();
         directions.clear();
-        treasure.get().dispose();
+        if(!treasure.isNull().get()) treasure.get().dispose();
         treasure.set(null);
-        bonus.set(null);
         additionalProperties.set(null);
     }
 
