@@ -106,8 +106,8 @@ public class ClientCommandService {
         MovePawnCommandPayload command = new MovePawnCommandPayload();
         command.setType(CommandType.MOVE_PAWN);
         Coordinates coordinates = new Coordinates();
-        coordinates.setX(finalRow);
-        coordinates.setY(finalCol);
+        coordinates.setX(finalCol);
+        coordinates.setY(finalRow);
         coordinates.setAdditionalProperties(new HashMap<>());
         command.setTargetCoordinates(coordinates);
         command.setAdditionalProperties(new HashMap<>());

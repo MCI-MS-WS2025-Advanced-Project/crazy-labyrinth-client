@@ -12,7 +12,7 @@
 <BorderPane xmlns="http://javafx.com/javafx"
             xmlns:fx="http://javafx.com/fxml"
             fx:controller="mci.dibse.crazylabyrinth.client.view.controller.GameStateController"
-            prefHeight="1200" prefWidth="1000">
+            prefHeight="800" prefWidth="1000">
 
     <!-- ================== TOP ================== -->
     <top>
@@ -89,7 +89,7 @@
     <!-- ================== MAIN GAME AREA ================== -->
     <center>
         <!-- This StackPane centers the content -->
-        <StackPane style="-fx-background-color: #ec9696;">
+        <StackPane style="-fx-background-color: #ffffff;">
             <!-- Definitions for buttons (instantiated but not in layout yet, added by Controller) -->
 
             <!-- CHANGED: Added ID gameContainer. This holds Arrows + Board -->
@@ -101,38 +101,38 @@
                         <GridPane fx:id="boardGrid"
                                   hgap="2" vgap="2"
                                   alignment="CENTER"
-                                  style="-fx-background-color:#cfbe6a; -fx-background-radius:15; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.3), 20, 0, 0, 0);"> <!-- -fx-padding:10; -->
+                                  style="-fx-background-color:#0b3300; -fx-background-radius:15; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.3), 20, 0, 0, 0);"> <!-- -fx-padding:10; -->
                             <!-- Constraints removed (handled in code) -->
                         </GridPane>
                 </center>
 
                 <!-- ARROWS close to the board -->
                 <top>
-                    <HBox fx:id="topArrowBox" alignment="CENTER" fillHeight="false" prefHeight="50" >
-                        <Button fx:id="arrowTop1" text="↓" style="-fx-background-radius:40;-fx-base: #6C2CAFFF; -fx-cursor: hand;"/>
-                        <Button fx:id="arrowTop3" text="↓" style="-fx-background-radius:40;-fx-base: #6C2CAFFF; -fx-cursor: hand;"/>
-                        <Button fx:id="arrowTop5" text="↓" style="-fx-background-radius:40;-fx-base: #6C2CAFFF; -fx-cursor: hand;"/>
+                    <HBox fx:id="topArrowBox" alignment="CENTER" fillHeight="false" prefHeight="50" style="-fx-background-color: #3d3e3d">
+                        <Button fx:id="arrowTop1" text="↓" style="-fx-background-radius:40;-fx-base: #cac6d6; -fx-cursor: hand;"/>
+                        <Button fx:id="arrowTop3" text="↓" style="-fx-background-radius:40;-fx-base: #cac6d6; -fx-cursor: hand;"/>
+                        <Button fx:id="arrowTop5" text="↓" style="-fx-background-radius:40;-fx-base: #cac6d6; -fx-cursor: hand;"/>
                     </HBox>
                 </top>
                 <bottom>
-                    <HBox fx:id="bottomArrowBox" alignment="CENTER" fillHeight="false" prefHeight="50" >
-                        <Button fx:id="arrowBottom1" text="↑" style="-fx-background-radius:40;-fx-base: #6C2CAFFF; -fx-cursor: hand;"/>
-                        <Button fx:id="arrowBottom3" text="↑" style="-fx-background-radius:40;-fx-base: #6C2CAFFF; -fx-cursor: hand;"/>
-                        <Button fx:id="arrowBottom5" text="↑" style="-fx-background-radius:40;-fx-base: #6C2CAFFF; -fx-cursor: hand;"/>
+                    <HBox fx:id="bottomArrowBox" alignment="CENTER" fillHeight="false" prefHeight="50" style="-fx-background-color: #3d3e3d">
+                        <Button fx:id="arrowBottom1" text="↑" style="-fx-background-radius:40;-fx-base: #cac6d6; -fx-cursor: hand;"/>
+                        <Button fx:id="arrowBottom3" text="↑" style="-fx-background-radius:40;-fx-base: #cac6d6; -fx-cursor: hand;"/>
+                        <Button fx:id="arrowBottom5" text="↑" style="-fx-background-radius:40;-fx-base: #cac6d6; -fx-cursor: hand;"/>
                     </HBox>
                 </bottom>
                 <left>
-                    <VBox fx:id="leftArrowBox" alignment="CENTER" fillWidth="false" prefWidth="50">
-                        <Button fx:id="arrowLeft1" text="→" style="-fx-background-radius:40; -fx-base: #6C2CAFFF; -fx-cursor: hand;"/>
-                        <Button fx:id="arrowLeft3" text="→" style="-fx-background-radius:40; -fx-base: #6C2CAFFF; -fx-cursor: hand;"/>
-                        <Button fx:id="arrowLeft5" text="→" style="-fx-background-radius:40; -fx-base: #6C2CAFFF; -fx-cursor: hand;"/>
+                    <VBox fx:id="leftArrowBox" alignment="CENTER" fillWidth="false" prefWidth="50" style="-fx-background-color: #3d3e3d">
+                        <Button fx:id="arrowLeft1" text="→" style="-fx-background-radius:40; -fx-base: #cac6d6; -fx-cursor: hand;"/>
+                        <Button fx:id="arrowLeft3" text="→" style="-fx-background-radius:40; -fx-base: #cac6d6; -fx-cursor: hand;"/>
+                        <Button fx:id="arrowLeft5" text="→" style="-fx-background-radius:40; -fx-base: #cac6d6; -fx-cursor: hand;"/>
                     </VBox>
                 </left>
                 <right>
-                    <VBox fx:id="rightArrowBox" alignment="CENTER" fillWidth="false" prefWidth="50" style="-fx-background-color: #cc3131 ">
-                        <Button fx:id="arrowRight1" text="←" style="-fx-background-radius:40; -fx-base: #6C2CAFFF; -fx-cursor: hand;"/>
-                        <Button fx:id="arrowRight3" text="←" style="-fx-background-radius:40; -fx-base: #6C2CAFFF; -fx-cursor: hand;"/>
-                        <Button fx:id="arrowRight5" text="←" style="-fx-background-radius:40; -fx-base: #6C2CAFFF; -fx-cursor: hand;"/>
+                    <VBox fx:id="rightArrowBox" alignment="CENTER" fillWidth="false" prefWidth="50" style="-fx-background-color: #3d3e3d">
+                        <Button fx:id="arrowRight1" text="←" style="-fx-background-radius:40; -fx-base: #cac6d6; -fx-cursor: hand;"/>
+                        <Button fx:id="arrowRight3" text="←" style="-fx-background-radius:40; -fx-base: #cac6d6; -fx-cursor: hand;"/>
+                        <Button fx:id="arrowRight5" text="←" style="-fx-background-radius:40; -fx-base: #cac6d6; -fx-cursor: hand;"/>
                     </VBox>
                 </right>
             </BorderPane>
