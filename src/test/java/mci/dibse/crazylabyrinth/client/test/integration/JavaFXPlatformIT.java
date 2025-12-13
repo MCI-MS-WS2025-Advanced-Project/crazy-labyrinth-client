@@ -9,13 +9,16 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import mci.dibse.crazylabyrinth.client.test.configuration.JavaFXPlatformTestConfig;
 
-import mci.dibse.crazylabyrinth.client.test.configuration.SpringInitTestConfig;
-import mci.dibse.crazylabyrinth.client.view.controller.impl.HelloJavaFXController;
+import mci.dibse.crazylabyrinth.client.test.configuration.MinimalTestConfig;
+import mci.dibse.crazylabyrinth.client.view.controller.impl.GameServerDashboardController;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
+
+import static org.junit.jupiter.api.Assertions.*;
+
 /**
  *  @author Julian Janetschek
  */
@@ -28,10 +31,10 @@ public class JavaFXPlatformIT {
     //TODO refactor or remove
     @Test
     public void testHelloJavaFX() throws IOException {
-        FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/helloJavaFX.fxml"));
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/gameServerDashboard.fxml"));
         loader.setControllerFactory(applicationContext::getBean);
         Parent root = loader.load();
-        HelloJavaFXController controller = loader.getController();
+        GameServerDashboardController controller = loader.getController();
         assertNotNull(controller);
     }
 
