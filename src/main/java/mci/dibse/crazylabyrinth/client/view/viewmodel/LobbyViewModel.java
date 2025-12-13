@@ -60,6 +60,8 @@ public class LobbyViewModel implements LobbyStateUpdateListener, PlayerConnected
         lobbyService.addLobbyListener(this);
     }
 
+    //todo after game  is ended --> server sned GAME_OVER & LOBBY_STATE  event
+    // but when in result screen
     public void setUpLobby(LobbyStateItem lobbyStateItem){
         this.lobbyStateItem = lobbyStateItem;
         navState.navigateTo(NavigationStateViewModel.ScreenId.LOBBY);
