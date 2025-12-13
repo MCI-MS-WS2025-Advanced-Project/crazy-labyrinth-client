@@ -139,6 +139,25 @@ public class GameStateController implements ViewCleanup {
                     }
                 },vm.getCurrentPlayerId(),vm.getCurrentTurnState()
                 ));
+        playerTurnLabel.graphicProperty().bind(Bindings.createObjectBinding(
+                () -> {
+                    String currentId = vm.getCurrentPlayerId().get();
+                    PlayerStateItem playerStateTurn;
+                    if(currentId != null) {
+                        playerStateTurn = vm.getPlayerStates().stream().filter(playerItem -> playerItem.getPlayerInfo().getId().equals(currentId)).findFirst().orElse(null);
+                    } else {
+                        String currentId2 = vm.getPlayerTurnId().get();
+                        playerStateTurn = vm.getPlayerStates().stream().filter(playerItem -> playerItem.getPlayerInfo().getId().equals(currentId2)).findFirst().orElse(null);
+                    }
+
+                    if (playerStateTurn != null) {
+                        return new Circle(6, PlayerPawnUtils.mapPlayerColorToFxColor(playerStateTurn.getPlayerInfo().getColor()));
+                    }
+                    return null;
+                },
+                vm.getCurrentPlayerId(), vm.getCurrentTurnState(), vm.getPlayerTurnId()
+        ));
+
 
 
         //player labels
@@ -160,15 +179,15 @@ public class GameStateController implements ViewCleanup {
                 .filter(playerItem -> playerItem.getPlayerInfo().getId().equals(vm.getClientPlayer().getId())).findFirst().get();
 
 
+        // put clientPlayer always on top
         idToPlayerLabel.get(vm.getClientPlayer().getId()).textProperty().bind(Bindings.createStringBinding(
                 () -> {
 
                     String name = playerStateClient.getPlayerInfo().getName();
 
-                    return name + " (" + playerStateClient.getTreasuresFound().size() + " / " + playerStateClient.getRemainingTreasureCount() + ")";
+                    return "Du: "+ name + " (" + playerStateClient.getTreasuresFound().size() + " / " + playerStateClient.getRemainingTreasureCount() + ")";
                 }, playerStateClient.getTreasuresFound()
         ));
-
         playerStates.subList(1, playerStates.size()).forEach(playerState -> {
             Label playerLabel = idToPlayerLabel.get(playerState.getPlayerInfo().getId());
             playerLabel.textProperty().bind(Bindings.createStringBinding(
@@ -422,7 +441,6 @@ public class GameStateController implements ViewCleanup {
                             && player.getCurrentPosition().getX().get() == finalCol).findFirst();
                     if (playerStateItemOptional.isPresent()) {
                         PlayerColor playerColor = playerStateItemOptional.get().getPlayerInfo().colorProperty().get();
-                        System.out.println("Player found at: " + playerStateItemOptional.get().getPlayerInfo().getName()+ " -> y: " + finalRow + ", x:" + finalCol);
                         Circle playerPawn = new Circle(10, PlayerPawnUtils.mapPlayerColorToFxColor(playerColor));
                         playerPawn.setOpacity(0.7);
                         cellContainer.getChildren().add(playerPawn);
@@ -431,7 +449,6 @@ public class GameStateController implements ViewCleanup {
 
                     //set mouse clicks tuff for move Phase
                     cellContainer.setOnMouseClicked(event -> {
-                        System.out.println("Clicked: " + finalRow + ", " + finalCol);
                          vm.movePawnCommand(finalRow, finalCol);
                     });
                     BooleanBinding isMyTurnAndMovePhase = Bindings.createBooleanBinding(
@@ -460,17 +477,57 @@ public class GameStateController implements ViewCleanup {
     //todo rework for dynamic buttons with different board sizes
     private void initPushTileButtons() {
         arrowTop1.setOnAction(_ -> pushTileCommand(1, Direction.DOWN, vm.getExtraTile().get().getDirections().toArray(Direction[]::new)));
+        arrowTop1.disableProperty().bind(isMyTurnAndPushPhase());
+
         arrowTop3.setOnAction(_ -> pushTileCommand(3, Direction.DOWN, vm.getExtraTile().get().getDirections().toArray(Direction[]::new)));
+        arrowTop3.disableProperty().bind(isMyTurnAndPushPhase());
+
         arrowTop5.setOnAction(_ -> pushTileCommand(5, Direction.DOWN, vm.getExtraTile().get().getDirections().toArray(Direction[]::new)));
+        arrowTop5.disableProperty().bind(isMyTurnAndPushPhase());
+
         arrowBottom1.setOnAction(_ -> pushTileCommand(1, Direction.UP, vm.getExtraTile().get().getDirections().toArray(Direction[]::new)));
+        arrowBottom1.disableProperty().bind(isMyTurnAndPushPhase());
+
         arrowBottom3.setOnAction(_ -> pushTileCommand(3, Direction.UP, vm.getExtraTile().get().getDirections().toArray(Direction[]::new)));
+        arrowBottom3.disableProperty().bind(isMyTurnAndPushPhase());
+
         arrowBottom5.setOnAction(_ -> pushTileCommand(5, Direction.UP, vm.getExtraTile().get().getDirections().toArray(Direction[]::new)));
+        arrowBottom5.disableProperty().bind(isMyTurnAndPushPhase());
+
         arrowLeft1.setOnAction(_ -> pushTileCommand(1, Direction.RIGHT, vm.getExtraTile().get().getDirections().toArray(Direction[]::new)));
+        arrowLeft1.disableProperty().bind(isMyTurnAndPushPhase());
+
         arrowLeft3.setOnAction(_ -> pushTileCommand(3, Direction.RIGHT, vm.getExtraTile().get().getDirections().toArray(Direction[]::new)));
+        arrowLeft3.disableProperty().bind(isMyTurnAndPushPhase());
+
         arrowLeft5.setOnAction(_ -> pushTileCommand(5, Direction.RIGHT, vm.getExtraTile().get().getDirections().toArray(Direction[]::new)));
+        arrowLeft5.disableProperty().bind(isMyTurnAndPushPhase());
+
         arrowRight1.setOnAction(_ -> pushTileCommand(1, Direction.LEFT, vm.getExtraTile().get().getDirections().toArray(Direction[]::new)));
+        arrowRight1.disableProperty().bind(isMyTurnAndPushPhase());
+
         arrowRight3.setOnAction(_ -> pushTileCommand(3, Direction.LEFT, vm.getExtraTile().get().getDirections().toArray(Direction[]::new)));
+        arrowRight3.disableProperty().bind(isMyTurnAndPushPhase());
+
         arrowRight5.setOnAction(_ -> pushTileCommand(5, Direction.LEFT, vm.getExtraTile().get().getDirections().toArray(Direction[]::new)));
+        arrowRight5.disableProperty().bind(isMyTurnAndPushPhase());
+
+    }
+
+    // todo: rework for api > 0.0.5??
+    private BooleanBinding isMyTurnAndPushPhase() {
+        return Bindings.createBooleanBinding(
+                () -> {
+
+                    // after game Start & first turn phase
+                    if (vm.getCurrentPlayerId().isNull().get()) {
+                        return !vm.getPlayerTurnId().get().equals(vm.getClientPlayer().getId());
+                    }
+                    //after first GAME_UPDATE_STATE event
+                    return ! (vm.getCurrentPlayerId().get().equals(vm.getClientPlayer().getId())
+                            && vm.getCurrentTurnState().get().equals(TurnState.WAITING_FOR_PUSH));
+                }, vm.getCurrentPlayerId(), vm.getCurrentTurnState(), vm.getPlayerTurnId()
+        );
     }
 
     private void pushTileCommand(int index, Direction pushDirection, Direction[] extraTileEntrances) {
