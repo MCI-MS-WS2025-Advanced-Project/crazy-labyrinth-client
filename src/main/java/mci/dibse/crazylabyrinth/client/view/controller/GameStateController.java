@@ -3,8 +3,10 @@ package mci.dibse.crazylabyrinth.client.view.controller;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
+import javafx.beans.property.ObjectProperty;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
+import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
@@ -16,6 +18,7 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import labyrinth.contracts.models.Direction;
 import labyrinth.contracts.models.PlayerColor;
+import labyrinth.contracts.models.PushActionInfo;
 import labyrinth.contracts.models.TurnState;
 import mci.dibse.crazylabyrinth.client.infrastructure.util.PlayerPawnUtils;
 import mci.dibse.crazylabyrinth.client.view.ViewCleanup;
@@ -118,7 +121,7 @@ public class GameStateController implements ViewCleanup {
         player4Box.setVisible(false); player4Box.setManaged(false);
 
         // cuurent turn label
-        playerTurnLabel.textProperty().bind(javafx.beans.binding.Bindings.createStringBinding(
+        playerTurnLabel.textProperty().bind(Bindings.createStringBinding(
                 () -> {
                     //todo rework
                     String currentId = vm.getCurrentPlayerId().get();
@@ -136,13 +139,32 @@ public class GameStateController implements ViewCleanup {
                     }
                 },vm.getCurrentPlayerId(),vm.getCurrentTurnState()
                 ));
+        playerTurnLabel.graphicProperty().bind(Bindings.createObjectBinding(
+                () -> {
+                    String currentId = vm.getCurrentPlayerId().get();
+                    PlayerStateItem playerStateTurn;
+                    if(currentId != null) {
+                        playerStateTurn = vm.getPlayerStates().stream().filter(playerItem -> playerItem.getPlayerInfo().getId().equals(currentId)).findFirst().orElse(null);
+                    } else {
+                        String currentId2 = vm.getPlayerTurnId().get();
+                        playerStateTurn = vm.getPlayerStates().stream().filter(playerItem -> playerItem.getPlayerInfo().getId().equals(currentId2)).findFirst().orElse(null);
+                    }
+
+                    if (playerStateTurn != null) {
+                        return new Circle(6, PlayerPawnUtils.mapPlayerColorToFxColor(playerStateTurn.getPlayerInfo().getColor()));
+                    }
+                    return null;
+                },
+                vm.getCurrentPlayerId(), vm.getCurrentTurnState(), vm.getPlayerTurnId()
+        ));
+
 
 
         //player labels
         List<PlayerStateItem> playerStates = vm.getPlayerStates();
         for (int i = 0; i < playerStates.size(); i++) {
             // Show the box
-            javafx.scene.layout.HBox box = getPlayerBoxByIndex(i);
+            HBox box = getPlayerBoxByIndex(i);
             box.setVisible(true);
             box.setManaged(true);
 
@@ -157,18 +179,18 @@ public class GameStateController implements ViewCleanup {
                 .filter(playerItem -> playerItem.getPlayerInfo().getId().equals(vm.getClientPlayer().getId())).findFirst().get();
 
 
-        idToPlayerLabel.get(vm.getClientPlayer().getId()).textProperty().bind(javafx.beans.binding.Bindings.createStringBinding(
+        // put clientPlayer always on top
+        idToPlayerLabel.get(vm.getClientPlayer().getId()).textProperty().bind(Bindings.createStringBinding(
                 () -> {
 
                     String name = playerStateClient.getPlayerInfo().getName();
 
-                    return name + " (" + playerStateClient.getTreasuresFound().size() + " / " + playerStateClient.getRemainingTreasureCount() + ")";
+                    return "Du: "+ name + " (" + playerStateClient.getTreasuresFound().size() + " / " + playerStateClient.getRemainingTreasureCount() + ")";
                 }, playerStateClient.getTreasuresFound()
         ));
-
         playerStates.subList(1, playerStates.size()).forEach(playerState -> {
             Label playerLabel = idToPlayerLabel.get(playerState.getPlayerInfo().getId());
-            playerLabel.textProperty().bind(javafx.beans.binding.Bindings.createStringBinding(
+            playerLabel.textProperty().bind(Bindings.createStringBinding(
                     () -> {
                         String name = playerState.getPlayerInfo().getName();
                         return name + " (" + playerState.getTreasuresFound().size() + " / " + playerState.getRemainingTreasureCount() + ")";
@@ -215,7 +237,7 @@ public class GameStateController implements ViewCleanup {
             // Add null check for newValue
             if (newValue != null) {
                 extraTile.imageProperty().bind(
-                        javafx.beans.binding.Bindings.createObjectBinding(
+                        Bindings.createObjectBinding(
                                 () -> {
                                     System.out.println("extra tile image binding");
                                     return newValue.getTileImage().get();
@@ -227,7 +249,7 @@ public class GameStateController implements ViewCleanup {
         if (vm.getExtraTile().get() != null) {
             TileItem currentTile = vm.getExtraTile().get();
             extraTile.imageProperty().bind(
-                    javafx.beans.binding.Bindings.createObjectBinding(
+                    Bindings.createObjectBinding(
                             () -> currentTile.getTileImage().get(),
                             vm.getExtraTile(), currentTile.getRotation()
                     ));
@@ -340,8 +362,8 @@ public class GameStateController implements ViewCleanup {
             boardGrid.setGridLinesVisible(true);
 
 
-            if (gameContainer.getParent() instanceof javafx.scene.layout.Region parent) {
-                var squareSize = javafx.beans.binding.Bindings.min(parent.widthProperty(), parent.heightProperty())
+            if (gameContainer.getParent() instanceof Region parent) {
+                var squareSize = Bindings.min(parent.widthProperty(), parent.heightProperty())
                         .subtract(20); // padding
 
                 gameContainer.minWidthProperty().bind(squareSize);
@@ -415,19 +437,18 @@ public class GameStateController implements ViewCleanup {
 
                     int finalRow = row;
                     int finalCol = col;
-                    Optional<PlayerStateItem> playerStateItemOptional = vm.getPlayerStates().stream().filter(player -> player.getCurrentPosition().getY().get() == finalCol
-                            && player.getCurrentPosition().getX().get() == finalRow).findFirst();
+                    Optional<PlayerStateItem> playerStateItemOptional = vm.getPlayerStates().stream().filter(player -> player.getCurrentPosition().getY().get() == finalRow
+                            && player.getCurrentPosition().getX().get() == finalCol).findFirst();
                     if (playerStateItemOptional.isPresent()) {
                         PlayerColor playerColor = playerStateItemOptional.get().getPlayerInfo().colorProperty().get();
-                        System.out.println("Player found at: " + playerStateItemOptional.get().getPlayerInfo().getName()+ " -> x: " + finalRow + ", y:" + finalCol);
                         Circle playerPawn = new Circle(10, PlayerPawnUtils.mapPlayerColorToFxColor(playerColor));
+                        playerPawn.setOpacity(0.7);
                         cellContainer.getChildren().add(playerPawn);
                     }
 
 
                     //set mouse clicks tuff for move Phase
                     cellContainer.setOnMouseClicked(event -> {
-                        System.out.println("Clicked: " + finalRow + ", " + finalCol);
                          vm.movePawnCommand(finalRow, finalCol);
                     });
                     BooleanBinding isMyTurnAndMovePhase = Bindings.createBooleanBinding(
@@ -439,9 +460,9 @@ public class GameStateController implements ViewCleanup {
                     boardGrid.add(cellContainer, col, row);
                     cellContainer.mouseTransparentProperty().bind(isMyTurnAndMovePhase.not());
                     cellContainer.cursorProperty().bind(
-                            javafx.beans.binding.Bindings.when(isMyTurnAndMovePhase)
-                                    .then(javafx.scene.Cursor.HAND)
-                                    .otherwise(javafx.scene.Cursor.DEFAULT)
+                            Bindings.when(isMyTurnAndMovePhase)
+                                    .then(Cursor.HAND)
+                                    .otherwise(Cursor.DEFAULT)
                     );
 
                 }
@@ -456,30 +477,84 @@ public class GameStateController implements ViewCleanup {
     //todo rework for dynamic buttons with different board sizes
     private void initPushTileButtons() {
         arrowTop1.setOnAction(_ -> pushTileCommand(1, Direction.DOWN, vm.getExtraTile().get().getDirections().toArray(Direction[]::new)));
+        arrowTop1.disableProperty().bind(isMyTurnAndPushPhase());
+
         arrowTop3.setOnAction(_ -> pushTileCommand(3, Direction.DOWN, vm.getExtraTile().get().getDirections().toArray(Direction[]::new)));
+        arrowTop3.disableProperty().bind(isMyTurnAndPushPhase());
+
         arrowTop5.setOnAction(_ -> pushTileCommand(5, Direction.DOWN, vm.getExtraTile().get().getDirections().toArray(Direction[]::new)));
+        arrowTop5.disableProperty().bind(isMyTurnAndPushPhase());
+
         arrowBottom1.setOnAction(_ -> pushTileCommand(1, Direction.UP, vm.getExtraTile().get().getDirections().toArray(Direction[]::new)));
+        arrowBottom1.disableProperty().bind(isMyTurnAndPushPhase());
+
         arrowBottom3.setOnAction(_ -> pushTileCommand(3, Direction.UP, vm.getExtraTile().get().getDirections().toArray(Direction[]::new)));
+        arrowBottom3.disableProperty().bind(isMyTurnAndPushPhase());
+
         arrowBottom5.setOnAction(_ -> pushTileCommand(5, Direction.UP, vm.getExtraTile().get().getDirections().toArray(Direction[]::new)));
+        arrowBottom5.disableProperty().bind(isMyTurnAndPushPhase());
+
         arrowLeft1.setOnAction(_ -> pushTileCommand(1, Direction.RIGHT, vm.getExtraTile().get().getDirections().toArray(Direction[]::new)));
+        arrowLeft1.disableProperty().bind(isMyTurnAndPushPhase());
+
         arrowLeft3.setOnAction(_ -> pushTileCommand(3, Direction.RIGHT, vm.getExtraTile().get().getDirections().toArray(Direction[]::new)));
+        arrowLeft3.disableProperty().bind(isMyTurnAndPushPhase());
+
         arrowLeft5.setOnAction(_ -> pushTileCommand(5, Direction.RIGHT, vm.getExtraTile().get().getDirections().toArray(Direction[]::new)));
+        arrowLeft5.disableProperty().bind(isMyTurnAndPushPhase());
+
         arrowRight1.setOnAction(_ -> pushTileCommand(1, Direction.LEFT, vm.getExtraTile().get().getDirections().toArray(Direction[]::new)));
+        arrowRight1.disableProperty().bind(isMyTurnAndPushPhase());
+
         arrowRight3.setOnAction(_ -> pushTileCommand(3, Direction.LEFT, vm.getExtraTile().get().getDirections().toArray(Direction[]::new)));
+        arrowRight3.disableProperty().bind(isMyTurnAndPushPhase());
+
         arrowRight5.setOnAction(_ -> pushTileCommand(5, Direction.LEFT, vm.getExtraTile().get().getDirections().toArray(Direction[]::new)));
+        arrowRight5.disableProperty().bind(isMyTurnAndPushPhase());
+
+    }
+
+    // todo: rework for api > 0.0.5??
+    private BooleanBinding isMyTurnAndPushPhase() {
+        return Bindings.createBooleanBinding(
+                () -> {
+
+                    // after game Start & first turn phase
+                    if (vm.getCurrentPlayerId().isNull().get()) {
+                        return !vm.getPlayerTurnId().get().equals(vm.getClientPlayer().getId());
+                    }
+                    //after first GAME_UPDATE_STATE event
+                    return ! (vm.getCurrentPlayerId().get().equals(vm.getClientPlayer().getId())
+                            && vm.getCurrentTurnState().get().equals(TurnState.WAITING_FOR_PUSH));
+                }, vm.getCurrentPlayerId(), vm.getCurrentTurnState(), vm.getPlayerTurnId()
+        );
     }
 
     private void pushTileCommand(int index, Direction pushDirection, Direction[] extraTileEntrances) {
-        if (vm.getGameBoardItem().lastPushProperty().get() != null) {
-            if (! (vm.getGameBoardItem().lastPushProperty().get().getDirection().equals(pushDirection)
-                    && vm.getGameBoardItem().getLastPush().getRowOrColIndex().equals(index))) {
-                vm.pushTileCommand(index, pushDirection, extraTileEntrances);
-            } else {
-                showAlertModal("Invalid push", "Invalid push", "You cannot push the tile in the same direction as the last push!");
-            }
-        } else {
+        if (! checkIfPushRevertsLastPush(index, pushDirection)) {
             vm.pushTileCommand(index, pushDirection, extraTileEntrances);
+        } else {
+            //todo rework error display
+            showAlertModal("Invalid push", "Invalid push", "You cannot push the tile in the same direction as the last push!");
         }
+    }
+    private boolean checkIfPushRevertsLastPush(int index, Direction pushDirection) {
+        GameBoardItem gameBoardItem = vm.getGameBoardItem();
+        ObjectProperty<PushActionInfo> lastPush = gameBoardItem.lastPushProperty();
+        if (lastPush.isNull().get()) return false;
+        if (! lastPush.get().getRowOrColIndex().equals(index)) return false;
+
+        Direction lastPushDirection = lastPush.get().getDirection();
+        return isOppositeDirection(pushDirection, lastPushDirection);
+
+    }
+    private boolean isOppositeDirection(Direction pushDirection, Direction lastPushDirection) {
+        return switch (pushDirection) {
+            case UP -> lastPushDirection == Direction.DOWN;
+            case DOWN -> lastPushDirection == Direction.UP;
+            case LEFT -> lastPushDirection == Direction.RIGHT;
+            case RIGHT -> lastPushDirection == Direction.LEFT;
+        };
     }
 
 
@@ -594,7 +669,7 @@ public class GameStateController implements ViewCleanup {
     }
 
     // Helper to get boxes
-    private javafx.scene.layout.HBox getPlayerBoxByIndex(int index) {
+    private HBox getPlayerBoxByIndex(int index) {
         return switch (index) {
             case 0 -> player1Box;
             case 1 -> player2Box;
