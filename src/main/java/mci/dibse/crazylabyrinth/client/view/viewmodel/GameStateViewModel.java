@@ -4,6 +4,7 @@ package mci.dibse.crazylabyrinth.client.view.viewmodel;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.value.ChangeListener;
 import labyrinth.contracts.models.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -66,6 +67,16 @@ public class GameStateViewModel implements ViewCleanup, PlayerConnectedAckListen
         lobbyService.addPlayerListener(this);
         this.clientCommandService = clientCommandService;
         this.navigationController = navigationController;
+        
+        
+        
+        //cleanup hook -> refactor
+        navState.getCurrentScreen().addListener((observable, oldValue, newValue) -> {
+            if (oldValue == NavigationStateViewModel.ScreenId.GAMEBOARD &&
+                    (newValue == NavigationStateViewModel.ScreenId.LOBBY || newValue == NavigationStateViewModel.ScreenId.MAIN)) {
+                cleanup();
+            }
+        });
     }
     // private final SimpleObjectProperty<Map<String, Object>> additionalProperties = new SimpleObjectProperty<>();
 
@@ -136,15 +147,30 @@ public class GameStateViewModel implements ViewCleanup, PlayerConnectedAckListen
         else javafx.application.Platform.runLater(task);
     }
 
+//todo refactor
 
+    
 
     @Override
     public void cleanup() {
         gameBoardItem.dispose();
         playerStates.forEach(PlayerStateItem::dispose);
         this.gameBoardItem = null;
-        this.playerStates = null;
-        //TODO something to do here?
+        this.playerStates.clear();
+        this.currentTurnState.unbind();
+        this.currentTurnState.set(null);
+        this.additionalProperties.unbind();
+        this.additionalProperties.set(null);
+        this.nextTeasure.unbind();
+        this.nextTeasure.set(null);
+        this.currentPlayerId.unbind();
+        this.currentPlayerId.set(null);
+        this.playerTurnId.unbind();
+        this.playerTurnId.set(null);
+        this.extraTile.unbind();
+        this.extraTile.set(null);
+        this.turnTimeLimitSeconds.unbind();
+        this.turnTimeLimitSeconds.set(0);
     }
 
     public String mapTurnStateToLabel(TurnState turnState){

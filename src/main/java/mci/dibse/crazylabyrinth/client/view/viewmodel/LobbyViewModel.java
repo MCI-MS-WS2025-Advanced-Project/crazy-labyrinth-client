@@ -2,6 +2,7 @@ package mci.dibse.crazylabyrinth.client.view.viewmodel;
 
 import jakarta.annotation.PostConstruct;
 import javafx.beans.property.StringProperty;
+import javafx.collections.ObservableList;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import mci.dibse.crazylabyrinth.client.domain.context.ApplicationEvents;
@@ -67,7 +68,7 @@ public class LobbyViewModel implements LobbyStateUpdateListener, PlayerConnected
         navState.navigateTo(NavigationStateViewModel.ScreenId.LOBBY);
     }
 
-    public List<PlayerInfoItem> getPlayers() {
+    public ObservableList<PlayerInfoItem> getPlayersListProperty() {
         return lobbyStateItem.getPlayerList();
     }
     public StringProperty getGameNameProperty() {
@@ -102,6 +103,7 @@ public class LobbyViewModel implements LobbyStateUpdateListener, PlayerConnected
         this.gameInfo = gameInfo;
     }
 
+    //fired when back to lobby button is clicked
     @EventListener
     public void handleLobbyNavigationEvent(ApplicationEvents event) {
         if (event == BACK_TO_GAME_SERVER_DASHBOARD) {
