@@ -53,6 +53,8 @@ public class NavigationController {
         try {
             Parent mainRoot = viewLoader.loadFXML(MAIN_VIEW);
             Scene scene = new Scene(mainRoot);
+            primaryStage.setMinWidth(350);
+            primaryStage.setMinHeight(400);
             primaryStage.setScene(scene);
             primaryStage.setTitle("The Amazing Labyrinth");
             primaryStage.show();
@@ -65,6 +67,7 @@ public class NavigationController {
         String viewFile = mapScreenIdToFile(newScreen);
         try {
             Parent mainRoot = viewLoader.loadFXML(viewFile);
+            setStageMinMaxByScreenId(newScreen);
             setUpStageAndScene(mainRoot);
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -86,5 +89,18 @@ public class NavigationController {
             case RESULTS -> RESULTS_VIEW;
             default -> MAIN_VIEW;
         };
+    }
+
+    private void setStageMinMaxByScreenId(NavigationStateViewModel.ScreenId newScreen) {
+        switch (newScreen) {
+            case MAIN -> setStageMinMaxSizes(712, 400);
+            case LOBBY -> setStageMinMaxSizes(800, 450);
+            case GAMEBOARD -> setStageMinMaxSizes(1024, 768);
+        }
+    }
+
+    private void setStageMinMaxSizes(int width, int height) {
+        primaryStage.setMinWidth(width);
+        primaryStage.setMinHeight(height);
     }
 }

@@ -51,6 +51,9 @@ public class LobbyStateItem implements Disposable{
                 if (change.wasAdded()) playerList.add(change.getValueAdded());
                 if (change.wasRemoved()) playerList.remove(change.getValueRemoved());
                 this.playerCount.set(String.valueOf(playerList.size()));
+
+                System.out.println("LobbyStateItem: MapChangeListener: palsyerlist" + playerList.size());
+                 System.out.println("LobbyStateItem: MapChangeListener: playerCount" + playerCount.getValue());
             };
             if (javafx.application.Platform.isFxApplicationThread()) apply.run();
             else javafx.application.Platform.runLater(apply);
@@ -109,11 +112,16 @@ public class LobbyStateItem implements Disposable{
         // Remove players that are no longer in the source list
         byId.keySet().removeIf(playerId ->
                 playerInfos.stream().noneMatch(info -> info.getId().equals(playerId)));
-       System.out.println("LobbyStateItem: playerInfos: " + playerInfos.size());
+
+       System.out.println("LobbyStateItem: incoming playerInfos: " + playerInfos.size());
+
         this.playerCount.set(String.valueOf(playerInfos.size()));
         playerInfos.stream()
                 .map(this::playerItemFromPlayerInfo)
                 .forEach(item -> {byId.putIfAbsent(item.getId(), item);});
+
+        System.out.println("LobbyStateItem: byId: " + byId.size());
+        System.out.println("LobbyStateItem: playerList: " + playerList.size());
 
         additionalProperties.set(source.getAdditionalProperties());
     }

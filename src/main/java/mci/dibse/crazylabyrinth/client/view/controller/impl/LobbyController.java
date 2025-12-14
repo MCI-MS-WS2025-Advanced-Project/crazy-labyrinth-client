@@ -1,5 +1,7 @@
 package mci.dibse.crazylabyrinth.client.view.controller.impl;
 
+import javafx.animation.PauseTransition;
+import javafx.beans.binding.Bindings;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 
@@ -9,6 +11,7 @@ import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
+import javafx.util.Duration;
 import labyrinth.contracts.models.PlayerColor;
 
 import mci.dibse.crazylabyrinth.client.domain.model.record.StartGameRecord;
@@ -59,6 +62,8 @@ public class LobbyController implements ViewCleanup {
 
     @FXML private ListView<String> playerList;
     @FXML private Button startGameButton;
+    private final BooleanProperty isStartButtonLocked = new SimpleBooleanProperty(false);
+
 
 
     @Autowired
@@ -69,10 +74,13 @@ public class LobbyController implements ViewCleanup {
 
     @FXML
     public void initialize() {
-        System.out.println("LobbyController initialized");
-        playerTable.setItems((ObservableList<PlayerInfoItem>) lobbyViewModel.getPlayers());
+
+        playerTable.setItems((ObservableList<PlayerInfoItem>) lobbyViewModel.getPlayersListProperty());
         setUpTableColumns();
-        startGameButton.setDisable(false);
+        startGameButton.disableProperty().bind(Bindings.createBooleanBinding(
+                () -> !(lobbyViewModel.getPlayersListProperty().size() > 1) ||isStartButtonLocked.get(),
+                lobbyViewModel.getPlayersListProperty(), isStartButtonLocked
+                ));
 
         clientAdmin.set(lobbyViewModel.isClientAdmin());
         adminSettings.visibleProperty().bind(clientAdmin);
@@ -85,7 +93,7 @@ public class LobbyController implements ViewCleanup {
 
         boardSizeCombo.setValue(mapBoardSizeToLabel(lobbyViewModel.getDefaultBoardSize()));
 
-        SpinnerValueFactory<Integer> valueFactory = new SpinnerValueFactory.IntegerSpinnerValueFactory(2, 6, 6);
+        SpinnerValueFactory<Integer> valueFactory = new SpinnerValueFactory.IntegerSpinnerValueFactory(1, 6, 6);
         treasureCardsSpinner.setValueFactory(valueFactory);
 
         //TODO min max??
@@ -132,7 +140,11 @@ public class LobbyController implements ViewCleanup {
      */
     @FXML
     public void onStartButtonClick() {
-        startGameButton.setDisable(true);
+        isStartButtonLocked.set(true);
+        PauseTransition pause = new PauseTransition(Duration.seconds(3));
+        pause.setOnFinished(e -> isStartButtonLocked.set(false));
+        pause.play();
+
         int treasureCardCount = treasureCardsSpinner.getValue();
         treasureCardCount = treasureCardCount * Integer.parseInt(connectedPlayers.getText());
         //TODO impl
