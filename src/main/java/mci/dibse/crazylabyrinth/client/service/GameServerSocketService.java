@@ -27,7 +27,7 @@ public class GameServerSocketService {
     // TODO remove = test method
     public String connectToServer(String serverUrl, String json) {
 
-        serverUrl = "ws://127.0.0.1:9001/game";
+    //    serverUrl = "ws://127.0.0.1:9001/game";
       //  serverUrl = "ws://192.168.178.24:9001/";
         client.connect(serverUrl);
         client.sendMessage(json);
