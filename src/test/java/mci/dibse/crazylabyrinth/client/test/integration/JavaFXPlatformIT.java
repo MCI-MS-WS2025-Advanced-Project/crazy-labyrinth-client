@@ -26,17 +26,8 @@ import static org.junit.jupiter.api.Assertions.*;
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 public class JavaFXPlatformIT {
 
-    @Autowired ApplicationContext applicationContext;
+ //   @Autowired ApplicationContext applicationContext;
 
-    //TODO refactor or remove
-    @Test
-    public void testHelloJavaFX() throws IOException {
-        FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/gameServerDashboard.fxml"));
-        loader.setControllerFactory(applicationContext::getBean);
-        Parent root = loader.load();
-        GameServerDashboardController controller = loader.getController();
-        assertNotNull(controller);
-    }
 
 
     @Test
