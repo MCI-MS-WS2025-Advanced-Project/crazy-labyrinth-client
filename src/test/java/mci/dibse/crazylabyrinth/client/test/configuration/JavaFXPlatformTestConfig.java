@@ -1,11 +1,11 @@
 package mci.dibse.crazylabyrinth.client.test.configuration;
 
+import static org.mockito.Mockito.mock;
+
 import javafx.application.Platform;
 import mci.dibse.crazylabyrinth.client.view.viewmodel.GameServerDashboardViewModel;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
-
-import static org.mockito.Mockito.mock;
 
 /**
  *  @author Julian Janetschek
@@ -20,10 +20,9 @@ public class JavaFXPlatformTestConfig {
         }
     }
 
-
-    //to avoid invoking modal on screen
+    // to avoid invoking modal on screen
     @Bean
-    GameServerDashboardViewModel gameServerDashboardViewModel(){
+    GameServerDashboardViewModel gameServerDashboardViewModel() {
         return mock(GameServerDashboardViewModel.class);
     }
 }

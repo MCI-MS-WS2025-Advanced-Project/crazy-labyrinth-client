@@ -34,10 +34,9 @@ import org.springframework.web.client.HttpServerErrorException;
 @Component
 public class ManagementServerClient {
 
-    private static final int HTTP_OK                = 200;
-    private static final int HTTP_SERVER_ERROR      = 500;
-    private static final String PATH_GET_SERVERS    = "/servers";
-
+    private static final int HTTP_OK = 200;
+    private static final int HTTP_SERVER_ERROR = 500;
+    private static final String PATH_GET_SERVERS = "/servers";
 
     private final String managementServerUrl;
     private final String port;
@@ -57,7 +56,6 @@ public class ManagementServerClient {
                         .followRedirects(HttpClient.Redirect.NORMAL)
                         .build();
     }
-
 
     public String getGameServers() throws GameManagementServerException {
         try {
@@ -83,7 +81,8 @@ public class ManagementServerClient {
             throw new GameManagementServerException("Unknown host", e);
         } catch (HttpServerErrorException e) {
             log.error("HttpServerError error", e);
-            throw new GameManagementServerException("HttpServerError: " + e.getStatusCode(), e, e.getResponseBodyAsString());
+            throw new GameManagementServerException(
+                    "HttpServerError: " + e.getStatusCode(), e, e.getResponseBodyAsString());
         } catch (IOException e) {
             log.error("I/O error during request", e);
             throw new GameManagementServerException("I/O error during request", e);
@@ -116,15 +115,14 @@ public class ManagementServerClient {
         }
     }
 
-    private HttpServerErrorException createDetailedServerErrorException(HttpResponse<String> response) {
+    private HttpServerErrorException createDetailedServerErrorException(
+            HttpResponse<String> response) {
         return new HttpServerErrorException(
                 HttpStatus.valueOf(response.statusCode()),
                 "Internal Server Error",
                 response.body().getBytes(java.nio.charset.StandardCharsets.UTF_8),
-                java.nio.charset.StandardCharsets.UTF_8
-        );
+                java.nio.charset.StandardCharsets.UTF_8);
     }
-
 
     private URI buildServerUri() {
         String base = managementServerUrl == null ? "" : managementServerUrl.trim();

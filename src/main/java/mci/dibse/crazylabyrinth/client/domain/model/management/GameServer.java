@@ -1,6 +1,5 @@
 package mci.dibse.crazylabyrinth.client.domain.model.management;
 
-
 import java.beans.PropertyChangeSupport;
 import java.net.URI;
 import java.time.Instant;
@@ -30,7 +29,6 @@ import mci.dibse.crazylabyrinth.client.infrastructure.api.dto.GameServerDTO;
 @Setter
 public class GameServer {
 
-
     private UUID id;
 
     private String name;
@@ -44,8 +42,6 @@ public class GameServer {
     private GameStatus status;
 
     private Instant lastSeen;
-
-
 
     /**
      * Creates a GameServer instance from a GameServerDTO.
@@ -93,20 +89,25 @@ public class GameServer {
         this.lastSeen = lastSeen;
     }
 
-
-
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder("GameServer{");
-        sb.append("id=").append(id)
-                .append(", name='").append(name).append('\'')
-                .append(", uri=").append(uri)
-                .append(", maxPlayers=").append(maxPlayers)
-                .append(", currentPlayerCount=").append(currentPlayerCount)
-                .append(", status=").append(status)
-                .append(", lastSeen=").append(lastSeen)
+        sb.append("id=")
+                .append(id)
+                .append(", name='")
+                .append(name)
+                .append('\'')
+                .append(", uri=")
+                .append(uri)
+                .append(", maxPlayers=")
+                .append(maxPlayers)
+                .append(", currentPlayerCount=")
+                .append(currentPlayerCount)
+                .append(", status=")
+                .append(status)
+                .append(", lastSeen=")
+                .append(lastSeen)
                 .append('}');
         return sb.toString();
-
     }
 }

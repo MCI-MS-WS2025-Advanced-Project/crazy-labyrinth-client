@@ -9,10 +9,8 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class BaseTestConfiguration {
 
-
     @Bean
     Application app() {
         return Mockito.mock(JavaFXClientApplication.class);
     }
-
 }

@@ -25,7 +25,7 @@ import org.springframework.core.io.support.ResourcePropertySource;
  * without the full Boot stack when only a minimal container is required while
  * still supporting complete Boot features are needed.
  *
- * @author Julian Janetschek
+ *
  */
 @Slf4j
 public class SpringBootConfiguration {

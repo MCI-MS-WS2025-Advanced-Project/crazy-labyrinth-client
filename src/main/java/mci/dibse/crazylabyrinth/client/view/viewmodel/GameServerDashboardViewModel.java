@@ -1,7 +1,8 @@
 package mci.dibse.crazylabyrinth.client.view.viewmodel;
 
-import java.util.*;
+import static mci.dibse.crazylabyrinth.client.infrastructure.util.JavaFXUtils.runOnFxThread;
 
+import java.util.*;
 import javafx.beans.Observable;
 import javafx.beans.property.*;
 import javafx.beans.value.ChangeListener;
@@ -12,9 +13,11 @@ import javafx.collections.ObservableMap;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
 import lombok.Getter;
-import mci.dibse.crazylabyrinth.client.domain.model.management.GameServer;
 import mci.dibse.crazylabyrinth.client.domain.model.enums.GameStatus;
+import mci.dibse.crazylabyrinth.client.domain.model.management.GameServer;
+import mci.dibse.crazylabyrinth.client.domain.model.record.GameInfoRecord;
 import mci.dibse.crazylabyrinth.client.infrastructure.exceptions.GeneralUiException;
+import mci.dibse.crazylabyrinth.client.service.ClientCommandService;
 import mci.dibse.crazylabyrinth.client.service.GameServerManagementService;
 import mci.dibse.crazylabyrinth.client.service.GameServerUpdateListener;
 import mci.dibse.crazylabyrinth.client.view.controller.impl.BaseViewCleanup;
@@ -22,8 +25,6 @@ import mci.dibse.crazylabyrinth.client.view.viewmodel.item.GameServerItem;
 import mci.dibse.crazylabyrinth.client.view.viewmodel.navigation.NavigationStateViewModel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
-import static mci.dibse.crazylabyrinth.client.infrastructure.util.JavaFXUtils.runOnFxThread;
 
 /**
  * ViewModel for the Game Server Dashboard, responsible for managing the state of available game servers.
@@ -35,34 +36,31 @@ import static mci.dibse.crazylabyrinth.client.infrastructure.util.JavaFXUtils.ru
  *
  *
  */
-
 @Component
-public class GameServerDashboardViewModel extends BaseViewCleanup implements GameServerUpdateListener {
+public class GameServerDashboardViewModel extends BaseViewCleanup
+        implements GameServerUpdateListener {
 
+    @Getter private final StringProperty errorMessage = new SimpleStringProperty();
+    @Getter private final BooleanProperty hasError = new SimpleBooleanProperty(false);
+    @Getter private final BooleanProperty isRefreshing = new SimpleBooleanProperty(false);
 
-    
-    @Getter 
-    private final StringProperty    errorMessage      = new SimpleStringProperty();
-    @Getter 
-    private final BooleanProperty   hasError          = new SimpleBooleanProperty(false);
-    @Getter 
-    private final BooleanProperty   isRefreshing      = new SimpleBooleanProperty(false);
-
-    
-    private final ObservableMap<UUID, GameServerItem>  serverMap = FXCollections.observableHashMap();
-    private final ObservableList<GameServerItem>       items;
-    private final FilteredList<GameServerItem>         filtered;
-    @Getter 
-    private final SortedList<GameServerItem>           sorted;
-    private final BooleanProperty                      onlyJoinable  = new SimpleBooleanProperty(false);
+    private final ObservableMap<UUID, GameServerItem> serverMap = FXCollections.observableHashMap();
+    private final ObservableList<GameServerItem> items;
+    private final FilteredList<GameServerItem> filtered;
+    @Getter private final SortedList<GameServerItem> sorted;
+    private final BooleanProperty onlyJoinable = new SimpleBooleanProperty(false);
 
     private final GameServerManagementService service;
+    private final ClientCommandService clientCommandService;
 
     private ChangeListener<Boolean> joinableListener;
     private MapChangeListener<UUID, GameServerItem> serverMapListener;
 
     @Autowired
-    public GameServerDashboardViewModel(GameServerManagementService service, NavigationStateViewModel navState) {
+    public GameServerDashboardViewModel(
+            GameServerManagementService service,
+            NavigationStateViewModel navState,
+            ClientCommandService clientCommandService) {
         super(navState);
         this.service = service;
 
@@ -72,17 +70,15 @@ public class GameServerDashboardViewModel extends BaseViewCleanup implements Gam
 
         setupFilteringAndSorting();
         registerListeners();
+        this.clientCommandService = clientCommandService;
     }
 
-    //todo test
+    // todo test
     @Override
     public void cleanup() {
         onlyJoinable.removeListener(joinableListener);
         serverMap.removeListener(serverMapListener);
         filtered.setPredicate(null);
-        filtered.clear();
-        sorted.setComparator(null);
-        sorted.clear();
         serverMap.clear();
         items.forEach(GameServerItem::dispose);
         items.clear();
@@ -92,11 +88,13 @@ public class GameServerDashboardViewModel extends BaseViewCleanup implements Gam
     }
 
     @Override
-    protected boolean customCleanupCheckpoint(NavigationStateViewModel.ScreenId oldValue, NavigationStateViewModel.ScreenId newValue) {
-        return oldValue != null && !newValue.equals(NavigationStateViewModel.ScreenId.MAIN);
+    protected boolean customCleanupCheckpoint(
+            NavigationStateViewModel.ScreenId oldValue,
+            NavigationStateViewModel.ScreenId newValue) {
+        return newValue != null
+                && NavigationStateViewModel.ScreenId.MAIN.equals(oldValue)
+                && !NavigationStateViewModel.ScreenId.MAIN.equals(newValue);
     }
-
-
 
     public BooleanProperty onlyJoinableProperty() {
         return onlyJoinable;
@@ -113,14 +111,15 @@ public class GameServerDashboardViewModel extends BaseViewCleanup implements Gam
             service.refreshGameServerList();
         } catch (GeneralUiException e) {
             clearServerMap();
-            String message = (Objects.nonNull(e.getErrorResponse()))
-                    ? e.getErrorResponse().getMessage() : e.getMessage();
+            String message =
+                    (Objects.nonNull(e.getErrorResponse()))
+                            ? e.getErrorResponse().getMessage()
+                            : e.getMessage();
             setError(message);
         } finally {
             setRefreshing(false);
         }
     }
-
 
     private void setupFilteringAndSorting() {
         filtered.setPredicate(this::matchesJoinable);
@@ -129,36 +128,38 @@ public class GameServerDashboardViewModel extends BaseViewCleanup implements Gam
     private void registerListeners() {
         this.service.addListener(this);
         // Keep items list in sync with map changes
-        joinableListener   = (obs, o, n) -> filtered.setPredicate(this::matchesJoinable);
+        joinableListener = (obs, o, n) -> filtered.setPredicate(this::matchesJoinable);
         onlyJoinable.addListener(joinableListener);
 
-        serverMapListener = (MapChangeListener<UUID, GameServerItem>) ch -> runOnFxThread(() -> updateListFromChange(ch));
+        serverMapListener =
+                (MapChangeListener<UUID, GameServerItem>)
+                        ch -> runOnFxThread(() -> updateListFromChange(ch));
         serverMap.addListener(serverMapListener);
     }
 
-
     private Observable[] extractObservables(GameServerItem item) {
-        return new Observable[]{
-                item.nameProperty(),
-                item.statusProperty(),
-                item.currentPlayerCountProperty(),
-                item.lastSeenProperty()
-                
+        return new Observable[] {
+            item.nameProperty(),
+            item.statusProperty(),
+            item.currentPlayerCountProperty(),
+            item.lastSeenProperty()
         };
     }
 
-    private void updateListFromChange(MapChangeListener.Change<? extends UUID, ? extends GameServerItem> ch) {
+    private void updateListFromChange(
+            MapChangeListener.Change<? extends UUID, ? extends GameServerItem> ch) {
         if (ch.wasRemoved()) items.remove(ch.getValueRemoved());
         if (ch.wasAdded()) items.add(ch.getValueAdded());
     }
-    
 
     private void applyServer(Collection<GameServer> servers) {
-        runOnFxThread(() -> {
-            upsertServers(servers);
-            removeStaleServers(servers);
-        });
+        runOnFxThread(
+                () -> {
+                    upsertServers(servers);
+                    removeStaleServers(servers);
+                });
     }
+
     private void upsertServers(Collection<GameServer> servers) {
         for (GameServer server : servers) {
             GameServerItem item = serverMap.get(server.getId());
@@ -169,21 +170,23 @@ public class GameServerDashboardViewModel extends BaseViewCleanup implements Gam
             }
         }
     }
+
     private void removeStaleServers(Collection<GameServer> servers) {
-        Set<UUID> incomingIds = servers.stream()
-                .map(GameServer::getId)
-                .collect(java.util.stream.Collectors.toSet());
+        Set<UUID> incomingIds =
+                servers.stream()
+                        .map(GameServer::getId)
+                        .collect(java.util.stream.Collectors.toSet());
 
         serverMap.keySet().removeIf(id -> !incomingIds.contains(id));
     }
 
-    
     private boolean matchesJoinable(GameServerItem item) {
         if (!onlyJoinable.get()) return true;
         if (item == null) return false;
-        
+
         boolean isLobby = GameStatus.LOBBY.equals(item.getStatus().getValue());
-        boolean hasCapacity = item.getCurrentPlayerCount().getValue() < item.getMaxPlayers().getValue();
+        boolean hasCapacity =
+                item.getCurrentPlayerCount().getValue() < item.getMaxPlayers().getValue();
         return isLobby && hasCapacity;
     }
 
@@ -192,29 +195,38 @@ public class GameServerDashboardViewModel extends BaseViewCleanup implements Gam
     }
 
     private void clearError() {
-        runOnFxThread( () -> {
-            errorMessage.set(null);
-            hasError.set(false);
-        });
+        runOnFxThread(
+                () -> {
+                    errorMessage.set(null);
+                    hasError.set(false);
+                });
     }
 
     private void setError(String message) {
-        runOnFxThread(() -> {
-            errorMessage.set(message);
-            hasError.set(true);
-            isRefreshing.set(false);
-        });
+        runOnFxThread(
+                () -> {
+                    errorMessage.set(message);
+                    hasError.set(true);
+                    isRefreshing.set(false);
+                });
     }
 
     private void setRefreshing(boolean refreshing) {
-        runOnFxThread(() -> {
-            isRefreshing.set(refreshing);
-            if (refreshing) {
-                hasError.set(false);
-                errorMessage.set(null);
-            }
-        });
+        runOnFxThread(
+                () -> {
+                    isRefreshing.set(refreshing);
+                    if (refreshing) {
+                        hasError.set(false);
+                        errorMessage.set(null);
+                    }
+                });
     }
 
-
+    public void joinSelectedServer(GameInfoRecord gameInfo) {
+        try {
+            clientCommandService.sendConnectCommand(gameInfo);
+        } catch (GeneralUiException e) {
+            setError(e.getMessage());
+        }
+    }
 }
