@@ -1,5 +1,7 @@
 package mci.dibse.crazylabyrinth.client.test.integration;
 
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+
 import java.io.IOException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -9,8 +11,11 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import mci.dibse.crazylabyrinth.client.test.configuration.JavaFXPlatformTestConfig;
 
+import mci.dibse.crazylabyrinth.client.test.configuration.MinimalTestConfig;
+import mci.dibse.crazylabyrinth.client.view.controller.impl.GameServerDashboardController;
+
 import mci.dibse.crazylabyrinth.client.test.configuration.SpringInitTestConfig;
-import mci.dibse.crazylabyrinth.client.view.controller.impl.HelloJavaFXController;
+
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
@@ -19,21 +24,15 @@ import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@SpringJUnitConfig({SpringInitTestConfig.class, JavaFXPlatformTestConfig.class})
+/**
+ *  @author Julian Janetschek
+ */
+@SpringJUnitConfig({MinimalTestConfig.class, JavaFXPlatformTestConfig.class})
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 public class JavaFXPlatformIT {
 
-    @Autowired ApplicationContext applicationContext;
+ //   @Autowired ApplicationContext applicationContext;
 
-    //TODO refactor or remove
-    @Test
-    public void testHelloJavaFX() throws IOException {
-        FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/helloJavaFX.fxml"));
-        loader.setControllerFactory(applicationContext::getBean);
-        Parent root = loader.load();
-        HelloJavaFXController controller = loader.getController();
-        assertNotNull(controller);
-    }
 
 
     @Test
