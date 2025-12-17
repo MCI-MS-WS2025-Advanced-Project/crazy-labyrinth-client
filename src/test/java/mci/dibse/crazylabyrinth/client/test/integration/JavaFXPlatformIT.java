@@ -1,5 +1,7 @@
 package mci.dibse.crazylabyrinth.client.test.integration;
 
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+
 import java.io.IOException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -11,6 +13,9 @@ import mci.dibse.crazylabyrinth.client.test.configuration.JavaFXPlatformTestConf
 
 import mci.dibse.crazylabyrinth.client.test.configuration.MinimalTestConfig;
 import mci.dibse.crazylabyrinth.client.view.controller.impl.GameServerDashboardController;
+
+import mci.dibse.crazylabyrinth.client.test.configuration.SpringInitTestConfig;
+
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
