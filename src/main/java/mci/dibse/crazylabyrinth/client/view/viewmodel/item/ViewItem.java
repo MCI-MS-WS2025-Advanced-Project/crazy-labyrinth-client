@@ -1,7 +1,5 @@
 package mci.dibse.crazylabyrinth.client.view.viewmodel.item;
 
-
-
 /**
  *       Interface for cleanup of unused references to avoid memory leaks
  *       Remove listener to prevent memory leaks
@@ -9,7 +7,6 @@ package mci.dibse.crazylabyrinth.client.view.viewmodel.item;
  *       Clear properties
  *       Clear references
  */
-
 public interface ViewItem {
 
     default void dispose() {}

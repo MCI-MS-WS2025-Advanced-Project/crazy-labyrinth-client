@@ -22,7 +22,7 @@ import mci.dibse.crazylabyrinth.client.infrastructure.api.dto.GameServerDTO;
 import mci.dibse.crazylabyrinth.client.infrastructure.exceptions.GameManagementServerException;
 import mci.dibse.crazylabyrinth.client.infrastructure.exceptions.GeneralUiException;
 import mci.dibse.crazylabyrinth.client.infrastructure.management.ManagementServerClient;
-import mci.dibse.crazylabyrinth.client.infrastructure.util.ObejctMapperConfig;
+import mci.dibse.crazylabyrinth.client.infrastructure.util.ObjectMapperConfig;
 import mci.dibse.crazylabyrinth.client.infrastructure.util.ValidatorConfig;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -36,11 +36,13 @@ import org.springframework.stereotype.Service;
 @Service
 public class GameServerManagementService {
 
-    private final String CUSTOMER_SERVICE_MESSAGE                   = " Please try again later ";
-    private final String GAME_MANAGEMENT_SERVER_EXCEPTION           = "Failed to retrieve game server list from management server.";
-    private final String GAME_MANAGEMENT_SERVER_PARSING_EXCEPTION   = "Failed to parse game server list from management server.";
-    private final String GAME_MANAGEMENT_SERVER_INVALID_EXCEPTION   = "Invalid game server list received from management server";
-
+    private final String CUSTOMER_SERVICE_MESSAGE = " Please try again later ";
+    private final String GAME_MANAGEMENT_SERVER_EXCEPTION =
+            "Failed to retrieve game server list from management server.";
+    private final String GAME_MANAGEMENT_SERVER_PARSING_EXCEPTION =
+            "Failed to parse game server list from management server.";
+    private final String GAME_MANAGEMENT_SERVER_INVALID_EXCEPTION =
+            "Invalid game server list received from management server";
 
     private final ManagementServerClient client;
 
@@ -74,16 +76,21 @@ public class GameServerManagementService {
             log.error(GAME_MANAGEMENT_SERVER_EXCEPTION, e);
             ErrorResponse errorResponse = null;
             try {
-                errorResponse =  processGameServerErrorResponseBody(e.getErrorResponseBody());
+                errorResponse = processGameServerErrorResponseBody(e.getErrorResponseBody());
             } catch (Exception errorException) {
                 log.error(GAME_MANAGEMENT_SERVER_EXCEPTION, errorException);
-                throwUiException(GAME_MANAGEMENT_SERVER_EXCEPTION + CUSTOMER_SERVICE_MESSAGE, errorException, null);
+                throwUiException(
+                        GAME_MANAGEMENT_SERVER_EXCEPTION + CUSTOMER_SERVICE_MESSAGE,
+                        errorException,
+                        null);
             }
-            throwUiException(GAME_MANAGEMENT_SERVER_EXCEPTION + CUSTOMER_SERVICE_MESSAGE, e , errorResponse);
+            throwUiException(
+                    GAME_MANAGEMENT_SERVER_EXCEPTION + CUSTOMER_SERVICE_MESSAGE, e, errorResponse);
         } catch (IOException | IllegalArgumentException e) {
-            String logMessage = (e instanceof IOException)
-                    ? GAME_MANAGEMENT_SERVER_PARSING_EXCEPTION
-                    : GAME_MANAGEMENT_SERVER_INVALID_EXCEPTION;
+            String logMessage =
+                    (e instanceof IOException)
+                            ? GAME_MANAGEMENT_SERVER_PARSING_EXCEPTION
+                            : GAME_MANAGEMENT_SERVER_INVALID_EXCEPTION;
             log.error(logMessage, e);
             throwUiException(GAME_MANAGEMENT_SERVER_EXCEPTION + CUSTOMER_SERVICE_MESSAGE, e, null);
         }
@@ -102,7 +109,7 @@ public class GameServerManagementService {
     }
 
     private List<GameServerDTO> parseGameServerDTOsFromBytes(byte[] raw) throws IOException {
-        ObjectMapper mapper = ObejctMapperConfig.createCustomObjectMapper();
+        ObjectMapper mapper = ObjectMapperConfig.createCustomObjectMapper();
         return mapper.readValue(raw, new TypeReference<List<GameServerDTO>>() {});
     }
 
@@ -148,16 +155,18 @@ public class GameServerManagementService {
         }
     }
 
-    private ErrorResponse processGameServerErrorResponseBody(String errorResponseBody) throws JsonProcessingException {
-        ObjectMapper mapper = ObejctMapperConfig.createCustomObjectMapper();
+    private ErrorResponse processGameServerErrorResponseBody(String errorResponseBody)
+            throws JsonProcessingException {
+        ObjectMapper mapper = ObjectMapperConfig.createCustomObjectMapper();
         ErrorResponse errorResponse = mapper.readValue(errorResponseBody, ErrorResponse.class);
         validateErrorResponse(errorResponse);
         return errorResponse;
     }
-    private void validateErrorResponse(ErrorResponse errorResponse) throws IllegalArgumentException {
+
+    private void validateErrorResponse(ErrorResponse errorResponse)
+            throws IllegalArgumentException {
         Validator validator = ValidatorConfig.createBeanValidator();
         Set<ConstraintViolation<ErrorResponse>> violations = validator.validate(errorResponse);
         if (!violations.isEmpty()) throw new IllegalArgumentException(violations.toString());
     }
-
 }

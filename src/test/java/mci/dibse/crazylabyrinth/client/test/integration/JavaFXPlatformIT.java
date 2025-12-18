@@ -1,28 +1,15 @@
 package mci.dibse.crazylabyrinth.client.test.integration;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 
-import java.io.IOException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
-
 import javafx.application.Platform;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Parent;
 import mci.dibse.crazylabyrinth.client.test.configuration.JavaFXPlatformTestConfig;
-
 import mci.dibse.crazylabyrinth.client.test.configuration.MinimalTestConfig;
-import mci.dibse.crazylabyrinth.client.view.controller.impl.GameServerDashboardController;
-
-import mci.dibse.crazylabyrinth.client.test.configuration.SpringInitTestConfig;
-
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 /**
  *  @author Julian Janetschek
@@ -31,19 +18,18 @@ import static org.junit.jupiter.api.Assertions.*;
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 public class JavaFXPlatformIT {
 
- //   @Autowired ApplicationContext applicationContext;
-
-
+    //   @Autowired ApplicationContext applicationContext;
 
     @Test
     void javafxToolkitIsInitialized_runLaterExecutesOnFxThread() throws Exception {
         CountDownLatch latch = new CountDownLatch(1);
         final boolean[] onFxThread = {false};
 
-        Platform.runLater(() -> {
-            onFxThread[0] = Platform.isFxApplicationThread();
-            latch.countDown();
-        });
+        Platform.runLater(
+                () -> {
+                    onFxThread[0] = Platform.isFxApplicationThread();
+                    latch.countDown();
+                });
 
         assertTrue(latch.await(2, TimeUnit.SECONDS), "runLater did not execute in time");
         assertTrue(onFxThread[0], "Task did not run on FX Application Thread");

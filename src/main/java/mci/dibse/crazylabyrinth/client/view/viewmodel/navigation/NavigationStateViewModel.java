@@ -3,7 +3,9 @@ package mci.dibse.crazylabyrinth.client.view.viewmodel.navigation;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import lombok.Getter;
+import mci.dibse.crazylabyrinth.client.infrastructure.util.JavaFXUtils;
 import org.springframework.stereotype.Component;
+
 /**
  *  View Model for the navigation state
  *  @author Julian Janetschek
@@ -19,9 +21,10 @@ public class NavigationStateViewModel {
     }
 
     @Getter
-    private final ObjectProperty<ScreenId> currentScreen = new SimpleObjectProperty<>(ScreenId.MAIN);
+    private final ObjectProperty<ScreenId> currentScreen =
+            new SimpleObjectProperty<>(ScreenId.MAIN);
 
     public void navigateTo(ScreenId screen) {
-        currentScreen.set(screen);
+        JavaFXUtils.runOnFxThread(() -> currentScreen.set(screen));
     }
 }
