@@ -13,7 +13,7 @@ import org.springframework.context.support.GenericApplicationContext;
  * It registers the JavaFX {@link Application} instance as a bean so that other
  * Spring-managed components can access it.
  *
- * @author Julian Janetschek
+ *
  */
 public class JavaFXSpringApplicationInitializer
         implements ApplicationContextInitializer<GenericApplicationContext> {

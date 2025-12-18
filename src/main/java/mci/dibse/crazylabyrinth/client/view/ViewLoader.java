@@ -7,14 +7,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
-
 /**
  * Component responsible for loading JavaFX FXML views and integrating them with the Spring application context
  * to enable dependency injection in controllers.
  *
  *
  */
-
 @Component
 public class ViewLoader {
 

@@ -6,11 +6,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
-
 import mci.dibse.crazylabyrinth.client.domain.model.enums.GameStatus;
 import mci.dibse.crazylabyrinth.client.domain.model.management.GameServer;
-
 import mci.dibse.crazylabyrinth.client.infrastructure.api.dto.GameServerDTO;
+
 /**
  *  @author Julian Janetschek
  */
@@ -70,7 +69,6 @@ public class TestDataFactory {
             int maxPlayers = 4;
             int currentPlayerCount = rnd.nextInt(0, maxPlayers + 1);
             GameStatus status = randomStatus(rnd);
-
 
             // Random lastSeen within the last 24 hours
             Instant lastSeen = Instant.now().minusSeconds(rnd.nextLong(0, 10 * 60));

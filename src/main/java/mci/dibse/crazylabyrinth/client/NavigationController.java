@@ -22,17 +22,16 @@ import org.springframework.stereotype.Component;
  * FXML views onto the primary {@link Stage}.
  * </p>
  */
-
 @Component
 public class NavigationController {
 
-    private static final String MAIN_VIEW           = "gameServerDashboard.fxml";
-    private static final String LOBBY_VIEW          = "";
-    private static final String GAMEBOARD_VIEW      = "";
-    private static final String RESULTS_VIEW        = "";
+    private static final String MAIN_VIEW = "gameServerDashboard.fxml";
+    private static final String LOBBY_VIEW = "gameLobby.fxml";
+    private static final String GAMEBOARD_VIEW = "";
+    private static final String RESULTS_VIEW = "";
 
-    private NavigationStateViewModel navState;
-    private ViewLoader viewLoader;
+    private final NavigationStateViewModel navState;
+    private final ViewLoader viewLoader;
     @Setter @Getter private Stage primaryStage;
 
     @Autowired
@@ -40,7 +39,6 @@ public class NavigationController {
         this.navState = navState;
         this.viewLoader = viewLoader;
     }
-
 
     @PostConstruct
     public void init() {
@@ -57,7 +55,6 @@ public class NavigationController {
     public void showMainScreen() {
         showScreen(NavigationStateViewModel.ScreenId.MAIN);
     }
-
 
     private void showScreen(NavigationStateViewModel.ScreenId newScreen) {
         String viewFile = mapScreenIdToFile(newScreen);

@@ -38,7 +38,8 @@ public class GameServerDTO {
 
     @NotNull private URI uri;
 
-    @Min(2) @Max(4)
+    @Min(2)
+    @Max(4)
     private int maxPlayers;
 
     @Min(0)
@@ -54,7 +55,7 @@ public class GameServerDTO {
     */
     @NotNull private Instant lastSeen;
 
-    public GameServerDTO(){}
+    public GameServerDTO() {}
 
     public GameServerDTO(
             UUID id,
@@ -76,16 +77,22 @@ public class GameServerDTO {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder("GameServer{");
-        sb.append("id=").append(id)
-                .append(", name='").append(name).append('\'')
-                .append(", uri=").append(uri)
-                .append(", maxPlayers=").append(maxPlayers)
-                .append(", currentPlayerCount=").append(currentPlayerCount)
-                .append(", status=").append(status)
-                .append(", lastSeen=").append(lastSeen)
+        sb.append("id=")
+                .append(id)
+                .append(", name='")
+                .append(name)
+                .append('\'')
+                .append(", uri=")
+                .append(uri)
+                .append(", maxPlayers=")
+                .append(maxPlayers)
+                .append(", currentPlayerCount=")
+                .append(currentPlayerCount)
+                .append(", status=")
+                .append(status)
+                .append(", lastSeen=")
+                .append(lastSeen)
                 .append('}');
         return sb.toString();
     }
-
-
 }
