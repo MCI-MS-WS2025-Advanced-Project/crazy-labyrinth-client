@@ -70,6 +70,7 @@ public class GameServerManagementService {
 
         try {
             String jsonString = client.getGameServers();
+
             processGameServerResponseBody(jsonString.getBytes(StandardCharsets.UTF_8));
 
         } catch (GameManagementServerException e) {
@@ -131,6 +132,8 @@ public class GameServerManagementService {
     }
 
     private void refresh(Collection<GameServer> updatedServers) {
+        System.out.println("refresh");
+
         Set<UUID> toRemove = new HashSet<>(servers.keySet());
         if (updatedServers != null) {
             for (GameServer incoming : updatedServers) {

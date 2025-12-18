@@ -6,17 +6,25 @@ import labyrinth.contracts.models.*;
 import lombok.extern.slf4j.Slf4j;
 import mci.dibse.crazylabyrinth.client.infrastructure.util.ObjectMapperConfig;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
 @Slf4j
 @Service
 public class ServerEventService {
 
+    private final ApplicationEventPublisher applicationEventPublisher;
     private final LobbyService lobbyService;
+    private final GameService gameService;
 
     @Autowired
-    public ServerEventService(LobbyService lobbyService) {
+    public ServerEventService(
+            LobbyService lobbyService,
+            GameService gameService,
+            ApplicationEventPublisher applicationEventPublisher) {
         this.lobbyService = lobbyService;
+        this.gameService = gameService;
+        this.applicationEventPublisher = applicationEventPublisher;
     }
 
     public void handleEvent(String event) {
@@ -34,6 +42,9 @@ public class ServerEventService {
             case ServerInfoPayload serverInfo -> handleServerInfo(serverInfo);
             case ConnectAckEventPayload connectAck -> handleConnectAck(connectAck);
             case LobbyStateEventPayload lobbyState -> handleLobbyState(lobbyState);
+            case GameStateEventPayload gameState -> handleGameState(gameState);
+            case NextTreasureCardEventPayload nextTreasure -> handleNextTreasure(nextTreasure);
+            case ActionErrorEventPayload actionError -> handleError(actionError);
             default -> log.warn("Unknown event type: {}", event.getClass().getSimpleName());
         }
     }
@@ -44,6 +55,12 @@ public class ServerEventService {
         // snyc client with server time?
     }
 
+    private void handleError(ActionErrorEventPayload actionError) {
+        log.debug("Received action error: {}", actionError);
+        // todo
+        applicationEventPublisher.publishEvent(actionError);
+    }
+
     private void handleConnectAck(ConnectAckEventPayload connectAck) {
         log.debug("Connection acknowledged: {}", connectAck.getIdentifierToken());
         lobbyService.handleConnectAck(connectAck);
@@ -52,5 +69,15 @@ public class ServerEventService {
     private void handleLobbyState(LobbyStateEventPayload lobbyState) {
         log.debug("Lobby state updated: {}", lobbyState);
         lobbyService.handleLobbyState(lobbyState);
+    }
+
+    private void handleGameState(GameStateEventPayload gameState) {
+        log.debug("game state updated: {}", gameState);
+        gameService.handleGameEvent(gameState);
+    }
+
+    private void handleNextTreasure(NextTreasureCardEventPayload nextTreasure) {
+        log.debug("next treasure event received {}", nextTreasure);
+        gameService.handleGameEvent(nextTreasure);
     }
 }

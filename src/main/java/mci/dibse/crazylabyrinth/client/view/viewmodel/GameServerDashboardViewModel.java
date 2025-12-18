@@ -20,7 +20,6 @@ import mci.dibse.crazylabyrinth.client.infrastructure.exceptions.GeneralUiExcept
 import mci.dibse.crazylabyrinth.client.service.ClientCommandService;
 import mci.dibse.crazylabyrinth.client.service.GameServerManagementService;
 import mci.dibse.crazylabyrinth.client.service.GameServerUpdateListener;
-import mci.dibse.crazylabyrinth.client.view.controller.impl.BaseViewCleanup;
 import mci.dibse.crazylabyrinth.client.view.viewmodel.item.GameServerItem;
 import mci.dibse.crazylabyrinth.client.view.viewmodel.navigation.NavigationStateViewModel;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,12 +36,8 @@ import org.springframework.stereotype.Component;
  *
  */
 @Component
-public class GameServerDashboardViewModel extends BaseViewCleanup
+public class GameServerDashboardViewModel extends BaseViewModel
         implements GameServerUpdateListener {
-
-    @Getter private final StringProperty errorMessage = new SimpleStringProperty();
-    @Getter private final BooleanProperty hasError = new SimpleBooleanProperty(false);
-    @Getter private final BooleanProperty isRefreshing = new SimpleBooleanProperty(false);
 
     private final ObservableMap<UUID, GameServerItem> serverMap = FXCollections.observableHashMap();
     private final ObservableList<GameServerItem> items;
@@ -60,7 +55,9 @@ public class GameServerDashboardViewModel extends BaseViewCleanup
     public GameServerDashboardViewModel(
             GameServerManagementService service,
             NavigationStateViewModel navState,
-            ClientCommandService clientCommandService) {
+            ClientCommandService clientCommandService,
+            NavigationStateViewModel navigationStateViewModel) {
+
         super(navState);
         this.service = service;
 
@@ -71,20 +68,19 @@ public class GameServerDashboardViewModel extends BaseViewCleanup
         setupFilteringAndSorting();
         registerListeners();
         this.clientCommandService = clientCommandService;
+        this.navigationStateViewModel = navigationStateViewModel;
     }
 
     // todo test
     @Override
     public void cleanup() {
-        onlyJoinable.removeListener(joinableListener);
-        serverMap.removeListener(serverMapListener);
-        filtered.setPredicate(null);
-        serverMap.clear();
-        items.forEach(GameServerItem::dispose);
-        items.clear();
-        errorMessage.unbind();
-        hasError.unbind();
-        isRefreshing.unbind();
+        Runnable cleanup =
+                () -> {
+                    serverMap.clear();
+                    items.forEach(GameServerItem::dispose);
+                    items.clear();
+                };
+        runOnFxThread(cleanup);
     }
 
     @Override
@@ -194,39 +190,17 @@ public class GameServerDashboardViewModel extends BaseViewCleanup
         runOnFxThread(serverMap::clear);
     }
 
-    private void clearError() {
-        runOnFxThread(
-                () -> {
-                    errorMessage.set(null);
-                    hasError.set(false);
-                });
-    }
-
-    private void setError(String message) {
-        runOnFxThread(
-                () -> {
-                    errorMessage.set(message);
-                    hasError.set(true);
-                    isRefreshing.set(false);
-                });
-    }
-
-    private void setRefreshing(boolean refreshing) {
-        runOnFxThread(
-                () -> {
-                    isRefreshing.set(refreshing);
-                    if (refreshing) {
-                        hasError.set(false);
-                        errorMessage.set(null);
-                    }
-                });
-    }
-
     public void joinSelectedServer(GameInfoRecord gameInfo) {
         try {
             clientCommandService.sendConnectCommand(gameInfo);
         } catch (GeneralUiException e) {
             setError(e.getMessage());
         }
+    }
+
+    @Override
+    protected boolean isErrorRelevant() {
+        return NavigationStateViewModel.ScreenId.MAIN.equals(
+                navigationStateViewModel.getCurrentScreen().get());
     }
 }

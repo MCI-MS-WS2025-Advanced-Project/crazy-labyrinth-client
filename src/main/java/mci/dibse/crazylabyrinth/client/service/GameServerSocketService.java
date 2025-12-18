@@ -9,6 +9,7 @@ import mci.dibse.crazylabyrinth.client.domain.context.ApplicationEvents;
 import mci.dibse.crazylabyrinth.client.domain.model.ClientPlayer;
 import mci.dibse.crazylabyrinth.client.domain.model.record.GameInfoRecord;
 import mci.dibse.crazylabyrinth.client.infrastructure.exceptions.ConnectionException;
+import mci.dibse.crazylabyrinth.client.infrastructure.exceptions.GeneralUiException;
 import mci.dibse.crazylabyrinth.client.infrastructure.gameserver.GameServerSocketClient;
 import mci.dibse.crazylabyrinth.client.infrastructure.util.CommandUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,9 +41,13 @@ public class GameServerSocketService implements PlayerConnectedAckListener {
         lobbyService.addPlayerListener(this);
     }
 
-    public String sendCommand(String command) {
-        client.sendMessage(command);
-        return "Command sent";
+    public void sendCommand(String command) {
+        try {
+            client.sendMessage(command);
+        } catch (ConnectionException e) {
+            log.error("Could not send command", e);
+            throw new GeneralUiException("Could not send command");
+        }
     }
 
     public void connectToServerAndSendMessage(String serverUrl, String json)
@@ -61,20 +66,8 @@ public class GameServerSocketService implements PlayerConnectedAckListener {
 
     @EventListener
     public void handleDisconnectEvent(ApplicationEvents event) {
-        // todo remove after test
-        System.out.println(
-                "Disconnect event received "
-                        + event
-                        + " "
-                        + (serverUrl)
-                        + "  "
-                        + (identifierToken)
-                        + "   "
-                        + (clientUserName));
         if (ApplicationEvents.CONNECTION_LOST.equals(event)
                 && (serverUrl != null && identifierToken != null && clientUserName != null)) {
-            // todo remove after test
-            System.out.println("trying to connect to server");
             ConnectCommandPayload reconnectPayload = new ConnectCommandPayload();
             reconnectPayload.setIdentifierToken(identifierToken);
             reconnectPayload.setType(CommandType.CONNECT);
