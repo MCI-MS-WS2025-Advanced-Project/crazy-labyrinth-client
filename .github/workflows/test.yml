@@ -59,7 +59,7 @@ jobs:
           ls -lah
 
           echo "=== Führe generate-async-models.js aus ==="
-          node generate-async-models.js
+          node models/generate-async-models.js
 
           echo "=== Nach Generation - Alle Ordner und Dateien: ==="
           ls -lah
