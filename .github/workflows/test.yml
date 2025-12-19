@@ -31,6 +31,17 @@ jobs:
           distribution: 'temurin'
           java-version: '25'
 
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+            node-version: '20'
+
+      - name: Generate Java Models
+        run: |
+            cd labyrinth-interface/models
+            npm install
+            node generate-async-models.js
+
       - name: Cache Maven dependencies
         uses: actions/cache@v4
         with:
@@ -39,9 +50,15 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-maven-
 
-      - name: Create pom.xml for shared models
+      - name: Build and install shared models
         run: |
-          cat > labyrinth-interface/models/pom.xml << 'EOF'
+          cd labyrinth-interface/models
+          
+          mkdir -p src/main/java/labyrinth/contracts/models
+          
+          cp models/async/*.java src/main/java/labyrinth/contracts/models/
+          
+          cat > pom.xml << 'EOF'
           <?xml version="1.0" encoding="UTF-8"?>
           <project xmlns="http://maven.apache.org/POM/4.0.0"
                    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -72,10 +89,7 @@ jobs:
               </build>
           </project>
           EOF
-
-      - name: Build and install shared models
-        run: |
-          cd labyrinth-interface/models
+        
           mvn clean install -DskipTests
           cd ../..
 
