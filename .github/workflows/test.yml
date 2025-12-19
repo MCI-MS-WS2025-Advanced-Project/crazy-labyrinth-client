@@ -54,9 +54,14 @@ jobs:
         run: |
           cd labyrinth-interface/models
           
+          echo "Suche nach generierten Dateien..."
+          find . -name "*.java"
+          
           mkdir -p src/main/java/labyrinth/contracts/models
           
-          cp models/async/*.java src/main/java/labyrinth/contracts/models/
+          find models/async -name "*.java" -exec cp {} src/main/java/labyrinth/contracts/models/ \; 2>/dev/null || \
+          find async -name "*.java" -exec cp {} src/main/java/labyrinth/contracts/models/ \; 2>/dev/null || \
+          cp *.java src/main/java/labyrinth/contracts/models/ 2>/dev/null || true
           
           cat > pom.xml << 'EOF'
           <?xml version="1.0" encoding="UTF-8"?>
