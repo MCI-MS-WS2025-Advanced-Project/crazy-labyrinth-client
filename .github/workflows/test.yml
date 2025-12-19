@@ -46,9 +46,34 @@ jobs:
 
       - name: Generate Java Models
         run: |
-            cd labyrinth-interface/models
-            npm install
-            node generate-async-models.js
+          echo "=== Start Model Generation ==="
+          cd labyrinth-interface/models
+
+          echo "=== Vor npm install - Dateien im models Ordner: ==="
+          ls -lah
+
+          echo "=== npm install ==="
+          npm install
+
+          echo "=== Nach npm install - Dateien: ==="
+          ls -lah
+
+          echo "=== Führe generate-async-models.js aus ==="
+          node generate-async-models.js
+
+          echo "=== Nach Generation - Alle Ordner und Dateien: ==="
+          ls -lah
+
+          echo "=== Prüfe ob async/ Ordner existiert: ==="
+          if [ -d "async" ]; then
+            echo "✓ async/ Ordner gefunden!"
+            ls -lah async/
+          else
+            echo "✗ async/ Ordner NICHT gefunden!"
+          fi
+
+          echo "=== Suche nach allen .java Files: ==="
+          find . -name "*.java" -type f
 
       - name: Build and install shared models
         run: |
