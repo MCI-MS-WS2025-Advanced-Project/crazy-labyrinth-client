@@ -59,9 +59,7 @@ jobs:
           
           mkdir -p src/main/java/labyrinth/contracts/models
           
-          find models/async -name "*.java" -exec cp {} src/main/java/labyrinth/contracts/models/ \; 2>/dev/null || \
-          find async -name "*.java" -exec cp {} src/main/java/labyrinth/contracts/models/ \; 2>/dev/null || \
-          cp *.java src/main/java/labyrinth/contracts/models/ 2>/dev/null || true
+          find . -name "*.java" -not -path "*/src/*" -exec cp {} src/main/java/labyrinth/contracts/models/ \;
           
           cat > pom.xml << 'EOF'
           <?xml version="1.0" encoding="UTF-8"?>
