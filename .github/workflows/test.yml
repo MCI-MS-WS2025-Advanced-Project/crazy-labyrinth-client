@@ -44,6 +44,10 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-maven-
 
+      - name: test echo
+        run: |
+          echo "Test Echo erreicht"
+
       - name: Generate Java Models
         run: |
             echo "Generate erreicht"
