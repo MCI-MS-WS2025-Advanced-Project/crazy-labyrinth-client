@@ -23,7 +23,7 @@ jobs:
       - name: Checkout labyrinth-interface (for shared models)
         uses: actions/checkout@v4
         with:
-          repositor: 'brackettz/labyrinth-interface'
+          repository: 'brackettz/labyrinth-interface'
           path: 'labyrinth-interface'
 
       - name: Set up JDK
