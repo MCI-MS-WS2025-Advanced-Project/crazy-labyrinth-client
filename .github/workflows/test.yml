@@ -59,7 +59,10 @@ jobs:
           
           mkdir -p src/main/java/labyrinth/contracts/models
           
-          find . -name "*.java" -not -path "*/src/*" -exec cp {} src/main/java/labyrinth/contracts/models/ \;
+          find . -name "*.java" -not -path "./src/*" -exec cp {} src/main/java/labyrinth/contracts/models/ \;
+          
+          echo "Gefundene Java-Dateien für das JAR:"
+          ls src/main/java/labyrinth/contracts/models/
           
           cat > pom.xml << 'EOF'
           <?xml version="1.0" encoding="UTF-8"?>
@@ -87,9 +90,6 @@ jobs:
                       <version>2.18.2</version>
                   </dependency>
               </dependencies>
-              <build>
-                  <sourceDirectory>.</sourceDirectory>
-              </build>
           </project>
           EOF
         
