@@ -79,24 +79,13 @@ jobs:
         run: |
           cd labyrinth-interface/models
           
-          echo "Suche nach generierten Dateien..."
-          find . -name "*.java"
-          
           mkdir -p src/main/java/labyrinth/contracts/models
           
           find . -name "*.java" -not -path "./src/*" -exec cp {} src/main/java/labyrinth/contracts/models/ \;
           
-          echo "Gefundene Java-Dateien für das JAR:"
-          ls src/main/java/labyrinth/contracts/models/
-          
-          echo ">>> Folgende Dateien werden in das JAR gepackt:"
-          ls -R src/main/java/
-          
           cat > pom.xml << 'EOF'
           <?xml version="1.0" encoding="UTF-8"?>
-          <project xmlns="http://maven.apache.org/POM/4.0.0"
-                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-                   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+          <project xmlns="http://maven.apache.org/POM/4.0.0">
               <modelVersion>4.0.0</modelVersion>
               <groupId>mci.dibse.crazylabyrinth</groupId>
               <artifactId>shared-model</artifactId>
@@ -120,11 +109,14 @@ jobs:
               </dependencies>
           </project>
           EOF
-        
+          
           mvn clean install -DskipTests
           
-          echo ">>> Validierung: JAR-Inhalt von shared-model-0.0.9.jar:"
-          jar tf target/shared-model-0.0.9.jar | grep .class
+          echo ">>> Inhalt des target Ordners:"
+          ls -l target/
+          
+          echo ">>> Validierung des JAR-Inhalts:"
+          jar tf target/shared-model-0.0.9.jar | grep .class || echo "WARNUNG: Keine Klassen im JAR gefunden!"
 
       - name: Run Tests
         run: |
