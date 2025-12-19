@@ -79,8 +79,9 @@ jobs:
         run: |
           cd labyrinth-interface/models
           
-          echo ">>> Suche generierte Java-Dateien..."
-          find . -name "*.java"
+          mkdir -p src/main/java
+          
+          find . -name "*.java" -not -path "./src/*" -exec cp --parents {} src/main/java/ \;
           
           cat > pom.xml << 'EOF'
           <?xml version="1.0" encoding="UTF-8"?>
@@ -107,7 +108,7 @@ jobs:
                   </dependency>
               </dependencies>
               <build>
-                  <sourceDirectory>.</sourceDirectory>
+                  <sourceDirectory>src/main/java</sourceDirectory>
               </build>
           </project>
           EOF
