@@ -19,11 +19,19 @@ jobs:
       - name: Checkout client repository
         uses: actions/checkout@v4
 
+      - name: checked out repo
+        run: |
+          echo "checked out repo"
+
       - name: Checkout labyrinth-interface (for shared models)
         uses: actions/checkout@v4
         with:
           repository: 'brackettz/labyrinth-interface'
           path: 'labyrinth-interface'
+
+      - name: checked out brackettz
+        run: |
+          echo "checked out brackettz"
 
       - name: Set up JDK
         uses: actions/setup-java@v4
@@ -31,10 +39,18 @@ jobs:
           distribution: 'temurin'
           java-version: '25'
 
+      - name: JDK setup
+        run: |
+          echo "JDK setup"
+
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
             node-version: '20'
+
+      - name: node setup
+        run: |
+          echo "node setup"
 
       - name: Cache Maven dependencies
         uses: actions/cache@v4
@@ -44,9 +60,9 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-maven-
 
-      - name: test echo
+      - name: cache maven
         run: |
-          echo "Test Echo erreicht"
+          echo "cache maven"
 
       - name: Generate Java Models
         run: |
@@ -54,6 +70,10 @@ jobs:
             cd labyrinth-interface/models
             npm install
             node generate-async-models.js
+
+      - name: generate models
+        run: |
+          echo "generate models"
 
       - name: Build and install shared models
         run: |
@@ -68,6 +88,9 @@ jobs:
           
           echo "Gefundene Java-Dateien für das JAR:"
           ls src/main/java/labyrinth/contracts/models/
+          
+          echo ">>> Folgende Dateien werden in das JAR gepackt:"
+          ls -R src/main/java/
           
           cat > pom.xml << 'EOF'
           <?xml version="1.0" encoding="UTF-8"?>
@@ -99,7 +122,10 @@ jobs:
           EOF
         
           mvn clean install -DskipTests
-          cd ../..
+          
+          echo ">>> Validierung: JAR-Inhalt von shared-model-0.0.9.jar:"
+          jar tf target/shared-model-0.0.9.jar | grep .class
 
       - name: Run Tests
-        run: mvn test
+        run: |
+          mvn clean test -U
