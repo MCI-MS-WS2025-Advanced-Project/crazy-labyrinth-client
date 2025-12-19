@@ -47,9 +47,9 @@ jobs:
       - name: Generate Java Models
         run: |
           echo "=== Start Model Generation ==="
-          cd labyrinth-interface/models
+          cd labyrinth-interface
 
-          echo "=== Vor npm install - Dateien im models Ordner: ==="
+          echo "=== Vor npm install - Dateien im Root: ==="
           ls -lah
 
           echo "=== npm install ==="
