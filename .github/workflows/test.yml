@@ -36,12 +36,6 @@ jobs:
         with:
             node-version: '20'
 
-      - name: Generate Java Models
-        run: |
-            cd labyrinth-interface/models
-            npm install
-            node generate-async-models.js
-
       - name: Cache Maven dependencies
         uses: actions/cache@v4
         with:
@@ -49,6 +43,13 @@ jobs:
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
           restore-keys: |
             ${{ runner.os }}-maven-
+
+      - name: Generate Java Models
+        run: |
+            echo "Generate erreicht"
+            cd labyrinth-interface/models
+            npm install
+            node generate-async-models.js
 
       - name: Build and install shared models
         run: |
