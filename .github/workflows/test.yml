@@ -35,4 +35,4 @@ jobs:
             ${{ runner.os }}-maven-
 
       - name: Run Tests
-        run: ./mvnw test
+        run: mvn test
