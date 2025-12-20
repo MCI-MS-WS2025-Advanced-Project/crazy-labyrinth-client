@@ -57,7 +57,6 @@ jobs:
           find async -name "*.java" -exec cp {} src/main/java/labyrinth/contracts/models/ \;
           
           SHARED_MODEL_VERSION=$(grep '<shared.model.version>' ../../pom.xml | sed 's/.*<shared.model.version>\(.*\)<\/shared.model.version>.*/\1/' | tr -d '[:space:]')
-          echo "Using shared-model version: $SHARED_MODEL_VERSION"
       
           cat > pom.xml << 'EOF'
           <?xml version="1.0" encoding="UTF-8"?>
