@@ -56,6 +56,9 @@ jobs:
           mkdir -p src/main/java/labyrinth/contracts/models 
           find async -name "*.java" -exec cp {} src/main/java/labyrinth/contracts/models/ \;
           
+          SHARED_MODEL_VERSION=$(grep '<shared.model.version>' ../../pom.xml | sed 's/.*<shared.model.version>\(.*\)<\/shared.model.version>.*/\1/' | tr -d '[:space:]')
+          echo "Using shared-model version: $SHARED_MODEL_VERSION"
+      
           cat > pom.xml << 'EOF'
           <?xml version="1.0" encoding="UTF-8"?>
           <project xmlns="http://maven.apache.org/POM/4.0.0"
@@ -64,7 +67,7 @@ jobs:
               <modelVersion>4.0.0</modelVersion>
               <groupId>mci.dibse.crazylabyrinth</groupId>
               <artifactId>shared-model</artifactId>
-              <version>0.0.9</version>
+              <version>${SHARED_MODEL_VERSION}</version>
               <properties>
                   <maven.compiler.source>25</maven.compiler.source>
                   <maven.compiler.target>25</maven.compiler.target>
