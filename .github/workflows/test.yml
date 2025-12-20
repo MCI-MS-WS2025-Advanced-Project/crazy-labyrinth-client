@@ -67,7 +67,7 @@ jobs:
               <modelVersion>4.0.0</modelVersion>
               <groupId>mci.dibse.crazylabyrinth</groupId>
               <artifactId>shared-model</artifactId>
-              <version>${SHARED_MODEL_VERSION}</version>
+              <version>PLACEHOLDER_VERSION</version>
               <properties>
                   <maven.compiler.source>25</maven.compiler.source>
                   <maven.compiler.target>25</maven.compiler.target>
@@ -90,6 +90,8 @@ jobs:
               </build>
           </project>
           EOF
+          
+          sed -i "s/PLACEHOLDER_VERSION/$SHARED_MODEL_VERSION/" pom.xml
           
           mvn clean install -DskipTests
 
