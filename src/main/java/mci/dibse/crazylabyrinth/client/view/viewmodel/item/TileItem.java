@@ -26,6 +26,14 @@ public class TileItem extends BaseItem<Tile> {
     @Getter private final SimpleObjectProperty<BonusType> bonus = new SimpleObjectProperty<>();
     @Getter private SimpleBooleanProperty isFixed = new SimpleBooleanProperty();
 
+    public TreasureItem getTreasureItem() {
+        return treasure.get();
+    }
+
+    public BonusType getBonusType() {
+        return bonus.get();
+    }
+
     public TileItem(Tile source) {
         List<Direction> directionList = new ArrayList<>(Arrays.asList(source.getEntrances()));
         directionList.sort(Comparator.comparingInt(Direction::ordinal));
@@ -77,6 +85,7 @@ public class TileItem extends BaseItem<Tile> {
         }
     }
 
+    // todo not needed anymore? rotation is done on server via command
     public void onLeftRotation() {
         Runnable apply =
                 () -> {

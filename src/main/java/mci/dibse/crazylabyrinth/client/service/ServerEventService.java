@@ -45,8 +45,16 @@ public class ServerEventService {
             case GameStateEventPayload gameState -> handleGameState(gameState);
             case NextTreasureCardEventPayload nextTreasure -> handleNextTreasure(nextTreasure);
             case ActionErrorEventPayload actionError -> handleError(actionError);
+            case AchievementUnlockedEventPayload achievement -> handleAchievement(achievement);
+            case GameOverEventPayload gameOver -> handleGameOver(gameOver);
+            case PlayerUpdatedEventPayload playerUpdate -> handlePlayerUpdate(playerUpdate);
             default -> log.warn("Unknown event type: {}", event.getClass().getSimpleName());
         }
+    }
+
+    private void handlePlayerUpdate(PlayerUpdatedEventPayload playerUpdate) {
+        log.debug("player update event received {}", playerUpdate);
+        // todo??????
     }
 
     private void handleServerInfo(ServerInfoPayload serverInfo) {
@@ -79,5 +87,13 @@ public class ServerEventService {
     private void handleNextTreasure(NextTreasureCardEventPayload nextTreasure) {
         log.debug("next treasure event received {}", nextTreasure);
         gameService.handleGameEvent(nextTreasure);
+    }
+
+    private void handleAchievement(AchievementUnlockedEventPayload achievement) {
+        log.debug("achievement unlocked event received{}", achievement);
+    }
+
+    private void handleGameOver(GameOverEventPayload gameOver) {
+        log.debug("game over event received {}", gameOver);
     }
 }

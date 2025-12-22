@@ -22,8 +22,16 @@ public class CoordinatesItem extends BaseItem<Coordinates> {
         return row;
     }
 
+    public int getRowAsInt() {
+        return row.intValue();
+    }
+
     public SimpleIntegerProperty columnProperty() {
         return column;
+    }
+
+    public int getColumnAsInt() {
+        return column.intValue();
     }
 
     @Override

@@ -51,7 +51,7 @@ public abstract class BaseViewModel extends BaseViewCleanup {
     }
 
     @Override
-    public void baseCleanUp() {
+    public void baseViewModelCleanup() {
         runOnFxThread(
                 () -> {
                     errorMessage.unbind();
