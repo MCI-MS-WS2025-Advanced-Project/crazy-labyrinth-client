@@ -11,7 +11,10 @@ public class CommandUtils {
         ObjectMapper mapper = ObjectMapperConfig.createCustomObjectMapper();
         return switch (command) {
             case CommandType.CONNECT -> mapper.writeValueAsString((ConnectCommandPayload) payload);
-            case CommandType.DISCONNECT -> mapper.writeValueAsString((DisconnectCommandPayload) payload);
+            case CommandType.DISCONNECT ->
+                    mapper.writeValueAsString((DisconnectCommandPayload) payload);
+            case CommandType.START_GAME ->
+                    mapper.writeValueAsString((StartGameCommandPayload) payload);
             default -> throw new IllegalStateException("Unexpected value: " + command);
         };
     }

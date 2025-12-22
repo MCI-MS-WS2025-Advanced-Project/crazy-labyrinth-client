@@ -1,0 +1,46 @@
+/* Toolbar */
+.toolbar {
+    -fx-background-color: white;
+    -fx-padding: 8;
+    -fx-background-radius: 8;
+    -fx-border-radius: 8;
+    -fx-border-color: #e3e8ef;
+    -fx-border-width: 1;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.04), 6, 0.2, 0, 1);
+}
+.toolbar .button {
+    -fx-background-color: #f3f4f6;
+    -fx-text-fill: #111827;
+}
+.toolbar .button:hover { -fx-background-color: #e5e7eb; }
+
+/* Center card padding */
+.center-card {
+    -fx-padding: 8;
+}
+
+/* Table placeholder text */
+.table-view .placeholder .label {
+    -fx-text-fill: #6b7280; /* muted gray */
+    -fx-font-size: 13px;
+}
+
+/* Footer/status bar */
+.footer {
+    -fx-background-color: white;
+    -fx-padding: 8 12 8 12;
+    -fx-background-radius: 8;
+    -fx-border-radius: 8;
+    -fx-border-color: #e3e8ef;
+    -fx-border-width: 1;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.04), 6, 0.2, 0, 1);
+}
+.footer .label {
+    -fx-text-fill: #374151;
+    -fx-font-weight: 600;
+}
+
+.button.action-button {
+    -fx-padding: 0 6 0 6 !important;
+    -fx-font-size:13px;
+}

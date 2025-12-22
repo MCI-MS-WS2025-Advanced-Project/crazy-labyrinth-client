@@ -3,20 +3,16 @@ package mci.dibse.crazylabyrinth.client.view.viewmodel.item;
 import java.net.URI;
 import java.time.Instant;
 import java.util.UUID;
-import java.util.concurrent.atomic.AtomicBoolean;
 import javafx.beans.property.*;
 import lombok.Getter;
 import mci.dibse.crazylabyrinth.client.domain.model.enums.GameStatus;
 import mci.dibse.crazylabyrinth.client.domain.model.management.GameServer;
-import mci.dibse.crazylabyrinth.client.infrastructure.util.JavaFXUtils;
 
 /**
  *  UI representation of GameServer
  *  @author Julian Janetschek
  */
-public class GameServerItem implements ViewItem {
-
-    private final AtomicBoolean pendingUpdate = new AtomicBoolean(false);
+public class GameServerItem extends BaseItem<GameServer> implements ViewItem {
 
     @Getter private final UUID id;
 
@@ -27,26 +23,24 @@ public class GameServerItem implements ViewItem {
     @Getter private final ObjectProperty<GameStatus> status = new SimpleObjectProperty<>();
     @Getter private final ObjectProperty<Instant> lastSeen = new SimpleObjectProperty<>();
 
+    @Getter private final ReadOnlyBooleanWrapper joinable = new ReadOnlyBooleanWrapper();
+
     public GameServerItem(GameServer source) {
+        setJoinableProperty();
         this.id = source.getId();
         updateFrom(source);
     }
 
-    public void updateFrom(GameServer source) {
-        if (!pendingUpdate.compareAndSet(false, true)) return;
-
-        Runnable updateTask =
-                () -> {
-                    try {
-                        updateItemFromSource(source);
-                    } finally {
-                        pendingUpdate.set(false);
-                    }
-                };
-        JavaFXUtils.runOnFxThread(updateTask);
+    private void setJoinableProperty() {
+        joinable.bind(
+                status.isEqualTo(GameStatus.LOBBY).and(currentPlayerCount.lessThan(maxPlayers)));
     }
 
-    private void updateItemFromSource(GameServer source) {
+    public boolean isJoinable() {
+        return joinable.get();
+    }
+
+    protected void updateItemFromSource(GameServer source) {
         name.set(source.getName());
         uri.set(source.getUri());
         maxPlayers.set(source.getMaxPlayers());
@@ -79,7 +73,8 @@ public class GameServerItem implements ViewItem {
         return lastSeen;
     }
 
-    // todo something to do here?
     @Override
-    public void dispose() {}
+    protected void disposeItem() {
+        // todo?
+    }
 }

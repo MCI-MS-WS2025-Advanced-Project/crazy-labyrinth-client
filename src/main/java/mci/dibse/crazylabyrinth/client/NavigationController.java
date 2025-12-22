@@ -27,7 +27,7 @@ public class NavigationController {
 
     private static final String MAIN_VIEW = "gameServerDashboard.fxml";
     private static final String LOBBY_VIEW = "gameLobby.fxml";
-    private static final String GAMEBOARD_VIEW = "";
+    private static final String GAMEBOARD_VIEW = "gameBoard.fxml";
     private static final String RESULTS_VIEW = "";
 
     private final NavigationStateViewModel navState;
@@ -86,8 +86,8 @@ public class NavigationController {
 
     private void setStageMinMaxByScreenId(NavigationStateViewModel.ScreenId newScreen) {
         switch (newScreen) {
-            case MAIN -> setStageMinMaxSizes(712, 400);
-            case LOBBY -> setStageMinMaxSizes(800, 450);
+            case MAIN -> setStageMinMaxSizes(712, 415);
+            case LOBBY -> setStageMinMaxSizes(900, 563);
             case GAMEBOARD -> setStageMinMaxSizes(1024, 768);
         }
     }
