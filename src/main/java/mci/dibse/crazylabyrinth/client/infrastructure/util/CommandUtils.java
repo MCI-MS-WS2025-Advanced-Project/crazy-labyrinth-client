@@ -15,6 +15,20 @@ public class CommandUtils {
                     mapper.writeValueAsString((DisconnectCommandPayload) payload);
             case CommandType.START_GAME ->
                     mapper.writeValueAsString((StartGameCommandPayload) payload);
+            case CommandType.ROTATE_TILE ->
+                    mapper.writeValueAsString((RotateTileCommandPayload) payload);
+            case CommandType.PUSH_TILE ->
+                    mapper.writeValueAsString((PushTileCommandPayload) payload);
+            case CommandType.MOVE_PAWN ->
+                    mapper.writeValueAsString((MovePawnCommandPayload) payload);
+            case CommandType.TOGGLE_AI ->
+                    mapper.writeValueAsString((ToggleAiCommandPayload) payload);
+            case CommandType.USE_BEAM -> mapper.writeValueAsString((UseBeamCommandPayload) payload);
+            case CommandType.USE_SWAP -> mapper.writeValueAsString((UseSwapCommandPayload) payload);
+            case CommandType.USE_PUSH_FIXED ->
+                    mapper.writeValueAsString((UsePushFixedCommandPayload) payload);
+            case CommandType.USE_PUSH_TWICE ->
+                    mapper.writeValueAsString((UsePushTwiceCommandPayload) payload);
             default -> throw new IllegalStateException("Unexpected value: " + command);
         };
     }

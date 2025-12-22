@@ -19,7 +19,7 @@ public class CurrentTurnInfoItem extends BaseItem<CurrentTurnInfo> {
         turnState.set(currentTurnInfo.getState());
     }
 
-    public String getCurrentPlayerId() {
+    public String getCurrentPlayerIdAsString() {
         return currentPlayerId.get();
     }
 
@@ -32,8 +32,11 @@ public class CurrentTurnInfoItem extends BaseItem<CurrentTurnInfo> {
 
     @Override
     protected void disposeItem() {
-        currentPlayerId.setValue(null);
-        turnEndTime.setValue(null);
-        turnState.setValue(null);
+        currentPlayerId.unbind();
+        currentPlayerId = null;
+        turnEndTime.unbind();
+        turnEndTime = null;
+        turnState.unbind();
+        turnState = null;
     }
 }

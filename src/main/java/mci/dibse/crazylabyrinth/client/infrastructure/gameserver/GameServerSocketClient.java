@@ -5,10 +5,13 @@ import java.time.Duration;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import labyrinth.contracts.models.ActionErrorEventPayload;
+import labyrinth.contracts.models.ErrorCode;
 import lombok.extern.slf4j.Slf4j;
 import mci.dibse.crazylabyrinth.client.infrastructure.exceptions.ConnectionException;
 import mci.dibse.crazylabyrinth.client.service.ServerEventService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
@@ -86,7 +89,7 @@ public class GameServerSocketClient {
         }
     }
 
-    public void connect(String serverUrl) throws ConnectionException {
+    public void connect(String serverUrl, Runnable connectCallback) throws ConnectionException {
         log.debug("Connecting to WebSocket server at: {}", serverUrl);
 
         if (connectionManager != null && connectionManager.isRunning()) {
@@ -105,26 +108,29 @@ public class GameServerSocketClient {
             connectionManager.setAutoStartup(false);
             connectionManager.start();
 
-            connectionFuture
-                    .orTimeout(CONNECT_TIMEOUT_SECONDS, TimeUnit.SECONDS) // Built-in timeout
-                    .thenRun(
-                            () -> {
-                                markConnected();
-                                log.info("Successfully connected to WebSocket server");
-                            })
-                    .exceptionally(
-                            throwable -> {
-                                log.error(
-                                        "Failed to connect to WebSocket server: {}",
-                                        throwable.getMessage());
-                                markDisconnected();
-                                return null;
-                            });
+            if (connectCallback != null) {
+                connectCallback.run();
+            } else {
+                connectionFuture
+                        .orTimeout(CONNECT_TIMEOUT_SECONDS, TimeUnit.SECONDS) // Built-in timeout
+                        .thenRun(
+                                () -> {
+                                    markConnected();
+                                    log.info("Successfully connected to WebSocket server");
+                                })
+                        .exceptionally(
+                                throwable -> {
+                                    log.error(
+                                            "Failed to connect to WebSocket server: {}",
+                                            throwable.getMessage());
+                                    markDisconnected();
+                                    return null;
+                                });
+            }
 
         } catch (Exception e) {
             log.error("Failed to connect to WebSocket server: {}", e.getMessage(), e);
             connectionFuture.completeExceptionally(e);
-            markDisconnected();
             throw new ConnectionException("Failed to connect to WebSocket server", e);
         }
     }
@@ -134,12 +140,13 @@ public class GameServerSocketClient {
             log.warn("Reconnect requested but no serverUrl known yet (call connect(url) first)");
             return;
         }
-
-        if (!reconnecting.compareAndSet(false, true)) {
-            return; // reconnect already running
-        }
-
+        log.debug("Reconnecting to WebSocket server at: {}", lastServerUrl);
         scheduleReconnectAttempt(lastServerUrl, callback);
+    }
+
+    @EventListener
+    public void handleReconnectionAbort(ActionErrorEventPayload error) {
+        if (ErrorCode.PLAYER_NOT_FOUND.equals(error.getErrorCode())) reconnecting.set(true);
     }
 
     /**
@@ -160,14 +167,24 @@ public class GameServerSocketClient {
         }
     }
 
+    private boolean canProceedWithReconnecting() {
+        boolean ret = reconnecting.compareAndSet(false, true);
+        log.debug("reconnectAttemptInProgress : {}", !ret);
+        return !ret;
+    }
+
+    private void resetReconnectionProgress() {
+        reconnecting.set(false);
+    }
+
     private void markConnected() {
         isConnected = true;
+        reconnecting.set(false);
+        reconnectAttempt.set(0);
     }
 
     private void markDisconnected() {
         isConnected = false;
-        reconnecting.set(false);
-        reconnectAttempt.set(0);
     }
 
     private WebSocketSession findOpenSession() throws IllegalStateException {
@@ -178,33 +195,39 @@ public class GameServerSocketClient {
     }
 
     private void scheduleReconnectAttempt(String lastServerUrl, Runnable callback) {
-        Duration delay = nextBackoffDelay(reconnectAttempt.getAndIncrement());
+        if (canProceedWithReconnecting()) return;
+        int attempt = reconnectAttempt.getAndIncrement();
+        Duration delay = nextBackoffDelay(attempt);
 
-        reconnectScheduler.schedule(
+        Runnable connectionCallback =
                 () -> {
-                    try {
-                        log.info(
-                                "Reconnect attempt #{} (delay {}ms)",
-                                reconnectAttempt.get(),
-                                delay.toMillis());
-                        connect(lastServerUrl);
-                    } catch (Exception e) {
-                        log.error("Reconnect attempt failed", e);
-                        scheduleReconnectAttempt(lastServerUrl, callback); // keep trying
-                    }
                     connectionFuture
                             .orTimeout(reconnectAttempt.get(), TimeUnit.SECONDS)
                             .thenRun(
                                     () -> {
-                                        reconnectAttempt.set(0);
+                                        log.info("connection Future completed successfully");
                                         markConnected();
                                         callback.run();
                                     })
                             .exceptionally(
                                     (_) -> {
+                                        log.error("connection Future completed exceptionally");
+                                        resetReconnectionProgress();
                                         scheduleReconnectAttempt(lastServerUrl, callback);
                                         return null;
                                     });
+                };
+
+        reconnectScheduler.schedule(
+                () -> {
+                    try {
+                        log.info("Reconnect attempt #{} (delay {}ms)", attempt, delay.toMillis());
+                        connect(lastServerUrl, connectionCallback);
+                    } catch (Exception e) {
+                        log.error("Reconnect attempt failed", e);
+                        resetReconnectionProgress();
+                        scheduleReconnectAttempt(lastServerUrl, callback); // keep trying
+                    }
                 },
                 delay.toMillis(),
                 TimeUnit.MILLISECONDS);
@@ -214,7 +237,9 @@ public class GameServerSocketClient {
         long baseMs = RECONNECT_BASE_DELAY.toMillis();
         long maxMs = RECONNECT_MAX_DELAY.toMillis();
 
-        long expMs = (attempt >= 30) ? maxMs : Math.min(maxMs, baseMs * (1L << attempt));
+        log.info("nextBackoffDelay -> {}", attempt);
+
+        long expMs = (attempt >= 10) ? maxMs : Math.min(maxMs, baseMs * (1L << attempt));
 
         return Duration.ofMillis(expMs);
     }

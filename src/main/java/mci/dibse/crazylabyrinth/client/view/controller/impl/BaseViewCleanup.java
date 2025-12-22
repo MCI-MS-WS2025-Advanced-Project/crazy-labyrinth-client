@@ -17,7 +17,7 @@ public abstract class BaseViewCleanup implements ViewCleanup {
                         // JavaFX props should not fire if values are equal
                         if (oldValue != null && oldValue.equals(newValue)) return;
                         if (!customCleanupCheckpoint(oldValue, newValue)) return;
-                        baseCleanUp();
+                        baseViewModelCleanup();
                         cleanup();
                     };
 
@@ -37,7 +37,7 @@ public abstract class BaseViewCleanup implements ViewCleanup {
     }
 
     // used for viewModel base class
-    protected void baseCleanUp() {}
+    protected void baseViewModelCleanup() {}
 
     private void init() {
         navigationStateViewModel.getCurrentScreen().addListener(cleanupListener);

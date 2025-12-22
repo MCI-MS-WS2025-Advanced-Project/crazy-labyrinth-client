@@ -30,7 +30,13 @@ public class EventDeserializer extends JsonDeserializer<Object> {
                     mapper.treeToValue(node, GameStateEventPayload.class);
             case EventType.NEXT_TREASURE ->
                     mapper.treeToValue(node, NextTreasureCardEventPayload.class);
+            case EventType.ACHIEVEMENT_UNLOCKED ->
+                    mapper.treeToValue(node, AchievementUnlockedEventPayload.class);
+            case EventType.GAME_OVER -> mapper.treeToValue(node, GameOverEventPayload.class);
+            case EventType.PLAYER_UPDATED ->
+                    mapper.treeToValue(node, PlayerUpdatedEventPayload.class);
             default -> throw new IllegalArgumentException("Unknown event type: " + type);
         };
     }
 }
+// PLAYER_UPDATED

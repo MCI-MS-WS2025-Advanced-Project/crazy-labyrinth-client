@@ -6,20 +6,22 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.value.ChangeListener;
 import labyrinth.contracts.models.*;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import mci.dibse.crazylabyrinth.client.domain.model.ClientPlayer;
 import mci.dibse.crazylabyrinth.client.infrastructure.util.JavaFXUtils;
+import mci.dibse.crazylabyrinth.client.service.ClientCommandService;
 import mci.dibse.crazylabyrinth.client.service.GameService;
 import mci.dibse.crazylabyrinth.client.service.LobbyService;
 import mci.dibse.crazylabyrinth.client.service.PlayerConnectedAckListener;
-import mci.dibse.crazylabyrinth.client.view.viewmodel.item.CurrentTurnInfoItem;
-import mci.dibse.crazylabyrinth.client.view.viewmodel.item.GameBoardItem;
-import mci.dibse.crazylabyrinth.client.view.viewmodel.item.PlayerStateItem;
-import mci.dibse.crazylabyrinth.client.view.viewmodel.item.TreasureItem;
+import mci.dibse.crazylabyrinth.client.view.viewmodel.item.*;
 import mci.dibse.crazylabyrinth.client.view.viewmodel.navigation.NavigationStateViewModel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.EventListener;
@@ -29,15 +31,15 @@ import org.springframework.stereotype.Component;
 @Slf4j
 public class GameViewModel extends BaseViewModel implements PlayerConnectedAckListener {
 
-    private final String WAITING_FOR_BONUS_LABEL = "setzt einen Bonus ein";
     private final String WAITING_FOR_PUSH_LABEL = "verschiebt einen Gang";
     private final String WAITING_FOR_MOVE_LABEL = "bewegt seine Spielfigur";
 
     private final LobbyService lobbyService;
     private final GameService gameService;
+    private ClientCommandService clientCommandService;
 
     @Getter private GameBoardItem gameBoardItem;
-    @Getter private List<PlayerStateItem> playerStates = new ArrayList<>();
+    @Getter private List<PlayerStateItem> playerStatesSorted = new ArrayList<>();
     @Setter @Getter private ClientPlayer clientPlayer;
     @Getter private OffsetDateTime gameEndTime;
 
@@ -46,12 +48,22 @@ public class GameViewModel extends BaseViewModel implements PlayerConnectedAckLi
     @Getter
     private final SimpleObjectProperty<TreasureItem> nextTreasure = new SimpleObjectProperty<>();
 
+    @Getter final SimpleBooleanProperty pendingRotation = new SimpleBooleanProperty();
+
+    private ChangeListener<TileItem> spareTileListener;
+    private ChangeListener<TurnState> turnStateChangeListener;
+
     @Autowired
     public GameViewModel(
-            NavigationStateViewModel vm, LobbyService lobbyService, GameService gameService) {
+            NavigationStateViewModel vm,
+            LobbyService lobbyService,
+            GameService gameService,
+            ClientCommandService clientCommandService) {
         super(vm);
         this.lobbyService = lobbyService;
         this.gameService = gameService;
+        this.clientCommandService = clientCommandService;
+        pendingRotation.set(false);
 
         lobbyService.addPlayerListener(this);
     }
@@ -61,22 +73,63 @@ public class GameViewModel extends BaseViewModel implements PlayerConnectedAckLi
         lobbyService.removePlayerListener(this);
     }
 
-    public String getCurrentPlayerId() {
-        return this.currentTurnInfoItem.getCurrentPlayerId();
+    public String getCurrentPlayerIdAsString() {
+        return this.currentTurnInfoItem.getCurrentPlayerIdAsString();
+    }
+
+    public String getCurrentTurnStateLabelAsString() {
+        return mapTurnStateToLabel(currentTurnInfoItem.getTurnState().get());
+    }
+
+    public SimpleStringProperty getCurrentPlayerIdProperty() {
+        return currentTurnInfoItem.getCurrentPlayerId();
+    }
+
+    public TileItem getSpareTileItem() {
+        return gameBoardItem.getSpareTile();
+    }
+
+    public ObjectProperty<TileItem> getSpareTileProperty() {
+        return gameBoardItem.getSpareTileProperty();
+    }
+
+    public TurnState getCurrentTurnState() {
+        return currentTurnInfoItem.getTurnState().get();
+    }
+
+    public SimpleObjectProperty<TurnState> getCurrentTurnStateProperty() {
+        return currentTurnInfoItem.getTurnState();
+    }
+
+    public String getNextTreasureNameAsString() {
+        return nextTreasure.get().getName();
+    }
+
+    public boolean isPendingRotation() {
+        return pendingRotation.get();
+    }
+
+    public PlayerStateItem getClientPlayerState() {
+        return playerStatesSorted.stream()
+                .filter(i -> i.getPlayerIdAsString().equals(clientPlayer.getId()))
+                .findFirst()
+                .orElseThrow();
     }
 
     @Override
     public void cleanup() {
         // todo?
+        System.out.println("Cleanup GameViewModel");
+        getSpareTileProperty().removeListener(spareTileListener);
+        getCurrentTurnStateProperty().removeListener(turnStateChangeListener);
+
         gameBoardItem.dispose();
         gameBoardItem = null;
-        playerStates.forEach(PlayerStateItem::dispose);
-        playerStates.clear();
+        playerStatesSorted.forEach(PlayerStateItem::dispose);
+        playerStatesSorted.clear();
         currentTurnInfoItem.dispose();
         currentTurnInfoItem = null;
-        clientPlayer = null;
         gameEndTime = null;
-        // JavaFXUtils.runOnFxThread();
     }
 
     @Override
@@ -101,15 +154,33 @@ public class GameViewModel extends BaseViewModel implements PlayerConnectedAckLi
     public void handleTreasureCardEvent(NextTreasureCardEventPayload nextTreasureCard) {
         Runnable task =
                 () -> {
-                    if (nextTreasure.get() == null) {
-                        TreasureItem treasureItem =
-                                new TreasureItem(nextTreasureCard.getTreasure());
-                        nextTreasure.set(treasureItem);
-                        return;
-                    }
-                    nextTreasure.get().updateFrom(nextTreasureCard.getTreasure());
+                    System.out.println("set treasure");
+                    TreasureItem treasureItem = new TreasureItem(nextTreasureCard.getTreasure());
+                    nextTreasure.set(treasureItem);
                 };
         JavaFXUtils.runOnFxThread(task);
+    }
+
+    public String mapTurnStateToLabel(TurnState turnState) {
+        return switch (turnState) {
+            case WAITING_FOR_MOVE -> WAITING_FOR_MOVE_LABEL;
+            case WAITING_FOR_PUSH -> WAITING_FOR_PUSH_LABEL;
+        };
+    }
+
+    public void movePawnCommand(int finalRow, int finalCol) {
+        clientCommandService.sendMovePawnCommand(finalRow, finalCol);
+    }
+
+    public void pushTileCommand(
+            int index, Direction pushDirection, Direction[] extraTileEntrances) {
+        clientCommandService.sendPushTileCommand(index, pushDirection, extraTileEntrances);
+    }
+
+    public void onLeftRotationOfSpareTile() {}
+
+    public void onRightRotationOfSpareTile() {
+        clientCommandService.sendRotateTileCommand();
     }
 
     @Override
@@ -130,13 +201,15 @@ public class GameViewModel extends BaseViewModel implements PlayerConnectedAckLi
     private void gameStarted(GameStateEventPayload gameState) {
         GameBoard initialBoard = gameState.getBoard();
         gameBoardItem = new GameBoardItem(initialBoard);
-        Arrays.stream(gameState.getPlayers()).map(PlayerStateItem::new).forEach(playerStates::add);
+        Arrays.stream(gameState.getPlayers())
+                .map(PlayerStateItem::new)
+                .forEach(playerStatesSorted::add);
         // sort client player first then the rest according to id
-        playerStates.sort(
+        playerStatesSorted.sort(
                 Comparator.comparing(
                                 (PlayerStateItem p) ->
-                                        !p.getPlayerId().equals(clientPlayer.getId()))
-                        .thenComparing(PlayerStateItem::getPlayerId));
+                                        !p.getPlayerIdAsString().equals(clientPlayer.getId()))
+                        .thenComparing(PlayerStateItem::getPlayerIdAsString));
 
         gameEndTime = gameState.getGameEndTime();
         currentTurnInfoItem = new CurrentTurnInfoItem(gameState.getCurrentTurnInfo());
@@ -150,52 +223,29 @@ public class GameViewModel extends BaseViewModel implements PlayerConnectedAckLi
                 .forEach(
                         p -> {
                             String incomingId = p.getPlayerInfo().getId();
-                            playerStates.stream()
+                            playerStatesSorted.stream()
                                     .filter(
                                             playerItem ->
-                                                    playerItem.getPlayerId().equals(incomingId))
+                                                    playerItem
+                                                            .getPlayerIdAsString()
+                                                            .equals(incomingId))
                                     .findFirst()
                                     .ifPresentOrElse(
                                             playerItem -> playerItem.updateFrom(p),
-                                            () -> playerStates.add(new PlayerStateItem(p)));
+                                            () -> playerStatesSorted.add(new PlayerStateItem(p)));
                         });
         this.currentTurnInfoItem.updateFrom(gameState.getCurrentTurnInfo());
+        this.pendingRotation.set(false);
+    }
+
+    public void addListenerToSpareTileProperty(ChangeListener<TileItem> spareTileListener) {
+        getSpareTileProperty().addListener(spareTileListener);
+        this.spareTileListener = spareTileListener;
+    }
+
+    public void addListenerToCurrentTurnStateProperty(
+            ChangeListener<TurnState> turnStateChangeListener) {
+        getCurrentTurnStateProperty().addListener(turnStateChangeListener);
+        this.turnStateChangeListener = turnStateChangeListener;
     }
 }
-
-/*
-
-   GameStateEventPayload:
-     type: object
-     required: [type, board, players, currentTurnInfo]
-     properties:
-       type: { $ref: "#/components/schemas/EventType" }
-       board: { $ref: "#/components/schemas/GameBoard" }
-       players:
-         type: array
-         items: { $ref: "#/components/schemas/PlayerState" }
-       currentTurnInfo: { $ref: "#/components/schemas/CurrentTurnInfo" }
-                   gameEndTime: { type: string, format: date-time }
-
-
-
-
-                       CurrentTurnInfo:
-     type: object
-     required: [ currentPlayerId, timeLimitSeconds, state ]
-     properties:
-       currentPlayerId: { type: string }
-       turnEndTime: { type: string, format: date-time }
-       state: { $ref: "#/components/schemas/TurnState" } --> enum
-
-
-
-
-   CurrentTurnInfo:
-     type: object
-     required: [ currentPlayerId, timeLimitSeconds, state ]
-     properties:
-       currentPlayerId: { type: string }
-       turnEndTime: { type: string, format: date-time }
-       state: { $ref: "#/components/schemas/TurnState" }
-*/

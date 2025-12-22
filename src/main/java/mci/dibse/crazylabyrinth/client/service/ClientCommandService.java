@@ -4,6 +4,7 @@ import static mci.dibse.crazylabyrinth.client.domain.context.ApplicationEvents.B
 import static mci.dibse.crazylabyrinth.client.infrastructure.util.CommandUtils.mapCommandToMessage;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import java.util.HashMap;
 import labyrinth.contracts.models.*;
 import lombok.extern.slf4j.Slf4j;
 import mci.dibse.crazylabyrinth.client.domain.model.record.GameInfoRecord;
@@ -81,6 +82,7 @@ public class ClientCommandService {
         command.setTreasureCardCount(startGameRecord.treasureCardCount());
 
         command.setTotalBonusCount(startGameRecord.totalBonusCount());
+
         try {
             String json = mapCommandToMessage(CommandType.START_GAME, command);
             log.debug("startGameCommand {}", json);
@@ -89,4 +91,59 @@ public class ClientCommandService {
             log.error("Failed to map start game command to json", e);
         }
     }
+
+    public void sendPushTileCommand(
+            int index, Direction pushDirection, Direction[] extraTileEntrances) {
+        PushTileCommandPayload command = new PushTileCommandPayload();
+        command.setType(CommandType.PUSH_TILE);
+        command.setDirection(pushDirection);
+        //  command.setTileEntrances(extraTileEntrances);
+        command.setRowOrColIndex(index);
+        try {
+            String json = mapCommandToMessage(CommandType.PUSH_TILE, command);
+            gameServerSocketService.sendCommand(json);
+        } catch (JsonProcessingException e) {
+            log.error("Failed to map disconnect command to json", e);
+        }
+    }
+
+    public void sendMovePawnCommand(int finalRow, int finalCol) {
+        MovePawnCommandPayload command = new MovePawnCommandPayload();
+        command.setType(CommandType.MOVE_PAWN);
+        Coordinates coordinates = new Coordinates();
+        coordinates.setColumn(finalCol);
+        coordinates.setRow(finalRow);
+        coordinates.setAdditionalProperties(new HashMap<>());
+        command.setTargetCoordinates(coordinates);
+        command.setAdditionalProperties(new HashMap<>());
+        try {
+            String json = mapCommandToMessage(CommandType.MOVE_PAWN, command);
+            gameServerSocketService.sendCommand(json);
+        } catch (JsonProcessingException e) {
+            log.error("Failed to map disconnect command to json", e);
+        }
+    }
+
+    public void sendRotateTileCommand() {
+        RotateTileCommandPayload rotateTileCommandPayload = new RotateTileCommandPayload();
+        rotateTileCommandPayload.setType(CommandType.ROTATE_TILE);
+        try {
+            String json = mapCommandToMessage(CommandType.ROTATE_TILE, rotateTileCommandPayload);
+            gameServerSocketService.sendCommand(json);
+        } catch (JsonProcessingException e) {
+            log.error("Failed to map rotate tile command to json", e);
+        }
+    }
+
+    // todo
+    /*
+               case CommandType.ROTATE_TILE -> mapper.writeValueAsString((RotateTileCommandPayload) payload);
+           case CommandType.TOGGLE_AI -> mapper.writeValueAsString((ToggleAiCommandPayload) payload);
+           case CommandType.USE_BEAM -> mapper.writeValueAsString((UseBeamCommandPayload) payload);
+           case CommandType.USE_SWAP -> mapper.writeValueAsString((UseSwapCommandPayload) payload);
+           case CommandType.USE_PUSH_FIXED -> mapper.writeValueAsString((UsePushFixedCommandPayload) payload);
+           case CommandType.USE_PUSH_TWICE -> mapper.writeValueAsString((UsePushTwiceCommandPayload) payload);
+
+    */
+
 }

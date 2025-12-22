@@ -4,10 +4,7 @@ import java.util.Arrays;
 import java.util.List;
 import javafx.beans.property.*;
 import javafx.collections.FXCollections;
-import labyrinth.contracts.models.AchievementType;
-import labyrinth.contracts.models.BonusType;
-import labyrinth.contracts.models.PlayerState;
-import labyrinth.contracts.models.Treasure;
+import labyrinth.contracts.models.*;
 import lombok.Getter;
 import mci.dibse.crazylabyrinth.client.infrastructure.util.JavaFXUtils;
 
@@ -53,8 +50,32 @@ public class PlayerStateItem extends BaseItem<PlayerState> {
         JavaFXUtils.runOnFxThread(apply);
     }
 
-    public String getPlayerId() {
+    public String getPlayerIdAsString() {
         return playerInfo.get().getId();
+    }
+
+    public String getPlayerNameAsString() {
+        return playerInfo.get().getName();
+    }
+
+    public PlayerColor getPlayerColor() {
+        return playerInfo.get().getColor();
+    }
+
+    public int getPlayerCurrentRowAsInt() {
+        return currentPosition.get().getRowAsInt();
+    }
+
+    public int getPlayerCurrentColumnAsInt() {
+        return currentPosition.get().getColumnAsInt();
+    }
+
+    public int getRemainingTreasureCountAsInt() {
+        return remainingTreasureCount.intValue();
+    }
+
+    public int getAvailableBonusCountForType(BonusType type) {
+        return Math.toIntExact(availableBonusTypes.stream().filter(type::equals).count());
     }
 
     @Override
@@ -65,7 +86,7 @@ public class PlayerStateItem extends BaseItem<PlayerState> {
                         .filter(
                                 t ->
                                         !this.treasuresFound.get().stream()
-                                                .map(i -> i.getId().get())
+                                                .map(TreasureItem::getId)
                                                 .toList()
                                                 .contains(t.getId()))
                         .map(TreasureItem::new)
@@ -73,6 +94,18 @@ public class PlayerStateItem extends BaseItem<PlayerState> {
         this.currentPosition.get().updateFrom(source.getCurrentPosition());
         this.treasuresFound.addAll(notExistingTreasures);
         this.playerInfo.get().updateFrom(source.getPlayerInfo());
+        this.remainingTreasureCount.set(source.getRemainingTreasureCount());
+
+        List<AchievementType> achievements = Arrays.stream(source.getAchievements()).toList();
+        // achievements = achievements.stream().filter(a ->
+        // !this.achievementTypes.contains(a)).toList();
+        // this.achievementTypes.addAll(achievements);
+        this.achievementTypes.set(FXCollections.observableArrayList(achievements));
+
+        List<BonusType> bonuses = Arrays.stream(source.getAvailableBonuses()).toList();
+        // bonuses = bonuses.stream().filter(a -> !this.availableBonusTypes.contains(a)).toList();
+        // this.availableBonusTypes.addAll(bonuses);
+        this.availableBonusTypes.set(FXCollections.observableArrayList(bonuses));
     }
 
     @Override

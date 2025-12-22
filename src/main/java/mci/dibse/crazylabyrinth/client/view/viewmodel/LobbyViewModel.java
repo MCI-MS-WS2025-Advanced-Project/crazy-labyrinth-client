@@ -144,7 +144,7 @@ public class LobbyViewModel extends BaseViewModel
     public void cleanup() {
         ObservableList<PlayerInfoItem> playersListProperty = getPlayersListProperty();
         playerListListener.forEach(playersListProperty::removeListener);
-        this.clientPlayer = null;
+        //  this.clientPlayer = null;
         lobbyStateItem.dispose();
         this.lobbyStateItem = null;
     }
@@ -199,6 +199,11 @@ public class LobbyViewModel extends BaseViewModel
     protected boolean customCleanupCheckpoint(
             NavigationStateViewModel.ScreenId oldValue,
             NavigationStateViewModel.ScreenId newValue) {
+
+        if (NavigationStateViewModel.ScreenId.LOBBY.equals(oldValue)
+                && NavigationStateViewModel.ScreenId.MAIN.equals(newValue))
+            this.clientPlayer = null;
+
         return newValue != null
                 && NavigationStateViewModel.ScreenId.LOBBY.equals(oldValue)
                 && !NavigationStateViewModel.ScreenId.LOBBY.equals(newValue);
