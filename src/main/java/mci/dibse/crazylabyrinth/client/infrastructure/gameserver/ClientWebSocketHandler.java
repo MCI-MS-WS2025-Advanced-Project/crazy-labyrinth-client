@@ -47,6 +47,7 @@ public class ClientWebSocketHandler extends TextWebSocketHandler {
         webSocketExecutor.execute(
                 () -> {
                     try {
+
                         serverEventService.handleEvent(message.getPayload());
                     } catch (Exception e) {
                         log.error(

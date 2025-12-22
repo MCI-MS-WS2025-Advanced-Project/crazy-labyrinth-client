@@ -8,7 +8,7 @@ import mci.dibse.crazylabyrinth.client.view.viewmodel.navigation.NavigationState
 @Slf4j
 public abstract class BaseViewCleanup implements ViewCleanup {
 
-    protected NavigationStateViewModel vm;
+    protected NavigationStateViewModel navigationStateViewModel;
 
     private final javafx.beans.value.ChangeListener<? super NavigationStateViewModel.ScreenId>
             cleanupListener =
@@ -17,30 +17,35 @@ public abstract class BaseViewCleanup implements ViewCleanup {
                         // JavaFX props should not fire if values are equal
                         if (oldValue != null && oldValue.equals(newValue)) return;
                         if (!customCleanupCheckpoint(oldValue, newValue)) return;
+                        baseCleanUp();
                         cleanup();
                     };
 
-    public BaseViewCleanup(NavigationStateViewModel vm) {
-        this.vm = vm;
+    public BaseViewCleanup(NavigationStateViewModel navigationStateViewModel) {
+        this.navigationStateViewModel = navigationStateViewModel;
         init();
     }
 
     @PreDestroy
     public void destroy() {
-        vm.getCurrentScreen().removeListener(cleanupListener);
+        navigationStateViewModel.getCurrentScreen().removeListener(cleanupListener);
     }
 
+    // override to impolement class specific cleanup
     public void cleanup() {
         log.debug("Cleaning up view...nothing to do here.");
     }
 
+    // used for viewModel base class
+    protected void baseCleanUp() {}
+
     private void init() {
-        vm.getCurrentScreen().addListener(cleanupListener);
+        navigationStateViewModel.getCurrentScreen().addListener(cleanupListener);
     }
 
     protected boolean customCleanupCheckpoint(
             NavigationStateViewModel.ScreenId oldValue,
             NavigationStateViewModel.ScreenId newValue) {
-        return true;
+        return false;
     }
 }

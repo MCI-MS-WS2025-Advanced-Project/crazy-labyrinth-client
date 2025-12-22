@@ -15,10 +15,16 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.layout.VBox?>
+<?import java.net.URL?>
 <BorderPane xmlns="http://javafx.com/javafx"
             xmlns:fx="http://javafx.com/fxml"
             fx:controller="mci.dibse.crazylabyrinth.client.view.controller.impl.GameServerDashboardController"
             prefHeight="400" prefWidth="700">
+
+    <stylesheets>
+        <URL value="@/styles/shared.css"/>
+        <URL value="@/styles/dashboard.css"/>
+    </stylesheets>
 
     <top>
         <ToolBar>
@@ -42,11 +48,11 @@
 
                 </placeholder>
                 <columns>
-                    <TableColumn fx:id="nameCol"  text="Name"  />
-                    <TableColumn fx:id="statusCol"  text="Status"  prefWidth="75" style="-fx-alignment: CENTER"/>
-                    <TableColumn fx:id="currentPlayersCol" text="Players" prefWidth="70"  style="-fx-alignment: CENTER"/>
-                    <TableColumn fx:id="lastSeenCol" text="Last Seen" prefWidth="100"  style="-fx-alignment: CENTER"/>
-                    <TableColumn fx:id="actionCol" text="Action" prefWidth="75"  style="-fx-alignment: CENTER"/>
+                    <TableColumn fx:id="nameCol" prefWidth="120" minWidth="300"  text="Name"  />
+                    <TableColumn fx:id="statusCol"  text="Status"  prefWidth="120"  minWidth="75" style="-fx-alignment: CENTER"/>
+                    <TableColumn fx:id="currentPlayersCol" text="Players" prefWidth="120" minWidth="70"  style="-fx-alignment: CENTER"/>
+                    <TableColumn fx:id="lastSeenCol" text="Last Seen" prefWidth="120"  minWidth="100" style="-fx-alignment: CENTER"/>
+                    <TableColumn fx:id="actionCol" text="Action" prefWidth="120"  minWidth="75" style="-fx-alignment: CENTER"/>
                 </columns>
 
                 <!-- Optional context menu for rows -->
