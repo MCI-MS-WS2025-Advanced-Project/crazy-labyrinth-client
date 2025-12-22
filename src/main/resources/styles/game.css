@@ -1,0 +1,201 @@
+/* Top bar and bottom timer formatting */
+.topbar {
+    -fx-padding: 10 14;
+}
+
+.timer-bar {
+    -fx-padding: 10 14;
+}
+
+/* Compact card variants for small content blocks */
+.compact-card {
+    -fx-padding: 10;
+}
+
+.image-card {
+    -fx-padding: 12;
+    -fx-background-color: rgba(42, 45, 51, 0.11);
+}
+
+/* Badge (counter) style: pill-like value display */
+.badge {
+    -fx-alignment: CENTER;
+    -fx-padding: 5 14;
+    -fx-background-color: linear-gradient(to bottom, #ffffff, #f2f4f7);
+    -fx-background-radius: 12;
+    -fx-border-color: #e5e7eb;
+    -fx-border-radius: 12;
+    -fx-border-width: 1;
+    -fx-text-fill: #111827;
+    -fx-font-size: 13px;
+    -fx-font-weight: 700;
+}
+
+
+/* Player list items */
+.list-item {
+    -fx-padding: 6 8;
+    -fx-background-color: white;
+    -fx-background-radius: 6;
+    -fx-border-color: #e5e7eb;
+    -fx-border-radius: 6;
+    -fx-border-width: 1;
+}
+
+/* Tile labels overlay */
+.tile-treasure-label {
+    -fx-font-size: 22px;
+    -fx-font-weight: 800;
+    -fx-text-fill: white;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.45), 10, 0.2, 0, 0);
+}
+
+.tile-bonus-label {
+    -fx-translate-y: -20;
+    -fx-font-size: 11px;
+    -fx-text-fill: #111827;
+    -fx-effect: dropshadow(gaussian, rgba(255,255,255,0.9), 8, 0.2, 0, 0);
+}
+
+/* Round buttons (rotate) using existing button color schemes */
+.round-button {
+    -fx-background-radius: 24;
+    -fx-min-width: 44;
+    -fx-min-height: 44;
+    -fx-max-width: 44;
+    -fx-max-height: 44;
+    -fx-font-size: 18px;
+    -fx-padding: 0;
+}
+
+/* Game container and board */
+.game-container {
+    -fx-padding: 0;
+}
+
+.board {
+    -fx-background-color: #6a816a;  /*  #6a816a; light green grid lines */
+    -fx-background-radius: 0;        /* square corners */
+    -fx-background-insets: 0;
+}
+
+/* Arrow bars and arrows */
+.arrow-bar {
+    -fx-background-color: rgb(67, 80, 67); /* rgba(0, 0, 0, 0); */
+}
+
+.top-arrow-bar    { -fx-background-radius: 12 12 0 0; /* TL TR BR BL */
+                     -fx-pref-height: 20px;
+}
+.bottom-arrow-bar { -fx-background-radius: 0 0 12 12;
+                    -fx-pref-height: 20px;
+}
+.left-arrow-bar   { -fx-pref-width: 20px;}
+.right-arrow-bar  { -fx-pref-width: 20px}
+
+
+
+
+/*
+ -fx-padding: 6 10;
+ */
+.arrow-button {
+    -fx-background-color: #f3f4f6;
+    -fx-text-fill: #111827;
+    -fx-background-radius: 20;
+    -fx-padding: 0;
+    -fx-border-color: #e5e7eb;
+    -fx-border-radius: 20;
+    -fx-border-width: 1;
+    -fx-cursor: hand;
+    -fx-font-size: 7px;
+    -fx-font-weight: 800;
+    -fx-margin: 0 6 0 6;
+}
+.arrow-button-vertical {
+    -fx-pref-width: 16;
+
+}
+.arrow-button-horizontal {
+    -fx-pref-height: 16;
+}
+
+.arrow-button:disabled {
+    -fx-background-color: transparent;
+    -fx-border-color: rgba(0, 0, 0, 0)  ;
+    -fx-text-fill: rgba(0, 0, 0, 0)  ;
+    -fx-opacity: 1;
+}
+.arrow-button:hover { -fx-background-color: #c2c4c8; }
+.arrow-button:pressed { -fx-background-color: #d1d5db; }
+
+
+.sidebar {
+    -fx-padding: 60 14 60 14; /* top right bottom left */
+}
+
+
+
+.game-container {
+    -fx-padding: 10;
+    -fx-background-color: rgb(0,0,0,0);
+
+}
+
+/* Bonus box and related controls (kept, aligned with theme) */
+.bonus-box {
+    -fx-padding: 2;
+    -fx-background-color: linear-gradient(to bottom, #f6f7fa, #eef0f4);
+    -fx-background-radius: 12;
+    -fx-border-color: rgba(0,0,0,0.08);
+    -fx-border-radius: 12;
+    -fx-border-width: 1;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 12, 0.2, 0, 2);
+}
+
+.bonus-row {
+    -fx-padding: 6 10;
+    -fx-background-color: rgba(255,255,255,0.85);
+    -fx-background-radius: 10;
+    -fx-border-color: #e5e7eb;
+    -fx-border-radius: 10;
+    -fx-border-width: 1;
+}
+
+.bonus-label {
+    -fx-font-size: 12px;
+    -fx-text-fill: #374151;
+    -fx-font-weight: 600;
+}
+
+.count-pill {
+    /*-fx-alignment: CENTER;*/
+    -fx-padding: 2 8;
+    -fx-background-color: linear-gradient(to bottom, #ffffff, #f2f4f7);
+    -fx-background-radius: 12;
+    -fx-border-color: rgba(0,0,0,0.12);
+    -fx-border-radius: 12;
+    -fx-border-width: 1;
+    -fx-text-fill: #111827;
+    -fx-font-size: 12px;
+    -fx-font-weight: 700;
+}
+
+.pill-button {
+    -fx-background-color:  #e9edf3;
+    -fx-background-radius: 14;
+    -fx-text-fill: #111827;
+    -fx-font-size: 12px;
+    -fx-cursor: hand;
+    -fx-padding: 0;
+    -fx-border-color: rgba(0,0,0,0.12);
+    -fx-border-radius: 14;
+    -fx-border-width: 1;
+    -fx-pref-width: 30;
+    -fx-pref-height: 20;
+}
+
+.pill-button:hover { -fx-background-color: linear-gradient(to bottom, #f5f7fa, #e9edf3); }
+.pill-button:pressed { -fx-background-color: linear-gradient(to bottom, #d7dbe2, #cbd0d8); }
+.pill-button:disabled { -fx-opacity: 0.6; -fx-cursor: default; }
+

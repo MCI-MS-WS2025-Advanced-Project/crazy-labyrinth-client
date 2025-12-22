@@ -53,7 +53,7 @@ public class GameServerSocketService implements PlayerConnectedAckListener {
     public void connectToServerAndSendMessage(String serverUrl, String json)
             throws ConnectionException {
         try {
-            client.connect(serverUrl.trim());
+            client.connect(serverUrl.trim(), null);
             // Wait for the connection to complete; blocks current thread
             client.getConnectionCallback().join();
 
@@ -68,6 +68,9 @@ public class GameServerSocketService implements PlayerConnectedAckListener {
     public void handleDisconnectEvent(ApplicationEvents event) {
         if (ApplicationEvents.CONNECTION_LOST.equals(event)
                 && (serverUrl != null && identifierToken != null && clientUserName != null)) {
+
+            log.info("Disconnect from server event detected");
+
             ConnectCommandPayload reconnectPayload = new ConnectCommandPayload();
             reconnectPayload.setIdentifierToken(identifierToken);
             reconnectPayload.setType(CommandType.CONNECT);
