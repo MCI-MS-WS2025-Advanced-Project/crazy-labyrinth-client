@@ -73,6 +73,16 @@ public class GameViewModel extends BaseViewModel implements PlayerConnectedAckLi
         lobbyService.removePlayerListener(this);
     }
 
+    public PlayerStateItem getCurrentPlayerState() {
+        return playerStatesSorted.stream()
+                .filter(
+                        i ->
+                                i.getPlayerIdAsString()
+                                        .equals(currentTurnInfoItem.getCurrentPlayerIdAsString()))
+                .findFirst()
+                .orElseThrow();
+    }
+
     public String getCurrentPlayerIdAsString() {
         return this.currentTurnInfoItem.getCurrentPlayerIdAsString();
     }

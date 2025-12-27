@@ -20,11 +20,9 @@ import labyrinth.contracts.models.*;
 import lombok.extern.slf4j.Slf4j;
 import mci.dibse.crazylabyrinth.client.infrastructure.util.JavaFXUtils;
 import mci.dibse.crazylabyrinth.client.infrastructure.util.PlayerPawnUtils;
+import mci.dibse.crazylabyrinth.client.service.AnimationService;
 import mci.dibse.crazylabyrinth.client.view.viewmodel.GameViewModel;
-import mci.dibse.crazylabyrinth.client.view.viewmodel.item.GameBoardItem;
-import mci.dibse.crazylabyrinth.client.view.viewmodel.item.PlayerStateItem;
-import mci.dibse.crazylabyrinth.client.view.viewmodel.item.TileItem;
-import mci.dibse.crazylabyrinth.client.view.viewmodel.item.TreasureItem;
+import mci.dibse.crazylabyrinth.client.view.viewmodel.item.*;
 import mci.dibse.crazylabyrinth.client.view.viewmodel.navigation.NavigationStateViewModel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -89,11 +87,15 @@ public class GameStateController extends BaseViewCleanup {
 
     private final GameViewModel gameViewModel;
     private final Map<String, Label> idToPlayerLabel = new HashMap<>();
+    private final Map<String, Circle> idToPlayerPawn = new HashMap<>();
+
+    private final AnimationService animationService;
 
     @Autowired
     public GameStateController(NavigationStateViewModel vm, GameViewModel gameViewModel) {
         super(vm);
         this.gameViewModel = gameViewModel;
+        this.animationService = new AnimationService();
     }
 
     @FXML
@@ -109,9 +111,17 @@ public class GameStateController extends BaseViewCleanup {
 
         ChangeListener<TurnState> turnStateChangeListener =
                 (observable, oldValue, newValue) -> {
-                    initGameGrid();
+                    if (animationService.isAnimationInProgress()) {
+                        Platform.runLater(this::waitForAnimationsAndRecreateGrid);
+                    } else {
+                        initGameGrid();
+                    }
                 };
         gameViewModel.addListenerToCurrentTurnStateProperty(turnStateChangeListener);
+
+        initPlayerMovementListener();
+
+        initTilePushListener();
 
         initPushTileButtons();
 
@@ -120,6 +130,14 @@ public class GameStateController extends BaseViewCleanup {
         initGameCounter();
 
         initBoni();
+    }
+
+    private void waitForAnimationsAndRecreateGrid() {
+        if (animationService.isAnimationInProgress()) {
+            Platform.runLater(this::waitForAnimationsAndRecreateGrid);
+        } else {
+            initGameGrid();
+        }
     }
 
     @Override
@@ -429,6 +447,8 @@ public class GameStateController extends BaseViewCleanup {
                     boardGrid.setSnapToPixel(true);
                     boardGrid.setPadding(Insets.EMPTY);
 
+                    idToPlayerPawn.clear();
+
                     if (gameContainer.getParent() instanceof Region parent) {
                         var squareSize =
                                 Bindings.min(parent.widthProperty(), parent.heightProperty())
@@ -509,14 +529,16 @@ public class GameStateController extends BaseViewCleanup {
                                                 PlayerPawnUtils.mapPlayerColorToFxColor(
                                                         playerColor));
                                 playerPawn.setOpacity(0.7);
+                                String playerId =
+                                        playerStateItemOptional.get().getPlayerIdAsString();
+                                idToPlayerPawn.put(playerId, playerPawn);
                                 cellContainer.getChildren().add(playerPawn);
                             }
-
-                            // set mouse clicks tuff for move Phase
                             cellContainer.setOnMouseClicked(
                                     event -> {
                                         gameViewModel.movePawnCommand(finalRow, finalCol);
                                     });
+
                             BooleanBinding isMyTurnAndMovePhase =
                                     Bindings.createBooleanBinding(
                                             () -> {
@@ -667,6 +689,7 @@ public class GameStateController extends BaseViewCleanup {
     private void pushTileCommand(
             int index, Direction pushDirection, Direction[] extraTileEntrances) {
         if (!checkIfPushRevertsLastPush(index, pushDirection)) {
+            // Send command to server - animation will be triggered by server response
             gameViewModel.pushTileCommand(index, pushDirection, extraTileEntrances);
         } else {
             // todo rework error display
@@ -925,5 +948,50 @@ public class GameStateController extends BaseViewCleanup {
 
     public void onBonusPushFixedButtonClick(ActionEvent actionEvent) {
         // todo
+    }
+
+    private void initTilePushListener() {
+        gameViewModel
+                .getGameBoardItem()
+                .lastPushProperty()
+                .addListener(
+                        (obs, oldPush, newPush) -> {
+                            if (newPush != null && !Objects.equals(oldPush, newPush)) {
+                                int index = newPush.getRowOrColIndex();
+                                Direction direction = newPush.getDirection();
+
+                                log.debug(
+                                        "Triggering tile push animation for all clients: index={},"
+                                                + " direction={}",
+                                        index,
+                                        direction);
+
+                                animationService.animateTilePush(index, direction, boardGrid);
+                            }
+                        });
+    }
+
+    private void initPlayerMovementListener() {
+        gameViewModel
+                .getPlayerStatesSorted()
+                .forEach(
+                        playerStateItem ->
+                                playerStateItem
+                                        .getCurrentPosition()
+                                        .addListener(
+                                                (obs, oldPos, newPos) -> {
+                                                    if (gameViewModel
+                                                            .getCurrentTurnState()
+                                                            .equals(TurnState.WAITING_FOR_MOVE)) {
+                                                        animationService.animatePlayerPath(
+                                                                gameViewModel.getGameBoardItem(),
+                                                                idToPlayerPawn.get(
+                                                                        playerStateItem
+                                                                                .getPlayerIdAsString()),
+                                                                oldPos,
+                                                                newPos,
+                                                                boardGrid);
+                                                    }
+                                                }));
     }
 }
