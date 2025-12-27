@@ -35,11 +35,11 @@ import lombok.extern.slf4j.Slf4j;
 import mci.dibse.crazylabyrinth.client.domain.context.PushTileCommandRecord;
 import mci.dibse.crazylabyrinth.client.infrastructure.util.*;
 import mci.dibse.crazylabyrinth.client.service.GameServerSocketService;
+import mci.dibse.crazylabyrinth.client.infrastructure.util.JavaFXUtils;
+import mci.dibse.crazylabyrinth.client.infrastructure.util.PlayerPawnUtils;
+import mci.dibse.crazylabyrinth.client.service.AnimationService;
 import mci.dibse.crazylabyrinth.client.view.viewmodel.GameViewModel;
-import mci.dibse.crazylabyrinth.client.view.viewmodel.item.GameBoardItem;
-import mci.dibse.crazylabyrinth.client.view.viewmodel.item.PlayerStateItem;
-import mci.dibse.crazylabyrinth.client.view.viewmodel.item.TileItem;
-import mci.dibse.crazylabyrinth.client.view.viewmodel.item.TreasureItem;
+import mci.dibse.crazylabyrinth.client.view.viewmodel.item.*;
 import mci.dibse.crazylabyrinth.client.view.viewmodel.navigation.NavigationStateViewModel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.EventListener;
@@ -146,12 +146,16 @@ public class GameStateController extends BaseViewCleanup {
     private ChangeListener<OffsetDateTime> turnTimeChangeListener;
 
     private ScreenResolutionProperties screenResolutionProperties;
+    private final Map<String, ImageView> idToPlayerPawn = new HashMap<>();
+
+    private final AnimationService animationService;
 
     @Autowired
     public GameStateController(NavigationStateViewModel vm, GameViewModel gameViewModel, ScreenResolutionProperties screenResolutionProperties) {
         super(vm);
         this.gameViewModel = gameViewModel;
         this.screenResolutionProperties = screenResolutionProperties;
+        this.animationService = new AnimationService();
     }
 
 
@@ -166,9 +170,17 @@ public class GameStateController extends BaseViewCleanup {
 
         ChangeListener<TurnState> turnStateChangeListener =
                 (observable, oldValue, newValue) -> {
-                    initGameGrid();
+                    if (animationService.isAnimationInProgress()) {
+                        Platform.runLater(this::waitForAnimationsAndRecreateGrid);
+                    } else {
+                        initGameGrid();
+                    }
                 };
         gameViewModel.addListenerToCurrentTurnStateProperty(turnStateChangeListener);
+
+        initPlayerMovementListener();
+
+        initTilePushListener();
 
         initPushTileButtons();
 
@@ -201,10 +213,15 @@ public class GameStateController extends BaseViewCleanup {
             ScreenResolutionProperties.ResolutionProperties props = new ScreenResolutionProperties.ResolutionProperties(root,
                     viewport);
             screenResolutionProperties.initUiScaling(props);
+    }
+
+    private void waitForAnimationsAndRecreateGrid() {
+        if (animationService.isAnimationInProgress()) {
+            Platform.runLater(this::waitForAnimationsAndRecreateGrid);
+        } else {
+            initGameGrid();
         }
-
-
-
+    }
 
     @Override
     protected boolean customCleanupCheckpoint(
@@ -625,6 +642,8 @@ public class GameStateController extends BaseViewCleanup {
                     boardGrid.setPadding(Insets.EMPTY);
                     GridPane.setMargin(boardGrid, Insets.EMPTY);
 
+                    idToPlayerPawn.clear();
+
                     if (gameContainer.getParent() instanceof Region parent) {
 
                         var squareSize =
@@ -730,6 +749,7 @@ public class GameStateController extends BaseViewCleanup {
                                 double scale = 0.45;
                                 playerImage.fitWidthProperty().bind(cellContainer.widthProperty().multiply(scale));
                                 playerImage.fitHeightProperty().bind(cellContainer.heightProperty().multiply(scale));
+                                idToPlayerPawn.put(playerStateItem.getPlayerIdAsString(), playerImage);
                                 cellContainer.getChildren().add(playerImage);
 
                             }
@@ -1453,5 +1473,50 @@ public class GameStateController extends BaseViewCleanup {
                                     }
                                 }));
         gameTimeline.setCycleCount(Animation.INDEFINITE); // we control stopping via remainingTimer
+    }
+
+    private void initTilePushListener() {
+        gameViewModel
+                .getGameBoardItem()
+                .lastPushProperty()
+                .addListener(
+                        (obs, oldPush, newPush) -> {
+                            if (newPush != null && !Objects.equals(oldPush, newPush)) {
+                                int index = newPush.getRowOrColIndex();
+                                Direction direction = newPush.getDirection();
+
+                                log.debug(
+                                        "Triggering tile push animation for all clients: index={},"
+                                                + " direction={}",
+                                        index,
+                                        direction);
+
+                                animationService.animateTilePush(index, direction, boardGrid);
+                            }
+                        });
+    }
+
+    private void initPlayerMovementListener() {
+        gameViewModel
+                .getPlayerStatesSorted()
+                .forEach(
+                        playerStateItem ->
+                                playerStateItem
+                                        .getCurrentPosition()
+                                        .addListener(
+                                                (obs, oldPos, newPos) -> {
+                                                    if (gameViewModel
+                                                            .getCurrentTurnState()
+                                                            .equals(TurnState.WAITING_FOR_MOVE)) {
+                                                        animationService.animatePlayerPath(
+                                                                gameViewModel.getGameBoardItem(),
+                                                                idToPlayerPawn.get(
+                                                                        playerStateItem
+                                                                                .getPlayerIdAsString()),
+                                                                oldPos,
+                                                                newPos,
+                                                                boardGrid);
+                                                    }
+                                                }));
     }
 }
