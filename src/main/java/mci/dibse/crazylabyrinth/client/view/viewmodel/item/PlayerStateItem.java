@@ -107,7 +107,7 @@ public class PlayerStateItem extends BaseItem<PlayerState> {
                                                 .contains(t.getId()))
                         .map(TreasureItem::new)
                         .toList();
-        this.currentPosition.get().updateFrom(source.getCurrentPosition());
+        this.currentPosition.set(new CoordinatesItem(source.getCurrentPosition()));
         this.treasuresFound.addAll(notExistingTreasures);
         this.playerInfo.get().updateFrom(source.getPlayerInfo());
 

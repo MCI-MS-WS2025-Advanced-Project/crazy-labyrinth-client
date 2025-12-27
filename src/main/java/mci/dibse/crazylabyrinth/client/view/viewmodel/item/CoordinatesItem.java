@@ -19,6 +19,22 @@ public class CoordinatesItem extends BaseItem<Coordinates> {
         JavaFXUtils.runOnFxThread(apply);
     }
 
+    public CoordinatesItem(int row, int column) {
+        Runnable apply =
+                () -> {
+                    this.row.set(row);
+                    this.column.set(column);
+                };
+        JavaFXUtils.runOnFxThread(apply);
+    }
+
+    public Coordinates toCoordinates() {
+        Coordinates coordinates = new Coordinates();
+        coordinates.setRow(this.getRowAsInt());
+        coordinates.setColumn(this.getColumnAsInt());
+        return coordinates;
+    }
+
     public SimpleIntegerProperty rowProperty() {
         return row;
     }
@@ -43,4 +59,19 @@ public class CoordinatesItem extends BaseItem<Coordinates> {
 
     @Override
     protected void disposeItem() {}
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof CoordinatesItem other) {
+            return this.getRowAsInt() == other.getRowAsInt()
+                    && this.getColumnAsInt() == other.getColumnAsInt();
+        }
+
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return getRowAsInt() * 31 + getColumnAsInt();
+    }
 }
