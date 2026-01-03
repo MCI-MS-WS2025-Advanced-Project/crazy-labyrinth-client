@@ -16,7 +16,9 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import mci.dibse.crazylabyrinth.client.domain.context.ApplicationEvents;
+import mci.dibse.crazylabyrinth.client.domain.context.PushTileCommandRecord;
 import mci.dibse.crazylabyrinth.client.domain.model.ClientPlayer;
+import mci.dibse.crazylabyrinth.client.infrastructure.exceptions.GeneralUiException;
 import mci.dibse.crazylabyrinth.client.infrastructure.util.JavaFXUtils;
 import mci.dibse.crazylabyrinth.client.service.ClientCommandService;
 import mci.dibse.crazylabyrinth.client.service.GameService;
@@ -35,7 +37,6 @@ public class GameViewModel extends BaseViewModel implements PlayerConnectedAckLi
     private final String WAITING_FOR_PUSH_LABEL = "verschiebt einen Gang";
     private final String WAITING_FOR_MOVE_LABEL = "bewegt seine Spielfigur";
 
-
     private final LobbyService lobbyService;
     private final GameService gameService;
     private ClientCommandService clientCommandService;
@@ -50,8 +51,19 @@ public class GameViewModel extends BaseViewModel implements PlayerConnectedAckLi
     @Getter
     private final SimpleObjectProperty<TreasureItem> nextTreasure = new SimpleObjectProperty<>();
 
-    @Getter final SimpleBooleanProperty pendingRotation = new SimpleBooleanProperty();
-    @Getter final SimpleBooleanProperty turnTimeout = new SimpleBooleanProperty();
+    @Getter final SimpleBooleanProperty pendingRotationProperty = new SimpleBooleanProperty();
+    @Getter final SimpleBooleanProperty turnTimeoutProperty = new SimpleBooleanProperty();
+
+    @Getter final SimpleBooleanProperty isBonusEnabledProperty = new SimpleBooleanProperty();
+
+    @Getter
+    final SimpleBooleanProperty isPushFixedTileBonusActiveProperty = new SimpleBooleanProperty();
+
+    @Getter
+    final SimpleBooleanProperty isPushTwiceTileBonusActiveProperty = new SimpleBooleanProperty();
+
+    @Getter final SimpleBooleanProperty isSwapBonusActiveProperty = new SimpleBooleanProperty();
+    @Getter final SimpleBooleanProperty isBeamTileBonusActiveProperty = new SimpleBooleanProperty();
 
     private ChangeListener<TileItem> spareTileListener;
     private ChangeListener<TurnState> turnStateChangeListener;
@@ -66,7 +78,7 @@ public class GameViewModel extends BaseViewModel implements PlayerConnectedAckLi
         this.lobbyService = lobbyService;
         this.gameService = gameService;
         this.clientCommandService = clientCommandService;
-        pendingRotation.set(false);
+        pendingRotationProperty.set(false);
 
         lobbyService.addPlayerListener(this);
     }
@@ -85,8 +97,9 @@ public class GameViewModel extends BaseViewModel implements PlayerConnectedAckLi
     }
 
     public boolean isClientPlayerTimeout() {
-        return turnTimeout.get();
+        return turnTimeoutProperty.get();
     }
+
     public SimpleStringProperty getCurrentPlayerIdProperty() {
         return currentTurnInfoItem.getCurrentPlayerId();
     }
@@ -112,7 +125,48 @@ public class GameViewModel extends BaseViewModel implements PlayerConnectedAckLi
     }
 
     public boolean isPendingRotation() {
-        return pendingRotation.get();
+        return pendingRotationProperty.get();
+    }
+
+    public boolean isBonusEnabled() {
+        return isBonusEnabledProperty.get();
+    }
+
+    public boolean isPushFixedTileBonusActive() {
+        return isPushFixedTileBonusActiveProperty.get();
+    }
+
+    public boolean isPushTwiceTileBonusActive() {
+        return isPushTwiceTileBonusActiveProperty.get();
+    }
+
+    public boolean isSwapBonusActive() {
+        return isSwapBonusActiveProperty.get();
+    }
+
+    public boolean isBeamTileBonusActive() {
+        return isBeamTileBonusActiveProperty.get();
+    }
+
+    public boolean isAnyBonusActive(BonusType bonusType) {
+        switch (bonusType) {
+            case BonusType.SWAP -> {
+                return isPushFixedTileBonusActive()
+                        || isPushTwiceTileBonusActive()
+                        || isBeamTileBonusActive();
+            }
+            case BonusType.PUSH_FIXED -> {
+                return isPushTwiceTileBonusActive()
+                        || isSwapBonusActive()
+                        || isBeamTileBonusActive();
+            }
+            case BonusType.BEAM -> {
+                return isPushFixedTileBonusActive()
+                        || isPushTwiceTileBonusActive()
+                        || isSwapBonusActive();
+            }
+        }
+        return false;
     }
 
     public PlayerStateItem getClientPlayerState() {
@@ -141,7 +195,7 @@ public class GameViewModel extends BaseViewModel implements PlayerConnectedAckLi
     @Override
     public void onPlayerConnected(ClientPlayer clientPlayer) {
         this.clientPlayer = clientPlayer;
-        turnTimeout.set(false);
+        turnTimeoutProperty.set(false);
     }
 
     @EventListener
@@ -172,7 +226,7 @@ public class GameViewModel extends BaseViewModel implements PlayerConnectedAckLi
     public void handleTurnTimeout(ApplicationEvents event) {
         if (!ApplicationEvents.TURN_TIMEOUT.equals(event)) return;
         log.debug("handle turn timeout");
-        Runnable task = () -> turnTimeout.set(true);
+        Runnable task = () -> turnTimeoutProperty.set(true);
         JavaFXUtils.runOnFxThread(task);
     }
 
@@ -180,9 +234,22 @@ public class GameViewModel extends BaseViewModel implements PlayerConnectedAckLi
     public void handlePlayerUpdate(PlayerUpdatedEventPayload event) {
         log.debug("handle player update");
         String incomingPlayerId = event.getPlayer().getId();
-        playerStatesSorted.stream().filter(player -> player.getPlayerIdAsString().equals(incomingPlayerId))
-                .findFirst().orElseThrow()
+        playerStatesSorted.stream()
+                .filter(player -> player.getPlayerIdAsString().equals(incomingPlayerId))
+                .findFirst()
+                .orElseThrow()
                 .updatePlayerInfoFrom(event.getPlayer());
+    }
+
+    public void addListenerToSpareTileProperty(ChangeListener<TileItem> spareTileListener) {
+        getSpareTileProperty().addListener(spareTileListener);
+        this.spareTileListener = spareTileListener;
+    }
+
+    public void addListenerToCurrentTurnStateProperty(
+            ChangeListener<TurnState> turnStateChangeListener) {
+        getCurrentTurnStateProperty().addListener(turnStateChangeListener);
+        this.turnStateChangeListener = turnStateChangeListener;
     }
 
     public String mapTurnStateToLabel(TurnState turnState) {
@@ -193,18 +260,53 @@ public class GameViewModel extends BaseViewModel implements PlayerConnectedAckLi
     }
 
     public void movePawnCommand(int finalRow, int finalCol) {
-        clientCommandService.sendMovePawnCommand(finalRow, finalCol);
+        try {
+            clientCommandService.sendMovePawnCommand(finalRow, finalCol);
+        } catch (GeneralUiException e) {
+            setError(e.getMessage());
+        }
     }
 
-    public void pushTileCommand(
-            int index, Direction pushDirection, Direction[] extraTileEntrances) {
-        clientCommandService.sendPushTileCommand(index, pushDirection, extraTileEntrances);
+    public void pushTileCommand(PushTileCommandRecord data) {
+        try {
+            clientCommandService.sendPushTileCommand(data);
+        } catch (GeneralUiException e) {
+            setError(e.getMessage());
+        }
     }
 
     public void onLeftRotationOfSpareTile() {}
 
     public void onRightRotationOfSpareTile() {
-        clientCommandService.sendRotateTileCommand();
+        try {
+            clientCommandService.sendRotateTileCommand();
+        } catch (GeneralUiException e) {
+            setError(e.getMessage());
+        }
+    }
+
+    public void sendUsePushTwiceCommand() {
+        try {
+            clientCommandService.sendUsePushTwiceComnmand();
+        } catch (GeneralUiException e) {
+            setError(e.getMessage());
+        }
+    }
+
+    public void sendUseBeamCommand(int finalRow, int finalCol) {
+        try {
+            clientCommandService.sendUseBeamCommand(finalRow, finalCol);
+        } catch (GeneralUiException e) {
+            setError(e.getMessage());
+        }
+    }
+
+    public void sendUseSwapCommand(String playerId) {
+        try {
+            clientCommandService.sendUseSwapCommand(playerId);
+        } catch (GeneralUiException e) {
+            setError(e.getMessage());
+        }
     }
 
     @Override
@@ -218,12 +320,14 @@ public class GameViewModel extends BaseViewModel implements PlayerConnectedAckLi
 
     @Override
     protected boolean isErrorRelevant() {
+        log.debug("is error relevant for game view model:");
         return NavigationStateViewModel.ScreenId.GAMEBOARD.equals(
                 navigationStateViewModel.getCurrentScreen().get());
     }
 
     private void gameStarted(GameStateEventPayload gameState) {
         GameBoard initialBoard = gameState.getBoard();
+        isBonusEnabledProperty.set(isBonusEnabled(gameState));
         gameBoardItem = new GameBoardItem(initialBoard);
         Arrays.stream(gameState.getPlayers())
                 .map(PlayerStateItem::new)
@@ -259,17 +363,14 @@ public class GameViewModel extends BaseViewModel implements PlayerConnectedAckLi
                                             () -> playerStatesSorted.add(new PlayerStateItem(p)));
                         });
         this.currentTurnInfoItem.updateFrom(gameState.getCurrentTurnInfo());
-        this.pendingRotation.set(false);
+        this.pendingRotationProperty.set(false);
     }
 
-    public void addListenerToSpareTileProperty(ChangeListener<TileItem> spareTileListener) {
-        getSpareTileProperty().addListener(spareTileListener);
-        this.spareTileListener = spareTileListener;
-    }
-
-    public void addListenerToCurrentTurnStateProperty(
-            ChangeListener<TurnState> turnStateChangeListener) {
-        getCurrentTurnStateProperty().addListener(turnStateChangeListener);
-        this.turnStateChangeListener = turnStateChangeListener;
+    private boolean isBonusEnabled(GameStateEventPayload gameState) {
+        GameBoard initialBoard = gameState.getBoard();
+        if (initialBoard.getSpareTile().getBonus() != null) return true;
+        return Arrays.stream(initialBoard.getTiles())
+                .flatMap(Arrays::stream)
+                .anyMatch(tile -> tile.getBonus() != null);
     }
 }
