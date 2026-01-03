@@ -404,7 +404,7 @@ public class GameStateController extends BaseViewCleanup {
                 .bind(
                         Bindings.createBooleanBinding(
                                 () -> {
-                                    if (gameViewModel.isPendingRotation()) return false;
+                                    if (gameViewModel.isPendingRotation() || gameViewModel.isClientPlayerTimeout()) return false;
                                     String playerId =
                                             gameViewModel
                                                     .getClientPlayerState()
@@ -417,6 +417,7 @@ public class GameStateController extends BaseViewCleanup {
                                 },
                                 gameViewModel.getCurrentPlayerIdProperty(),
                                 gameViewModel.getCurrentTurnStateProperty(),
+                                gameViewModel.getTurnTimeout(),
                                 gameViewModel.getPendingRotation()));
 
         rotateRightButton.setOnAction(
@@ -546,7 +547,8 @@ public class GameStateController extends BaseViewCleanup {
                                                                         .getCurrentTurnState()
                                                                         .equals(
                                                                                 TurnState
-                                                                                        .WAITING_FOR_MOVE));
+                                                                                        .WAITING_FOR_MOVE))
+                                                        && !gameViewModel.isClientPlayerTimeout();
                                             },
                                             gameViewModel.getCurrentPlayerIdProperty());
                             boardGrid.add(cellContainer, col, row);
@@ -672,9 +674,11 @@ public class GameStateController extends BaseViewCleanup {
                                     .getCurrentPlayerIdAsString()
                                     .equals(gameViewModel.getClientPlayer().getId())
                             && TurnState.WAITING_FOR_PUSH.equals(
-                                    gameViewModel.getCurrentTurnState()));
+                                    gameViewModel.getCurrentTurnState())
+                            && !gameViewModel.isClientPlayerTimeout());
                 },
                 gameViewModel.getCurrentPlayerIdProperty(),
+                gameViewModel.getTurnTimeout(),
                 gameViewModel.getCurrentTurnStateProperty());
     }
 
