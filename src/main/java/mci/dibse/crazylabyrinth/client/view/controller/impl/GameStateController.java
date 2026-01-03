@@ -35,6 +35,7 @@ public class GameStateController extends BaseViewCleanup {
 
     private static final int GAP_BETWEEN_TILES = 2;
     private static final int MAX_PLAYERS = 4;
+    private static final String TIMEOUT_LABEL = "Timeout aufgrund von Untätigkeit";
 
     @FXML public BorderPane gameContainer;
     @FXML public GridPane boardGrid;
@@ -71,6 +72,8 @@ public class GameStateController extends BaseViewCleanup {
     @FXML public Button bonusPushFixedButton;
 
     @FXML public Label playerTurnLabel;
+
+
     @FXML public Label player1;
     @FXML public Circle player1Circle;
     @FXML public HBox player1Box;
@@ -89,6 +92,7 @@ public class GameStateController extends BaseViewCleanup {
 
     private final GameViewModel gameViewModel;
     private final Map<String, Label> idToPlayerLabel = new HashMap<>();
+
 
     @Autowired
     public GameStateController(NavigationStateViewModel vm, GameViewModel gameViewModel) {
@@ -202,6 +206,9 @@ public class GameStateController extends BaseViewCleanup {
                                                                             .getPlayerIdAsString()
                                                                             .equals(currentId))
                                                     .findFirst();
+
+                                    if(gameViewModel.isClientPlayerTimeout()) return TIMEOUT_LABEL;
+
                                     if (playerStateTurnOptional.isPresent()) {
                                         PlayerStateItem playerStateTurn =
                                                 playerStateTurnOptional.get();
@@ -212,7 +219,8 @@ public class GameStateController extends BaseViewCleanup {
                                     return name + ": " + turnLabel;
                                 },
                                 gameViewModel.getCurrentPlayerIdProperty(),
-                                gameViewModel.getCurrentTurnStateProperty()));
+                                gameViewModel.getCurrentTurnStateProperty(),
+                                gameViewModel.getTurnTimeout()));
         playerTurnLabel
                 .graphicProperty()
                 .bind(
@@ -295,17 +303,23 @@ public class GameStateController extends BaseViewCleanup {
                 .bind(
                         Bindings.createStringBinding(
                                 () -> {
+
+
                                     String prefix = isClient ? "Du: " : "";
                                     String name = player.getPlayerNameAsString();
                                     int found = player.getTreasuresFound().size();
-                                    return prefix
-                                            + name
-                                            + " ("
-                                            + found
-                                            + " / "
-                                            + maxAvailableTreasurePerPlayer
-                                            + ")";
+                                    String playerLabel = prefix +
+                                            name +
+                                            " (" +
+                                            found +
+                                            " / " +
+                                            maxAvailableTreasurePerPlayer +
+                                            ")";
+                                    if (player.isPlayerAiControlled()) playerLabel += " (AI)";
+                                    return playerLabel;
                                 },
+                                player.getPlayerInfo(),
+                                player.getPlayerInfo().get().isAiControlledProperty(),
                                 player.getTreasuresFound()));
     }
 

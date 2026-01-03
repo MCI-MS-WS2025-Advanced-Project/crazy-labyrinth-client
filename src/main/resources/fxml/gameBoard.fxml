@@ -29,6 +29,8 @@
               styleClass="card,topbar">
             <Label fx:id="playerTurnLabel"
                    styleClass="section-header"/>
+            <Label fx:id="timeOut"
+                   styleClass="section-header"/>
         </HBox>
     </top>
 

@@ -54,7 +54,7 @@ public class ServerEventService {
 
     private void handlePlayerUpdate(PlayerUpdatedEventPayload playerUpdate) {
         log.debug("player update event received {}", playerUpdate);
-        // todo??????
+        applicationEventPublisher.publishEvent(playerUpdate);
     }
 
     private void handleServerInfo(ServerInfoPayload serverInfo) {
