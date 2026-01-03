@@ -6,8 +6,10 @@ import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import labyrinth.contracts.models.*;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import mci.dibse.crazylabyrinth.client.infrastructure.util.JavaFXUtils;
 
+@Slf4j
 public class PlayerStateItem extends BaseItem<PlayerState> {
 
     @Getter private final ObjectProperty<PlayerInfoItem> playerInfo = new SimpleObjectProperty<>();
@@ -50,6 +52,11 @@ public class PlayerStateItem extends BaseItem<PlayerState> {
         JavaFXUtils.runOnFxThread(apply);
     }
 
+    public void updatePlayerInfoFrom(PlayerInfo playerInfo) {
+        log.debug("updatePlayerInfoFrom {}", playerInfo);
+        this.playerInfo.get().updateFrom(playerInfo);
+    }
+
     public String getPlayerIdAsString() {
         return playerInfo.get().getId();
     }
@@ -76,6 +83,10 @@ public class PlayerStateItem extends BaseItem<PlayerState> {
 
     public int getAvailableBonusCountForType(BonusType type) {
         return Math.toIntExact(availableBonusTypes.stream().filter(type::equals).count());
+    }
+
+    public boolean isPlayerAiControlled() {
+        return playerInfo.get().getIsAiControlled();
     }
 
     @Override

@@ -15,6 +15,7 @@ import labyrinth.contracts.models.*;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import mci.dibse.crazylabyrinth.client.domain.context.ApplicationEvents;
 import mci.dibse.crazylabyrinth.client.domain.model.ClientPlayer;
 import mci.dibse.crazylabyrinth.client.infrastructure.util.JavaFXUtils;
 import mci.dibse.crazylabyrinth.client.service.ClientCommandService;
@@ -34,6 +35,7 @@ public class GameViewModel extends BaseViewModel implements PlayerConnectedAckLi
     private final String WAITING_FOR_PUSH_LABEL = "verschiebt einen Gang";
     private final String WAITING_FOR_MOVE_LABEL = "bewegt seine Spielfigur";
 
+
     private final LobbyService lobbyService;
     private final GameService gameService;
     private ClientCommandService clientCommandService;
@@ -49,6 +51,7 @@ public class GameViewModel extends BaseViewModel implements PlayerConnectedAckLi
     private final SimpleObjectProperty<TreasureItem> nextTreasure = new SimpleObjectProperty<>();
 
     @Getter final SimpleBooleanProperty pendingRotation = new SimpleBooleanProperty();
+    @Getter final SimpleBooleanProperty turnTimeout = new SimpleBooleanProperty();
 
     private ChangeListener<TileItem> spareTileListener;
     private ChangeListener<TurnState> turnStateChangeListener;
@@ -81,6 +84,9 @@ public class GameViewModel extends BaseViewModel implements PlayerConnectedAckLi
         return mapTurnStateToLabel(currentTurnInfoItem.getTurnState().get());
     }
 
+    public boolean isClientPlayerTimeout() {
+        return turnTimeout.get();
+    }
     public SimpleStringProperty getCurrentPlayerIdProperty() {
         return currentTurnInfoItem.getCurrentPlayerId();
     }
@@ -135,6 +141,7 @@ public class GameViewModel extends BaseViewModel implements PlayerConnectedAckLi
     @Override
     public void onPlayerConnected(ClientPlayer clientPlayer) {
         this.clientPlayer = clientPlayer;
+        turnTimeout.set(false);
     }
 
     @EventListener
@@ -159,6 +166,23 @@ public class GameViewModel extends BaseViewModel implements PlayerConnectedAckLi
                     nextTreasure.set(treasureItem);
                 };
         JavaFXUtils.runOnFxThread(task);
+    }
+
+    @EventListener
+    public void handleTurnTimeout(ApplicationEvents event) {
+        if (!ApplicationEvents.TURN_TIMEOUT.equals(event)) return;
+        log.debug("handle turn timeout");
+        Runnable task = () -> turnTimeout.set(true);
+        JavaFXUtils.runOnFxThread(task);
+    }
+
+    @EventListener
+    public void handlePlayerUpdate(PlayerUpdatedEventPayload event) {
+        log.debug("handle player update");
+        String incomingPlayerId = event.getPlayer().getId();
+        playerStatesSorted.stream().filter(player -> player.getPlayerIdAsString().equals(incomingPlayerId))
+                .findFirst().orElseThrow()
+                .updatePlayerInfoFrom(event.getPlayer());
     }
 
     public String mapTurnStateToLabel(TurnState turnState) {

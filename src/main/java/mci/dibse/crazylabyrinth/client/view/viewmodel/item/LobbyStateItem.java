@@ -33,7 +33,7 @@ public class LobbyStateItem extends BaseItem<LobbyStateEventPayload> {
                                 item.idProperty(),
                                 item.nameProperty(),
                                 item.colorProperty(),
-                                item.isAdminProperty(),
+                                item.isAiControlledProperty(),
                                 item.isAdminProperty()
                             });
 

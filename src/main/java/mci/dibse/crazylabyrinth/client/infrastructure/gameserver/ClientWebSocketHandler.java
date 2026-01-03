@@ -1,6 +1,7 @@
 package mci.dibse.crazylabyrinth.client.infrastructure.gameserver;
 
 import static mci.dibse.crazylabyrinth.client.domain.context.ApplicationEvents.CONNECTION_LOST;
+import static mci.dibse.crazylabyrinth.client.domain.context.ApplicationEvents.TURN_TIMEOUT;
 
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -77,8 +78,17 @@ public class ClientWebSocketHandler extends TextWebSocketHandler {
                 "WebSocket connection closed for session: {} with status: {}",
                 session.getId(),
                 status);
-        eventListener.publishEvent(CONNECTION_LOST);
-        connectionCallback = null;
+
+        // WebSocket connection closed for session: 1b8607c2-7211-2684-7499-3ef9db732f7e with status: CloseStatus[code=1008, reason=Disconnected due to turn timeout.]
+        if (status.getCode() == 1008) {
+            eventListener.publishEvent(TURN_TIMEOUT);
+        } else {
+            eventListener.publishEvent(CONNECTION_LOST);
+            connectionCallback = null;
+        }
+
+
+
     }
 
     @Override
