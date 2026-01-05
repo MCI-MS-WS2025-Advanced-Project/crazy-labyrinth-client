@@ -10,6 +10,7 @@ public class CoordinatesItem extends BaseItem<Coordinates> {
     private final SimpleIntegerProperty column = new SimpleIntegerProperty();
 
     public CoordinatesItem(Coordinates source) {
+        super();
         Runnable apply =
                 () -> {
                     this.row.set(source.getRow());

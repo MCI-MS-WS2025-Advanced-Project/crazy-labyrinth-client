@@ -185,7 +185,7 @@ public class GameViewModel extends BaseViewModel implements PlayerConnectedAckLi
     @Override
     public void cleanup() {
         // todo?
-        System.out.println("Cleanup GameViewModel");
+        log.info("Cleanup GameViewModel");
         getSpareTileProperty().removeListener(spareTileListener);
         getCurrentTurnStateProperty().removeListener(turnStateChangeListener);
 

@@ -111,7 +111,7 @@ public class GameServerDashboardController extends BaseViewCleanup {
         viewModel.getSorted().comparatorProperty().bind(serversTable.comparatorProperty());
 
         serversTable.setFixedCellSize(34);
-        cleanUpTask = JavaFXUtils.setupTableClip(serversTable, 34);
+        cleanUpTask = JavaFXUtils.setupTableClip(serversTable, 34.0);
     }
 
     private void setupTableColumns() {

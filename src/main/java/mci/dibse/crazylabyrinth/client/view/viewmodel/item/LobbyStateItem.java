@@ -38,9 +38,14 @@ public class LobbyStateItem extends BaseItem<LobbyStateEventPayload> {
                             });
 
     public LobbyStateItem(LobbyStateEventPayload source) {
+        super();
         mapChangeListener = initMapChangeListener();
-        byId.addListener(this.mapChangeListener);
-        updateFrom(source);
+        Runnable apply = () -> {
+            byId.addListener(this.mapChangeListener);
+            updateFrom(source);
+        };
+        JavaFXUtils.runOnFxThread(apply);
+
     }
 
     @Override

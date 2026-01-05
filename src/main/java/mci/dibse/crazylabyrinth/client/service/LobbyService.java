@@ -3,6 +3,7 @@ package mci.dibse.crazylabyrinth.client.service;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import labyrinth.contracts.models.ConnectAckEventPayload;
+import labyrinth.contracts.models.GameOverEventPayload;
 import labyrinth.contracts.models.LobbyStateEventPayload;
 import mci.dibse.crazylabyrinth.client.domain.model.ClientPlayer;
 import org.springframework.stereotype.Service;
@@ -40,4 +41,6 @@ public class LobbyService {
     public void handleLobbyState(LobbyStateEventPayload lobbyStatePayload) {
         lobbyStateListeners.forEach(l -> l.onLobbyStateUpdated(lobbyStatePayload));
     }
+
+
 }

@@ -75,8 +75,10 @@ public class GameBoardItem extends BaseItem<GameBoard> {
     }
 
     public GameBoardItem(GameBoard source) {
+        super();
         Runnable apply =
                 () -> {
+
                     this.rows.set(source.getRows());
                     this.cols.set(source.getCols());
                     TileItem[][] tileItems = new TileItem[source.getRows()][source.getCols()];
