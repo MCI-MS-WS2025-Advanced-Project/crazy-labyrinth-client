@@ -16,15 +16,18 @@ public class ServerEventService {
     private final ApplicationEventPublisher applicationEventPublisher;
     private final LobbyService lobbyService;
     private final GameService gameService;
+    private final TimerService timerService;
 
     @Autowired
     public ServerEventService(
             LobbyService lobbyService,
             GameService gameService,
-            ApplicationEventPublisher applicationEventPublisher) {
+            ApplicationEventPublisher applicationEventPublisher,
+            TimerService timerService) {
         this.lobbyService = lobbyService;
         this.gameService = gameService;
         this.applicationEventPublisher = applicationEventPublisher;
+        this.timerService = timerService;
     }
 
     public void handleEvent(String event) {
@@ -59,8 +62,8 @@ public class ServerEventService {
 
     private void handleServerInfo(ServerInfoPayload serverInfo) {
         log.debug("Received server info: {}", serverInfo);
-        // TODO what do with this?
-        // snyc client with server time?
+        // applicationEventPublisher.publishEvent(serverInfo);
+        timerService.handleGameServerTimeInfo(serverInfo);
     }
 
     private void handleError(ActionErrorEventPayload actionError) {
