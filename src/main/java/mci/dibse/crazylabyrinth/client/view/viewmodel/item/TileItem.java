@@ -35,6 +35,7 @@ public class TileItem extends BaseItem<Tile> {
     }
 
     public TileItem(Tile source) {
+        super();
         List<Direction> directionList = new ArrayList<>(Arrays.asList(source.getEntrances()));
         directionList.sort(Comparator.comparingInt(Direction::ordinal));
         this.directions = directionList;

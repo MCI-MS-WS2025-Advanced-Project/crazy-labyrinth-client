@@ -13,6 +13,7 @@ public class PlayerInfoItem extends BaseItem<PlayerInfo> {
     private final BooleanProperty isAiControlled = new SimpleBooleanProperty();
 
     public PlayerInfoItem(PlayerInfo source) {
+        super();
         updateFrom(source);
     }
 

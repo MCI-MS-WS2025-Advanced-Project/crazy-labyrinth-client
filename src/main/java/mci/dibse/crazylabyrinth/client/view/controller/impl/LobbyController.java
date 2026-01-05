@@ -4,33 +4,44 @@ import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.PauseTransition;
 import javafx.animation.Timeline;
+import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.IntegerProperty;
-import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleIntegerProperty;
+import javafx.beans.property.*;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.ListChangeListener;
+import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.control.*;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.util.Duration;
-import labyrinth.contracts.models.PlayerColor;
+import labyrinth.contracts.models.*;
+import lombok.extern.slf4j.Slf4j;
 import mci.dibse.crazylabyrinth.client.domain.model.record.StartGameRecord;
 import mci.dibse.crazylabyrinth.client.infrastructure.util.JavaFXUtils;
+import mci.dibse.crazylabyrinth.client.service.AchievementService;
+import mci.dibse.crazylabyrinth.client.view.viewmodel.GameViewModel;
 import mci.dibse.crazylabyrinth.client.view.viewmodel.LobbyViewModel;
 import mci.dibse.crazylabyrinth.client.view.viewmodel.item.PlayerInfoItem;
 import mci.dibse.crazylabyrinth.client.view.viewmodel.navigation.NavigationStateViewModel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 @Component
+@Slf4j
 public class LobbyController extends BaseViewCleanup {
 
+    private final GameViewModel gameViewModel;
+    private final AchievementService achievementService;
     public BooleanProperty clientAdmin = new SimpleBooleanProperty(false);
 
     // todo add results
@@ -50,6 +61,10 @@ public class LobbyController extends BaseViewCleanup {
     @FXML public HBox bonusSetting;
     @FXML public Spinner<Integer> bonusCountSpinner;
     @FXML public Button leaveLobby;
+    @FXML public TableView<RankingEntry> resultsTable;
+    @FXML public TableColumn<RankingEntry, String> resultNameColumn;
+    @FXML public TableColumn<RankingEntry, String> resultScoreColumn;
+    @FXML public TableColumn<RankingEntry, RankingEntry> achievements;
     @FXML private ListView<String> playerList;
 
     // Admin Stuff
@@ -84,12 +99,15 @@ public class LobbyController extends BaseViewCleanup {
 
     private final LobbyViewModel lobbyViewModel;
 
-    private Runnable cleanUpTask;
+    private Runnable cleanUpTaskPlayerTable;
+    private Runnable cleanUpTaskResultsTable;
 
     @Autowired
-    public LobbyController(NavigationStateViewModel navState, LobbyViewModel lobbyViewModel) {
+    public LobbyController(NavigationStateViewModel navState, LobbyViewModel lobbyViewModel, GameViewModel gameViewModel, AchievementService achievementService) {
         super(navState);
         this.lobbyViewModel = lobbyViewModel;
+        this.gameViewModel = gameViewModel;
+        this.achievementService = achievementService;
     }
 
     @FXML
@@ -97,7 +115,7 @@ public class LobbyController extends BaseViewCleanup {
         playerTable.setItems(lobbyViewModel.getPlayersListProperty());
 
         // Clip/cleanup
-        cleanUpTask = JavaFXUtils.setupTableClip(playerTable, 30);
+        cleanUpTaskPlayerTable = JavaFXUtils.setupTableClip(playerTable, 30.0);
 
         setUpTableColumns();
 
@@ -144,6 +162,79 @@ public class LobbyController extends BaseViewCleanup {
         setupCountDownTimer();
 
         setupErrorHandling();
+
+        setupResultsTable();
+    }
+
+    private void setupResultsTable() {
+        log.info("setupResultsTable");
+        // Clip/cleanup
+
+
+        ChangeListener<Boolean> resultsListener = (obs, oldVal, newVal) -> {
+            Runnable task = () -> {
+                ObservableList<RankingEntry> rankingEntriesSorted = lobbyViewModel.getSortedRankingEntries();
+                resultsTable.setItems(rankingEntriesSorted);
+                lobbyViewModel.bindSortedRankingsComparator(resultsTable.comparatorProperty());
+
+
+
+
+                int numberEntries = rankingEntriesSorted.size();
+               // numberEntries
+                cleanUpTaskResultsTable = JavaFXUtils.setupTableClip(resultsTable, 30.0);
+
+                resultNameColumn.setCellValueFactory(cd -> new SimpleStringProperty(cd.getValue().getPlayerId()));
+                resultNameColumn.setCellFactory(
+                        column -> {
+                            return new TableCell<RankingEntry, String>() {
+                                @Override
+                                protected void updateItem(String item, boolean empty) {
+                                    super.updateItem(item, empty);
+                                    if (empty) {
+                                        setText(null);
+                                        return;
+                                    }
+                                    String name = lobbyViewModel.getPlayerNameForId(item);
+                                    if (lobbyViewModel.getWinnerId().equals(item)) name += " (Gewinner)";
+                                    setText(name);
+                                }
+                            };
+                        }
+                );
+
+                resultScoreColumn.setCellValueFactory(cd -> new SimpleStringProperty(cd.getValue().getScore().toString()));
+
+                achievements.setCellValueFactory(cd -> new SimpleObjectProperty<RankingEntry>(cd.getValue()));
+                achievements.setCellFactory(
+                        column -> {
+                            return new TableCell<RankingEntry, RankingEntry>() {
+                                @Override
+                                protected void updateItem(RankingEntry item, boolean empty) {
+                                    super.updateItem(item, empty);
+                                    if (empty) {
+                                        setText(null);
+                                        return;
+                                    }
+
+                                  //  setGraphic(createAchievementGraphicForPlayer(item));
+                                    String achievements = getAchievementResultsStringForPlayer(item);
+                                    setText(achievements);
+                                }
+                            };
+                        }
+                );
+
+                resultsBox.setVisible(true);
+                resultsBox.setManaged(true);
+
+
+            };
+            JavaFXUtils.runOnFxThread(task);
+        };
+
+        lobbyViewModel.addListenerToResultsAvailableProperty(resultsListener);
+
     }
 
     public void onleaveLobbyButtonClick(ActionEvent actionEvent) {
@@ -203,13 +294,19 @@ public class LobbyController extends BaseViewCleanup {
                     colorColumn.setCellFactory(null);
                     adminColumn.setCellValueFactory(null);
 
-                    playerTable.getItems().clear();
+                    playerTable.setItems(null);
+
+                    resultsTable.setItems(null);
 
                     boardSizeCombo.getItems().clear();
 
                     countdownTimeline = null;
+
+                    resultsBox.setVisible(false);
+                    resultsBox.setManaged(false);
                 });
-        cleanUpTask.run();
+        cleanUpTaskPlayerTable.run();
+        if (cleanUpTaskResultsTable != null)  cleanUpTaskResultsTable.run();
     }
 
     private void setupCountDownTimer() {
@@ -244,7 +341,7 @@ public class LobbyController extends BaseViewCleanup {
                                 Duration.seconds(1),
                                 e -> {
                                     remainingTimer.set(remainingTimer.get() - 1);
-                                    if (remainingTimer.get() <= 0) {
+                                    if (remainingTimer.get() <= 0 && countdownTimeline != null) {
                                         countdownTimeline.stop();
                                         if (lobbyViewModel.isClientAdmin()) startGame();
                                     }
@@ -385,4 +482,70 @@ public class LobbyController extends BaseViewCleanup {
                 };
         lobbyViewModel.getHasError().addListener(errorListener);
     }
+
+
+    private String getAchievementResultsStringForPlayer(RankingEntry entry) {
+        String id = entry.getPlayerId();
+        List<AchievementUnlockedEventPayload> achievements = achievementService.getAchievementEventsForPLayerId(id);
+        return achievements.stream()
+                .map(event -> {
+                    AchievementType type = event.getAchievement();
+                    return switch (type) {
+                        case RUNNER -> "Runner (" + entry.getStats().getStepsTaken() + ")";
+                        case PUSHER -> "Pusher (" + entry.getStats().getTilesPushed() + ")";
+                        // Note: Assuming Pusher refers to tiles pushed, not treasures
+                        default -> type.name();
+                    };
+                })
+                .collect(Collectors.joining(", "));
+    }
+
+    /*
+    private Node createAchievementGraphicForPlayer(RankingEntry entry) {
+        String id = entry.getPlayerId();
+        List<AchievementUnlockedEventPayload> unlocked = achievementService.getAchievementEventsForPLayerId(id);
+
+        if (unlocked == null || unlocked.isEmpty()) {
+            return new Label("");
+        }
+
+        HBox container = new HBox(10);
+        container.setAlignment(Pos.CENTER_LEFT);
+        for (AchievementUnlockedEventPayload event : unlocked) {
+            AchievementType type = event.getAchievement();
+
+            // Badge container: Icon + Text
+            HBox badge = new HBox(4);
+            badge.setAlignment(Pos.CENTER_LEFT);
+
+            Node icon = getIconForAchievementType(type);
+            Label text = new Label(getLabelForAchievementType(type, entry.getStats()));
+
+            badge.getChildren().addAll(icon, text);
+            container.getChildren().add(badge);
+        }
+        return container;
+    }
+
+
+    private Node getIconForAchievementType(AchievementType type) {
+        // You can replace these Shapes with new ImageView(new Image("..."))
+        return switch (type) {
+            case RUNNER ->  new ImageView(new Image("..."))
+            case PUSHER ->  new ImageView(new Image("..."))
+        };
+    }
+
+    private String getLabelForAchievementType(AchievementType type, PlayerGameStats stats) {
+        return switch (type) {
+            case RUNNER -> "Runner (" + stats.getStepsTaken() + ")";
+            case PUSHER -> "Pusher (" + stats.getTilesPushed() + ")";
+            default -> type.name();
+        };
+    }
+
+     */
+
+
+
 }
