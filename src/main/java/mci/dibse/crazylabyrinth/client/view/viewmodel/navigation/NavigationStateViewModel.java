@@ -24,7 +24,7 @@ public class NavigationStateViewModel {
     }
 
     @Getter
-    private final ObjectProperty<ScreenId> currentScreen =
+    private final ObjectProperty<ScreenId> currentScreenProperty =
             new SimpleObjectProperty<>(ScreenId.MAIN);
 
     @EventListener
@@ -32,7 +32,12 @@ public class NavigationStateViewModel {
         if (ErrorCode.PLAYER_NOT_FOUND.equals(error.getErrorCode())) navigateTo(ScreenId.LOBBY);
     }
 
+
+    public ScreenId getCurrentScreenId() {
+            return currentScreenProperty.get();
+    }
+
     public void navigateTo(ScreenId screen) {
-        JavaFXUtils.runOnFxThread(() -> currentScreen.set(screen));
+        JavaFXUtils.runOnFxThread(() -> currentScreenProperty.set(screen));
     }
 }

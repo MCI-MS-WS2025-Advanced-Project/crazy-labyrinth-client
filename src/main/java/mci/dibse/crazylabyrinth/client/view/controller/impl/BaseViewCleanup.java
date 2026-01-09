@@ -28,7 +28,7 @@ public abstract class BaseViewCleanup implements ViewCleanup {
 
     @PreDestroy
     public void destroy() {
-        navigationStateViewModel.getCurrentScreen().removeListener(cleanupListener);
+        navigationStateViewModel.getCurrentScreenProperty().removeListener(cleanupListener);
     }
 
     // override to impolement class specific cleanup
@@ -40,7 +40,7 @@ public abstract class BaseViewCleanup implements ViewCleanup {
     protected void baseViewModelCleanup() {}
 
     private void init() {
-        navigationStateViewModel.getCurrentScreen().addListener(cleanupListener);
+        navigationStateViewModel.getCurrentScreenProperty().addListener(cleanupListener);
     }
 
     protected boolean customCleanupCheckpoint(

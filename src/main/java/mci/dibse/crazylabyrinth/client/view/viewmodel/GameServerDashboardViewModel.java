@@ -201,6 +201,6 @@ public class GameServerDashboardViewModel extends BaseViewModel
     @Override
     protected boolean isErrorRelevant() {
         return NavigationStateViewModel.ScreenId.MAIN.equals(
-                navigationStateViewModel.getCurrentScreen().get());
+                navigationStateViewModel.getCurrentScreenProperty().get());
     }
 }

@@ -133,7 +133,7 @@ public class LobbyViewModel extends BaseViewModel
         // checkAndSetIfClientIsAdmin(lobbyState);
         if (lobbyStateItem == null
                 || !navigationStateViewModel
-                        .getCurrentScreen()
+                        .getCurrentScreenProperty()
                         .get()
                         .equals(NavigationStateViewModel.ScreenId.LOBBY)) {
             LobbyStateItem item = new LobbyStateItem(lobbyState);
@@ -177,7 +177,7 @@ public class LobbyViewModel extends BaseViewModel
     @Override
     protected boolean isErrorRelevant() {
         return NavigationStateViewModel.ScreenId.LOBBY.equals(
-                navigationStateViewModel.getCurrentScreen().get());
+                navigationStateViewModel.getCurrentScreenProperty().get());
     }
 
     private void setUpGameInfo() {

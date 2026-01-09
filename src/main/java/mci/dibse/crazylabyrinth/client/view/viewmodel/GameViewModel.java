@@ -322,7 +322,7 @@ public class GameViewModel extends BaseViewModel implements PlayerConnectedAckLi
     protected boolean isErrorRelevant() {
         log.debug("is error relevant for game view model:");
         return NavigationStateViewModel.ScreenId.GAMEBOARD.equals(
-                navigationStateViewModel.getCurrentScreen().get());
+                navigationStateViewModel.getCurrentScreenProperty().get());
     }
 
     private void gameStarted(GameStateEventPayload gameState) {
