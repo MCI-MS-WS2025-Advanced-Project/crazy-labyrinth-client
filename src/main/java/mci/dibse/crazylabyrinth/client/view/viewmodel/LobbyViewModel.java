@@ -89,9 +89,14 @@ public class LobbyViewModel extends BaseViewModel
 
     public boolean isClientAdmin() {
         if (clientPlayer == null) return false;
-        PlayerInfoItem clientPlayerInof = lobbyStateItem.getPlayerList().stream().filter(player  -> {
-            return player.getId().equals(clientPlayer.getId());
-        }).findFirst().orElseThrow();
+        PlayerInfoItem clientPlayerInof =
+                lobbyStateItem.getPlayerList().stream()
+                        .filter(
+                                player -> {
+                                    return player.getId().equals(clientPlayer.getId());
+                                })
+                        .findFirst()
+                        .orElseThrow();
         return clientPlayerInof.getIsAdmin();
     }
 
@@ -125,7 +130,7 @@ public class LobbyViewModel extends BaseViewModel
 
     @Override
     public void onLobbyStateUpdated(LobbyStateEventPayload lobbyState) {
-       // checkAndSetIfClientIsAdmin(lobbyState);
+        // checkAndSetIfClientIsAdmin(lobbyState);
         if (lobbyStateItem == null
                 || !navigationStateViewModel
                         .getCurrentScreen()
@@ -185,7 +190,7 @@ public class LobbyViewModel extends BaseViewModel
                 .forEach(
                         player -> {
                             if (player.getId().equals(clientId)) {
-                               // clientPlayer.setIsAdmin(player.getIsAdmin());
+                                // clientPlayer.setIsAdmin(player.getIsAdmin());
                             }
                         });
     }

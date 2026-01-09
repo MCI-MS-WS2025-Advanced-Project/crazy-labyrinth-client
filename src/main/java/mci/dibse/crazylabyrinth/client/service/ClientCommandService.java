@@ -7,6 +7,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import java.util.HashMap;
 import labyrinth.contracts.models.*;
 import lombok.extern.slf4j.Slf4j;
+import mci.dibse.crazylabyrinth.client.domain.context.PushTileCommandRecord;
 import mci.dibse.crazylabyrinth.client.domain.model.record.GameInfoRecord;
 import mci.dibse.crazylabyrinth.client.domain.model.record.StartGameRecord;
 import mci.dibse.crazylabyrinth.client.infrastructure.exceptions.ConnectionException;
@@ -56,7 +57,7 @@ public class ClientCommandService {
         command.setType(CommandType.DISCONNECT);
         try {
             String json = mapCommandToMessage(CommandType.DISCONNECT, command);
-            gameServerSocketService.sendCommand(json);
+            gameServerSocketService.sendCommand(json, null);
         } catch (JsonProcessingException e) {
             log.error("Failed to map disconnect command to json", e);
             throw new GeneralUiException("Failed to send command");
@@ -86,24 +87,37 @@ public class ClientCommandService {
         try {
             String json = mapCommandToMessage(CommandType.START_GAME, command);
             log.debug("startGameCommand {}", json);
-            gameServerSocketService.sendCommand(json);
+            gameServerSocketService.sendCommand(json, CommandType.START_GAME);
         } catch (JsonProcessingException e) {
             log.error("Failed to map start game command to json", e);
         }
     }
 
-    public void sendPushTileCommand(
-            int index, Direction pushDirection, Direction[] extraTileEntrances) {
-        PushTileCommandPayload command = new PushTileCommandPayload();
-        command.setType(CommandType.PUSH_TILE);
-        command.setDirection(pushDirection);
-        //  command.setTileEntrances(extraTileEntrances);
-        command.setRowOrColIndex(index);
+    public void sendPushTileCommand(PushTileCommandRecord data) {
+        Object command = null;
+        if (CommandType.PUSH_TILE.equals(data.commandType())) {
+            PushTileCommandPayload payload = new PushTileCommandPayload();
+            payload.setType(data.commandType());
+            payload.setDirection(data.pushDirection());
+            payload.setRowOrColIndex(data.index());
+            command = payload;
+        } else if (CommandType.USE_PUSH_FIXED.equals(data.commandType())) {
+            UsePushFixedCommandPayload payload = new UsePushFixedCommandPayload();
+            payload.setType(CommandType.USE_PUSH_FIXED);
+            payload.setDirection(data.pushDirection());
+            payload.setRowOrColIndex(data.index());
+            command = payload;
+        }
+        if (command == null) return;
         try {
-            String json = mapCommandToMessage(CommandType.PUSH_TILE, command);
-            gameServerSocketService.sendCommand(json);
+            String json = mapCommandToMessage(data.commandType(), command);
+            gameServerSocketService.sendCommand(json, data.commandType());
         } catch (JsonProcessingException e) {
-            log.error("Failed to map disconnect command to json", e);
+            log.error("Failed to map push tile command to json", e);
+            throw new GeneralUiException("Failed to process push tile command");
+        } catch (GeneralUiException _) {
+            log.error("Failed to send push tile command");
+            throw new GeneralUiException("Failed to send push tile command");
         }
     }
 
@@ -118,9 +132,13 @@ public class ClientCommandService {
         command.setAdditionalProperties(new HashMap<>());
         try {
             String json = mapCommandToMessage(CommandType.MOVE_PAWN, command);
-            gameServerSocketService.sendCommand(json);
+            gameServerSocketService.sendCommand(json, null);
         } catch (JsonProcessingException e) {
             log.error("Failed to map disconnect command to json", e);
+            throw new GeneralUiException("Failed to send move command");
+        } catch (GeneralUiException _) {
+            log.error("Failed to send move command");
+            throw new GeneralUiException("Failed to send  move command");
         }
     }
 
@@ -129,19 +147,72 @@ public class ClientCommandService {
         rotateTileCommandPayload.setType(CommandType.ROTATE_TILE);
         try {
             String json = mapCommandToMessage(CommandType.ROTATE_TILE, rotateTileCommandPayload);
-            gameServerSocketService.sendCommand(json);
+            gameServerSocketService.sendCommand(json, null);
         } catch (JsonProcessingException e) {
             log.error("Failed to map rotate tile command to json", e);
+            throw new GeneralUiException("Failed to send rotate command");
+        } catch (GeneralUiException _) {
+            log.error("Failed to send rotate command");
+            throw new GeneralUiException("Failed to send rotate command");
+        }
+    }
+
+    public void sendUsePushTwiceComnmand() {
+        UsePushTwiceCommandPayload command = new UsePushTwiceCommandPayload();
+        command.setType(CommandType.USE_PUSH_TWICE);
+        try {
+            String json = mapCommandToMessage(CommandType.USE_PUSH_TWICE, command);
+            gameServerSocketService.sendCommand(json, CommandType.USE_PUSH_TWICE);
+        } catch (JsonProcessingException e) {
+            log.error("Failed to map use push twice command to json", e);
+            throw new GeneralUiException("Failed to send use push twice command");
+        } catch (GeneralUiException _) {
+            log.error("Failed to send use push twice command");
+            throw new GeneralUiException("Failed to send use push twice command");
+        }
+    }
+
+    public void sendUseBeamCommand(int finalRow, int finalCol) {
+        UseBeamCommandPayload command = new UseBeamCommandPayload();
+        command.setType(CommandType.USE_BEAM);
+        Coordinates coordinates = new Coordinates();
+        coordinates.setColumn(finalCol);
+        coordinates.setRow(finalRow);
+        coordinates.setAdditionalProperties(new HashMap<>());
+        command.setTargetCoordinates(coordinates);
+        try {
+            String json = mapCommandToMessage(CommandType.USE_BEAM, command);
+            gameServerSocketService.sendCommand(json, CommandType.USE_BEAM);
+        } catch (JsonProcessingException e) {
+            log.error("Failed to map use beam command to json", e);
+            throw new GeneralUiException("Failed to send  use beam command");
+        } catch (GeneralUiException _) {
+            log.error("Failed to send  use beam command");
+            throw new GeneralUiException("Failed to send  use beam command");
+        }
+    }
+
+    public void sendUseSwapCommand(String playerId) {
+        UseSwapCommandPayload command = new UseSwapCommandPayload();
+        command.setType(CommandType.USE_SWAP);
+        command.setTargetPlayerId(playerId);
+        try {
+            String json = mapCommandToMessage(CommandType.USE_SWAP, command);
+            gameServerSocketService.sendCommand(json, CommandType.USE_SWAP);
+        } catch (JsonProcessingException e) {
+            log.error("Failed to map use swap command to json", e);
+            throw new GeneralUiException("Failed to send use swap command");
+        } catch (GeneralUiException _) {
+            log.error("Failed to send use swap command");
+            throw new GeneralUiException("Failed to send  use swap command");
         }
     }
 
     // todo
     /*
-               case CommandType.ROTATE_TILE -> mapper.writeValueAsString((RotateTileCommandPayload) payload);
-           case CommandType.TOGGLE_AI -> mapper.writeValueAsString((ToggleAiCommandPayload) payload);
+        case CommandType.TOGGLE_AI -> mapper.writeValueAsString((ToggleAiCommandPayload) payload);
            case CommandType.USE_BEAM -> mapper.writeValueAsString((UseBeamCommandPayload) payload);
            case CommandType.USE_SWAP -> mapper.writeValueAsString((UseSwapCommandPayload) payload);
-           case CommandType.USE_PUSH_FIXED -> mapper.writeValueAsString((UsePushFixedCommandPayload) payload);
            case CommandType.USE_PUSH_TWICE -> mapper.writeValueAsString((UsePushTwiceCommandPayload) payload);
 
     */

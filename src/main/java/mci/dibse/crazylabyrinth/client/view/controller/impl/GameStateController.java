@@ -1,11 +1,13 @@
 package mci.dibse.crazylabyrinth.client.view.controller.impl;
 
+import jakarta.annotation.Nullable;
 import java.util.*;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.value.ChangeListener;
+import javafx.css.PseudoClass;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
@@ -18,8 +20,10 @@ import javafx.scene.layout.*;
 import javafx.scene.shape.Circle;
 import labyrinth.contracts.models.*;
 import lombok.extern.slf4j.Slf4j;
+import mci.dibse.crazylabyrinth.client.domain.context.PushTileCommandRecord;
 import mci.dibse.crazylabyrinth.client.infrastructure.util.JavaFXUtils;
 import mci.dibse.crazylabyrinth.client.infrastructure.util.PlayerPawnUtils;
+import mci.dibse.crazylabyrinth.client.service.GameServerSocketService;
 import mci.dibse.crazylabyrinth.client.view.viewmodel.GameViewModel;
 import mci.dibse.crazylabyrinth.client.view.viewmodel.item.GameBoardItem;
 import mci.dibse.crazylabyrinth.client.view.viewmodel.item.PlayerStateItem;
@@ -27,15 +31,12 @@ import mci.dibse.crazylabyrinth.client.view.viewmodel.item.TileItem;
 import mci.dibse.crazylabyrinth.client.view.viewmodel.item.TreasureItem;
 import mci.dibse.crazylabyrinth.client.view.viewmodel.navigation.NavigationStateViewModel;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 @Component
 @Slf4j
 public class GameStateController extends BaseViewCleanup {
-
-    private static final int GAP_BETWEEN_TILES = 2;
-    private static final int MAX_PLAYERS = 4;
-    private static final String TIMEOUT_LABEL = "Timeout aufgrund von Untätigkeit";
 
     @FXML public BorderPane gameContainer;
     @FXML public GridPane boardGrid;
@@ -73,7 +74,6 @@ public class GameStateController extends BaseViewCleanup {
 
     @FXML public Label playerTurnLabel;
 
-
     @FXML public Label player1;
     @FXML public Circle player1Circle;
     @FXML public HBox player1Box;
@@ -90,9 +90,19 @@ public class GameStateController extends BaseViewCleanup {
     @FXML public Label gameCounterLabel;
     @FXML public StackPane centerWrapper;
 
+    private static final int GAP_BETWEEN_TILES = 2;
+    private static final int MAX_PLAYERS = 4;
+    private static final String TIMEOUT_LABEL = "Timeout aufgrund von Untätigkeit";
+    private static final String GENERAL_ERROR_TITLE = "Achtung Fehler!";
+    private static final PseudoClass ACTIVE_BONUS_BUTTON_PSEUDO_CLASS =
+            PseudoClass.getPseudoClass("bonus-active");
+    private static final PseudoClass AVAILABLE_BONUS_BUTTON_PSEUDO_CLASS =
+            PseudoClass.getPseudoClass("bonus-available");
+
     private final GameViewModel gameViewModel;
     private final Map<String, Label> idToPlayerLabel = new HashMap<>();
 
+    private Map<BonusType, ChangeListener<Boolean>> bonusAvailableListeners = new HashMap<>();
 
     @Autowired
     public GameStateController(NavigationStateViewModel vm, GameViewModel gameViewModel) {
@@ -124,6 +134,8 @@ public class GameStateController extends BaseViewCleanup {
         initGameCounter();
 
         initBoni();
+
+        setupErrorHandling();
     }
 
     @Override
@@ -154,18 +166,44 @@ public class GameStateController extends BaseViewCleanup {
         bonusSwapBox.visibleProperty().unbind();
         bonusSwapBox.managedProperty().unbind();
         bonusSwapCount.textProperty().unbind();
+        bonusSwapButton.disableProperty().unbind();
+        bonusSwapButton
+                .disableProperty()
+                .removeListener(bonusAvailableListeners.get(BonusType.SWAP));
 
         bonusBeamBox.visibleProperty().unbind();
         bonusBeamBox.managedProperty().unbind();
         bonusBeamCount.textProperty().unbind();
+        bonusBeamButton.disableProperty().unbind();
+        bonusBeamButton
+                .disableProperty()
+                .removeListener(bonusAvailableListeners.get(BonusType.BEAM));
 
         bonusPushTwiceBox.visibleProperty().unbind();
         bonusPushTwiceBox.managedProperty().unbind();
         bonusPushTwiceCount.textProperty().unbind();
+        bonusPushTwiceButton.disableProperty().unbind();
+        bonusPushTwiceButton
+                .disableProperty()
+                .removeListener(bonusAvailableListeners.get(BonusType.PUSH_TWICE));
 
         bonusPushFixedBox.visibleProperty().unbind();
         bonusPushFixedBox.managedProperty().unbind();
         bonusPushFixedCount.textProperty().unbind();
+        bonusPushFixedButton.disableProperty().unbind();
+        bonusPushFixedButton
+                .disableProperty()
+                .removeListener(bonusAvailableListeners.get(BonusType.PUSH_FIXED));
+    }
+
+    @EventListener
+    public void handleSendCommandEvent(GameServerSocketService.SendCommand event) {
+        switch (event.commandType()) {
+            case PUSH_TILE, USE_PUSH_FIXED -> toggleOrSetBonusButton(BONUS_TYPE.PUSH_FIXED, false);
+            case USE_BEAM -> toggleOrSetBonusButton(BONUS_TYPE.BEAM, false);
+            case USE_SWAP -> toggleOrSetBonusButton(BONUS_TYPE.SWAP, false);
+            case USE_PUSH_TWICE -> toggleOrSetBonusButton(BONUS_TYPE.PUSH_TWICE, false);
+        }
     }
 
     private Label getPlayerLabelByIndex(int index) {
@@ -207,7 +245,7 @@ public class GameStateController extends BaseViewCleanup {
                                                                             .equals(currentId))
                                                     .findFirst();
 
-                                    if(gameViewModel.isClientPlayerTimeout()) return TIMEOUT_LABEL;
+                                    if (gameViewModel.isClientPlayerTimeout()) return TIMEOUT_LABEL;
 
                                     if (playerStateTurnOptional.isPresent()) {
                                         PlayerStateItem playerStateTurn =
@@ -220,7 +258,7 @@ public class GameStateController extends BaseViewCleanup {
                                 },
                                 gameViewModel.getCurrentPlayerIdProperty(),
                                 gameViewModel.getCurrentTurnStateProperty(),
-                                gameViewModel.getTurnTimeout()));
+                                gameViewModel.getTurnTimeoutProperty()));
         playerTurnLabel
                 .graphicProperty()
                 .bind(
@@ -303,18 +341,17 @@ public class GameStateController extends BaseViewCleanup {
                 .bind(
                         Bindings.createStringBinding(
                                 () -> {
-
-
                                     String prefix = isClient ? "Du: " : "";
                                     String name = player.getPlayerNameAsString();
                                     int found = player.getTreasuresFound().size();
-                                    String playerLabel = prefix +
-                                            name +
-                                            " (" +
-                                            found +
-                                            " / " +
-                                            maxAvailableTreasurePerPlayer +
-                                            ")";
+                                    String playerLabel =
+                                            prefix
+                                                    + name
+                                                    + " ("
+                                                    + found
+                                                    + " / "
+                                                    + maxAvailableTreasurePerPlayer
+                                                    + ")";
                                     if (player.isPlayerAiControlled()) playerLabel += " (AI)";
                                     return playerLabel;
                                 },
@@ -404,7 +441,8 @@ public class GameStateController extends BaseViewCleanup {
                 .bind(
                         Bindings.createBooleanBinding(
                                 () -> {
-                                    if (gameViewModel.isPendingRotation() || gameViewModel.isClientPlayerTimeout()) return false;
+                                    if (gameViewModel.isPendingRotation()
+                                            || gameViewModel.isClientPlayerTimeout()) return false;
                                     String playerId =
                                             gameViewModel
                                                     .getClientPlayerState()
@@ -417,13 +455,13 @@ public class GameStateController extends BaseViewCleanup {
                                 },
                                 gameViewModel.getCurrentPlayerIdProperty(),
                                 gameViewModel.getCurrentTurnStateProperty(),
-                                gameViewModel.getTurnTimeout(),
-                                gameViewModel.getPendingRotation()));
+                                gameViewModel.getTurnTimeoutProperty(),
+                                gameViewModel.getPendingRotationProperty()));
 
         rotateRightButton.setOnAction(
                 _ -> {
                     //  gameViewModel.getSpareTileItem().onRightRotation();
-                    gameViewModel.getPendingRotation().set(true);
+                    gameViewModel.getPendingRotationProperty().set(true);
                     gameViewModel.onRightRotationOfSpareTile();
                 });
     }
@@ -530,35 +568,43 @@ public class GameStateController extends BaseViewCleanup {
                             // set mouse clicks tuff for move Phase
                             cellContainer.setOnMouseClicked(
                                     event -> {
-                                        gameViewModel.movePawnCommand(finalRow, finalCol);
+                                        sendMoveOrBonusCommand(
+                                                finalRow, finalCol, playerStateItemOptional);
                                     });
-                            BooleanBinding isMyTurnAndMovePhase =
-                                    Bindings.createBooleanBinding(
-                                            () -> {
-                                                return gameViewModel
-                                                                .getCurrentPlayerIdAsString()
-                                                                .equals(
-                                                                        gameViewModel
-                                                                                .getClientPlayer()
-                                                                                .getId())
-                                                        && (gameViewModel.getCurrentTurnState()
-                                                                        != null
-                                                                && gameViewModel
-                                                                        .getCurrentTurnState()
-                                                                        .equals(
-                                                                                TurnState
-                                                                                        .WAITING_FOR_MOVE))
-                                                        && !gameViewModel.isClientPlayerTimeout();
-                                            },
-                                            gameViewModel.getCurrentPlayerIdProperty());
+                            /*
+                                                       BooleanBinding isMyTurnAndMovePhase =
+                                                               Bindings.createBooleanBinding(
+                                                                       () -> {
+                                                                           return gameViewModel
+                                                                                           .getCurrentPlayerIdAsString()
+                                                                                           .equals(
+                                                                                                   gameViewModel
+                                                                                                           .getClientPlayer()
+                                                                                                           .getId())
+                                                                                   && (gameViewModel.getCurrentTurnState()
+                                                                                                   != null
+                                                                                           && gameViewModel
+                                                                                                   .getCurrentTurnState()
+                                                                                                   .equals(
+                                                                                                           TurnState
+                                                                                                                   .WAITING_FOR_MOVE))
+                                                                                   && !gameViewModel.isClientPlayerTimeout();
+                                                                       },
+                                                                       gameViewModel.getCurrentPlayerIdProperty());
+
+                            */
+
                             boardGrid.add(cellContainer, col, row);
                             cellContainer
                                     .mouseTransparentProperty()
-                                    .bind(isMyTurnAndMovePhase.not());
+                                    .bind(shouldMouseOverTileBeDisabled(playerStateItemOptional));
                             cellContainer
                                     .cursorProperty()
                                     .bind(
-                                            Bindings.when(isMyTurnAndMovePhase)
+                                            Bindings.when(
+                                                            shouldMouseOverTileBeDisabled(
+                                                                            playerStateItemOptional)
+                                                                    .not())
                                                     .then(Cursor.HAND)
                                                     .otherwise(Cursor.DEFAULT));
                         }
@@ -594,13 +640,21 @@ public class GameStateController extends BaseViewCleanup {
         HBox.setHgrow(lead, Priority.ALWAYS);
         bar.getChildren().add(lead);
 
-        // One child per column: button at odd indices, spacer at even
         for (int col = 0; col < size; col++) {
-            boolean isValidPushIndex = (col % 2 == 1) && (col <= size - 2);
+            boolean isValidPushIndex = isValidatePushIndex(col, size);
+            boolean isValidPushTwiceBonusIndex =
+                    isBonusEnabledAndValidPushFixedBonusIndex(col, size);
+
             Region item;
             if (isValidPushIndex) {
                 Button b = createArrowButton(dir == Direction.DOWN ? "↓" : "↑", col, dir);
-                // Do NOT HGrow the slot items; keep exact width = one column
+                b.setMaxWidth(Region.USE_PREF_SIZE);
+                item = b;
+            } else if (isValidPushTwiceBonusIndex) {
+                Button b =
+                        createPushFixedBonusArrowButton(
+                                dir == Direction.DOWN ? "↓" : "↑", col, dir);
+
                 b.setMaxWidth(Region.USE_PREF_SIZE);
                 item = b;
             } else {
@@ -624,10 +678,17 @@ public class GameStateController extends BaseViewCleanup {
 
         // One child per row: button at odd indices, spacer at even
         for (int row = 0; row < size; row++) {
-            boolean isValidPushIndex = (row % 2 == 1) && (row <= size - 2);
+            boolean isValidPushIndex = isValidatePushIndex(row, size);
+            boolean isValidPushFixedBonusIndex =
+                    isBonusEnabledAndValidPushFixedBonusIndex(row, size);
             Region item;
             if (isValidPushIndex) {
                 Button b = createArrowButton(dir == Direction.RIGHT ? "→" : "←", row, dir);
+                item = b;
+            } else if (isValidPushFixedBonusIndex) {
+                Button b =
+                        createPushFixedBonusArrowButton(
+                                dir == Direction.RIGHT ? "→" : "←", row, dir);
                 item = b;
             } else {
                 Region spacer = new Region();
@@ -646,7 +707,7 @@ public class GameStateController extends BaseViewCleanup {
         item.prefHeightProperty().bind(boardGrid.heightProperty().divide(size));
     }
 
-    private Button createArrowButton(String text, int index, Direction dir) {
+    private Button createBaseArrowButton(String text, Direction dir) {
         Button b = new Button(text);
         b.getStyleClass().add("arrow-button");
         if (Direction.DOWN.equals(dir) || Direction.UP.equals(dir)) {
@@ -654,38 +715,125 @@ public class GameStateController extends BaseViewCleanup {
         } else {
             b.getStyleClass().add("arrow-button-vertical");
         }
-        b.setOnAction(
-                _ ->
-                        pushTileCommand(
-                                index,
-                                dir,
-                                gameViewModel
-                                        .getSpareTileItem()
-                                        .getDirections()
-                                        .toArray(Direction[]::new)));
-        b.disableProperty().bind(isNotMyTurnAndPushPhase());
         return b;
     }
 
-    private BooleanBinding isNotMyTurnAndPushPhase() {
-        return Bindings.createBooleanBinding(
-                () -> {
-                    return !(gameViewModel
-                                    .getCurrentPlayerIdAsString()
-                                    .equals(gameViewModel.getClientPlayer().getId())
-                            && TurnState.WAITING_FOR_PUSH.equals(
-                                    gameViewModel.getCurrentTurnState())
-                            && !gameViewModel.isClientPlayerTimeout());
-                },
-                gameViewModel.getCurrentPlayerIdProperty(),
-                gameViewModel.getTurnTimeout(),
-                gameViewModel.getCurrentTurnStateProperty());
+    private Button createArrowButton(String text, int index, Direction dir) {
+        Button b = createBaseArrowButton(text, dir);
+        b.setOnAction(_ -> choosePushTileCommand(index, dir, CommandType.PUSH_TILE));
+        b.disableProperty().bind(shouldPushTileButtonBeDisabled());
+        return b;
     }
 
-    private void pushTileCommand(
-            int index, Direction pushDirection, Direction[] extraTileEntrances) {
+    private Button createPushFixedBonusArrowButton(String text, int index, Direction dir) {
+        Button b = createBaseArrowButton(text, dir);
+        b.getStyleClass().add("arrow-button-fixed");
+        b.setOnAction(_ -> choosePushTileCommand(index, dir, CommandType.USE_PUSH_FIXED));
+
+        b.disableProperty().bind(shouldPushFixedTileButtonBeDisabled());
+        return b;
+    }
+
+    private boolean isValidatePushIndex(int index, int size) {
+        return (index % 2 == 1) && (index <= size - 2);
+    }
+
+    private boolean isBonusEnabledAndValidPushFixedBonusIndex(int index, int size) {
+        return gameViewModel.isBonusEnabled()
+                && (index % 2 == 0)
+                && (index <= size - 2)
+                && (index > 0);
+    }
+
+    private BooleanBinding isNotMyTurnAndTimeout() {
+        return gameViewModel
+                .getCurrentPlayerIdProperty()
+                .isNotEqualTo(gameViewModel.getClientPlayer().getId())
+                .or(gameViewModel.getTurnTimeoutProperty());
+    }
+
+    private BooleanBinding isNotMyTurnAndTimeoutAndPushPhase() {
+        return isNotMyTurnAndTimeout()
+                .or(
+                        gameViewModel
+                                .getCurrentTurnStateProperty()
+                                .isNotEqualTo(TurnState.WAITING_FOR_PUSH));
+    }
+
+    private BooleanBinding isNotMyTurnAndTimeoutAndMovePhase() {
+        return isNotMyTurnAndTimeout()
+                .or(
+                        gameViewModel
+                                .getCurrentTurnStateProperty()
+                                .isNotEqualTo(TurnState.WAITING_FOR_MOVE));
+    }
+
+    private BooleanBinding shouldMouseOverTileBeDisabled(Optional<PlayerStateItem> playerOnTile) {
+        BooleanBinding isMyTurn = isNotMyTurnAndTimeout().not();
+        BooleanBinding isMovePhase =
+                gameViewModel.getCurrentTurnStateProperty().isEqualTo(TurnState.WAITING_FOR_MOVE);
+
+        BooleanBinding isSwapAllowed =
+                gameViewModel
+                        .getIsSwapBonusActiveProperty()
+                        .and(
+                                Bindings.createBooleanBinding(
+                                        () ->
+                                                playerOnTile.isPresent()
+                                                        && !playerOnTile
+                                                                .get()
+                                                                .getPlayerIdAsString()
+                                                                .equals(
+                                                                        gameViewModel
+                                                                                .getClientPlayer()
+                                                                                .getId()),
+                                        gameViewModel.getIsSwapBonusActiveProperty()));
+        BooleanBinding isPushPhaseAndBonusActive =
+                gameViewModel
+                        .getCurrentTurnStateProperty()
+                        .isEqualTo(TurnState.WAITING_FOR_PUSH)
+                        .and(gameViewModel.getIsBeamTileBonusActiveProperty().or(isSwapAllowed));
+
+        BooleanBinding isTileEnabled = isMyTurn.and(isMovePhase.or(isPushPhaseAndBonusActive));
+
+        return isTileEnabled.not();
+    }
+
+    private BooleanBinding shouldPushTileButtonBeDisabled() {
+        return isNotMyTurnAndTimeoutAndPushPhase()
+                .or(gameViewModel.getIsPushFixedTileBonusActiveProperty())
+                .or(gameViewModel.getIsBeamTileBonusActiveProperty())
+                .or(gameViewModel.getIsSwapBonusActiveProperty());
+    }
+
+    private BooleanBinding shouldPushFixedTileButtonBeDisabled() {
+        return isNotMyTurnAndTimeoutAndPushPhase()
+                .or(gameViewModel.getIsPushFixedTileBonusActiveProperty().not());
+    }
+
+    private BooleanBinding shouldBonusButtonBeDisabled(BonusType bonusType) {
+        return isNotMyTurnAndTimeoutAndPushPhase()
+                .or(
+                        Bindings.createBooleanBinding(
+                                () -> gameViewModel.isAnyBonusActive(bonusType),
+                                gameViewModel.getIsPushFixedTileBonusActiveProperty(),
+                                gameViewModel.getIsSwapBonusActiveProperty(),
+                                gameViewModel.getIsBeamTileBonusActiveProperty()));
+    }
+
+    private void choosePushTileCommand(int index, Direction dir, CommandType type) {
+        Direction[] extraTileEntrances =
+                gameViewModel.getSpareTileItem().getDirections().toArray(Direction[]::new);
+        pushTileCommand(new PushTileCommandRecord(index, dir, extraTileEntrances, type));
+    }
+
+    private void pushTileCommand(PushTileCommandRecord data) {
+        int index = data.index();
+        Direction pushDirection = data.pushDirection();
+
         if (!checkIfPushRevertsLastPush(index, pushDirection)) {
-            gameViewModel.pushTileCommand(index, pushDirection, extraTileEntrances);
+            // Send command to server - animation will be triggered by server response
+            gameViewModel.pushTileCommand(data);
         } else {
             // todo rework error display
             showAlertModal(
@@ -712,6 +860,18 @@ public class GameStateController extends BaseViewCleanup {
             case LEFT -> lastPushDirection == Direction.RIGHT;
             case RIGHT -> lastPushDirection == Direction.LEFT;
         };
+    }
+
+    private void sendMoveOrBonusCommand(
+            int finalRow, int finalCol, Optional<PlayerStateItem> playerStateItemOptional) {
+        if (gameViewModel.isBeamTileBonusActive()) {
+            gameViewModel.sendUseBeamCommand(finalRow, finalCol);
+        } else if (gameViewModel.isSwapBonusActive() && playerStateItemOptional.isPresent()) {
+            String playerId = playerStateItemOptional.get().getPlayerIdAsString();
+            gameViewModel.sendUseSwapCommand(playerId);
+        } else {
+            gameViewModel.movePawnCommand(finalRow, finalCol);
+        }
     }
 
     // todo rework
@@ -803,8 +963,17 @@ public class GameStateController extends BaseViewCleanup {
                                             getAvailableBonusCountForTypeAndClient(BonusType.SWAP));
                                 },
                                 gameViewModel.getClientPlayerState().getAvailableBonusTypes()));
-        // todo impl bonus usage
-        bonusSwapButton.setDisable(true);
+
+        bonusSwapButton.disableProperty().bind(shouldBonusButtonBeDisabled(BonusType.SWAP));
+
+        ChangeListener<Boolean> bonusSwapButtonAvailableListener =
+                (ov, oldVal, newVal) -> {
+                    bonusSwapButton.pseudoClassStateChanged(
+                            AVAILABLE_BONUS_BUTTON_PSEUDO_CLASS,
+                            shouldBonusButtonBeDisabled(BonusType.SWAP).not().get());
+                };
+        bonusSwapButton.disableProperty().addListener(bonusSwapButtonAvailableListener);
+        bonusAvailableListeners.put(BonusType.SWAP, bonusSwapButtonAvailableListener);
 
         bonusBeamBox
                 .visibleProperty()
@@ -827,8 +996,17 @@ public class GameStateController extends BaseViewCleanup {
                                             getAvailableBonusCountForTypeAndClient(BonusType.BEAM));
                                 },
                                 gameViewModel.getClientPlayerState().getAvailableBonusTypes()));
-        // todo impl bonus usage
-        bonusBeamButton.setDisable(true);
+
+        bonusBeamButton.disableProperty().bind(shouldBonusButtonBeDisabled(BonusType.BEAM));
+
+        ChangeListener<Boolean> bonusBeamButtonAvailableListener =
+                (ov, oldVal, newVal) -> {
+                    bonusBeamButton.pseudoClassStateChanged(
+                            AVAILABLE_BONUS_BUTTON_PSEUDO_CLASS,
+                            shouldBonusButtonBeDisabled(BonusType.BEAM).not().get());
+                };
+        bonusBeamButton.disableProperty().addListener(bonusBeamButtonAvailableListener);
+        bonusAvailableListeners.put(BonusType.BEAM, bonusBeamButtonAvailableListener);
 
         bonusPushTwiceBox
                 .visibleProperty()
@@ -856,8 +1034,17 @@ public class GameStateController extends BaseViewCleanup {
                                                     BonusType.PUSH_TWICE));
                                 },
                                 gameViewModel.getClientPlayerState().getAvailableBonusTypes()));
-        // todo impl bonus usage
-        bonusPushTwiceButton.setDisable(true);
+
+        bonusPushTwiceButton.disableProperty().bind(isNotMyTurnAndTimeoutAndMovePhase());
+
+        ChangeListener<Boolean> bonusPushTwiceButtonAvailableListener =
+                (ov, oldVal, newVal) -> {
+                    bonusPushTwiceButton.pseudoClassStateChanged(
+                            AVAILABLE_BONUS_BUTTON_PSEUDO_CLASS,
+                            isNotMyTurnAndTimeoutAndMovePhase().not().get());
+                };
+        bonusPushTwiceButton.disableProperty().addListener(bonusPushTwiceButtonAvailableListener);
+        bonusAvailableListeners.put(BonusType.PUSH_TWICE, bonusPushTwiceButtonAvailableListener);
 
         bonusPushFixedBox
                 .visibleProperty()
@@ -885,8 +1072,19 @@ public class GameStateController extends BaseViewCleanup {
                                                     BonusType.PUSH_FIXED));
                                 },
                                 gameViewModel.getClientPlayerState().getAvailableBonusTypes()));
-        // todo impl bonus usage
-        bonusPushFixedButton.setDisable(true);
+
+        bonusPushFixedButton
+                .disableProperty()
+                .bind(shouldBonusButtonBeDisabled(BonusType.PUSH_FIXED));
+
+        ChangeListener<Boolean> bonusPushFixedButtonAvailableListener =
+                (ov, oldVal, newVal) -> {
+                    bonusPushFixedButton.pseudoClassStateChanged(
+                            AVAILABLE_BONUS_BUTTON_PSEUDO_CLASS,
+                            shouldBonusButtonBeDisabled(BonusType.PUSH_FIXED).not().get());
+                };
+        bonusPushFixedButton.disableProperty().addListener(bonusPushFixedButtonAvailableListener);
+        bonusAvailableListeners.put(BonusType.PUSH_FIXED, bonusPushFixedButtonAvailableListener);
     }
 
     private int getAvailableBonusCountForTypeAndClient(BonusType type) {
@@ -930,18 +1128,77 @@ public class GameStateController extends BaseViewCleanup {
     }
 
     public void onBonusSwapButtonClick(ActionEvent actionEvent) {
-        // todo
+        toggleOrSetBonusButton(BONUS_TYPE.SWAP, null);
     }
 
     public void onBonusBeamButtonClick(ActionEvent actionEvent) {
-        // todo
+        toggleOrSetBonusButton(BONUS_TYPE.BEAM, null);
     }
 
     public void onBonusPushTwiceButtonClick(ActionEvent actionEvent) {
-        // todo
+        toggleOrSetBonusButton(BONUS_TYPE.PUSH_TWICE, null);
+        gameViewModel.sendUsePushTwiceCommand();
     }
 
     public void onBonusPushFixedButtonClick(ActionEvent actionEvent) {
-        // todo
+        toggleOrSetBonusButton(BONUS_TYPE.PUSH_FIXED, null);
+    }
+
+    private void toggleOrSetBonusButton(BONUS_TYPE type, @Nullable Boolean set) {
+        switch (type) {
+            case SWAP -> {
+                boolean flag = set != null ? set : !gameViewModel.isSwapBonusActive();
+                gameViewModel.getIsSwapBonusActiveProperty().set(flag);
+                bonusSwapButton.pseudoClassStateChanged(ACTIVE_BONUS_BUTTON_PSEUDO_CLASS, flag);
+            }
+            case BEAM -> {
+                boolean flag = set != null ? set : !gameViewModel.isBeamTileBonusActive();
+                gameViewModel.getIsBeamTileBonusActiveProperty().set(flag);
+                bonusBeamButton.pseudoClassStateChanged(ACTIVE_BONUS_BUTTON_PSEUDO_CLASS, flag);
+            }
+            case PUSH_TWICE -> {
+                boolean flag = set != null ? set : !gameViewModel.isPushTwiceTileBonusActive();
+                gameViewModel.getIsPushTwiceTileBonusActiveProperty().set(flag);
+                bonusPushTwiceButton.pseudoClassStateChanged(
+                        ACTIVE_BONUS_BUTTON_PSEUDO_CLASS, flag);
+            }
+            case PUSH_FIXED -> {
+                boolean flag = set != null ? set : !gameViewModel.isPushFixedTileBonusActive();
+                gameViewModel.getIsPushFixedTileBonusActiveProperty().set(flag);
+                bonusPushFixedButton.pseudoClassStateChanged(
+                        ACTIVE_BONUS_BUTTON_PSEUDO_CLASS, flag);
+            }
+        }
+    }
+
+    private void setupErrorHandling() {
+        gameViewModel
+                .getHasError()
+                .addListener(
+                        (obs, oldVal, newVal) -> {
+                            if (Boolean.TRUE.equals(newVal) && shouldErrorBeShownAsModal()) {
+                                JavaFXUtils.showAlertModal(
+                                        GENERAL_ERROR_TITLE,
+                                        "",
+                                        gameViewModel.getErrorMessage().get(),
+                                        gameViewModel::clearError);
+                            }
+                        });
+    }
+
+    private boolean shouldErrorBeShownAsModal() {
+        if (gameViewModel.getErrorCodeProperty().get() == null) return false;
+
+        return switch (gameViewModel.getErrorCodeProperty().get()) {
+            case INVALID_MOVE -> false;
+            default -> true;
+        };
+    }
+
+    private enum BONUS_TYPE {
+        SWAP,
+        BEAM,
+        PUSH_TWICE,
+        PUSH_FIXED;
     }
 }
