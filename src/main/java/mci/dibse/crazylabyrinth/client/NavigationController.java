@@ -42,7 +42,7 @@ public class NavigationController {
 
     @PostConstruct
     public void init() {
-        navState.getCurrentScreen().addListener(navListener);
+        navState.getCurrentScreenProperty().addListener(navListener);
     }
 
     private final ChangeListener<NavigationStateViewModel.ScreenId> navListener =

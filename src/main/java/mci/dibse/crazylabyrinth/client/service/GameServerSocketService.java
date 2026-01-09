@@ -12,6 +12,7 @@ import mci.dibse.crazylabyrinth.client.infrastructure.exceptions.ConnectionExcep
 import mci.dibse.crazylabyrinth.client.infrastructure.exceptions.GeneralUiException;
 import mci.dibse.crazylabyrinth.client.infrastructure.gameserver.GameServerSocketClient;
 import mci.dibse.crazylabyrinth.client.infrastructure.util.CommandUtils;
+import mci.dibse.crazylabyrinth.client.view.viewmodel.navigation.NavigationStateViewModel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.event.EventListener;
@@ -25,6 +26,7 @@ public class GameServerSocketService implements PlayerConnectedAckListener {
     private final GameServerSocketClient client;
 
     private final LobbyService lobbyService;
+    private final NavigationStateViewModel navState;
 
     private String serverUrl;
     private String identifierToken;
@@ -34,10 +36,11 @@ public class GameServerSocketService implements PlayerConnectedAckListener {
     public GameServerSocketService(
             GameServerSocketClient client,
             ApplicationEventPublisher eventPublisher,
-            LobbyService lobbyService) {
+            LobbyService lobbyService, NavigationStateViewModel navState) {
         this.client = client;
         this.eventPublisher = eventPublisher;
         this.lobbyService = lobbyService;
+        this.navState = navState;
         lobbyService.addPlayerListener(this);
     }
 
@@ -75,7 +78,11 @@ public class GameServerSocketService implements PlayerConnectedAckListener {
             log.info("Disconnect from server event detected");
 
             ConnectCommandPayload reconnectPayload = new ConnectCommandPayload();
-            reconnectPayload.setIdentifierToken(identifierToken);
+
+            if (!NavigationStateViewModel.ScreenId.LOBBY.equals(navState.getCurrentScreenId())) {
+                reconnectPayload.setIdentifierToken(identifierToken);
+            }
+
             reconnectPayload.setType(CommandType.CONNECT);
             reconnectPayload.setUsername(this.clientUserName);
             try {
