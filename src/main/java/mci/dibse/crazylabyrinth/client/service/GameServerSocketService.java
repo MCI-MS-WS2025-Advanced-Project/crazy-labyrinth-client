@@ -41,13 +41,16 @@ public class GameServerSocketService implements PlayerConnectedAckListener {
         lobbyService.addPlayerListener(this);
     }
 
-    public void sendCommand(String command) {
+    public void sendCommand(String command, CommandType commandType) throws GeneralUiException {
         try {
             client.sendMessage(command);
         } catch (ConnectionException e) {
             log.error("Could not send command", e);
             throw new GeneralUiException("Could not send command");
         }
+        if (commandType == null) return;
+        SendCommand sendCommand = new SendCommand(commandType.name(), commandType);
+        eventPublisher.publishEvent(sendCommand);
     }
 
     public void connectToServerAndSendMessage(String serverUrl, String json)
@@ -115,4 +118,6 @@ public class GameServerSocketService implements PlayerConnectedAckListener {
         log.debug("Handle onPlayerConnected event");
         this.identifierToken = clientPlayer.getIdentifierToken();
     }
+
+    public record SendCommand(String title, CommandType commandType) {}
 }

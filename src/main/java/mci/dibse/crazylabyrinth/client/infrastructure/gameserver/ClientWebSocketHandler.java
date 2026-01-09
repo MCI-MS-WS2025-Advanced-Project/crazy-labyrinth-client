@@ -79,16 +79,14 @@ public class ClientWebSocketHandler extends TextWebSocketHandler {
                 session.getId(),
                 status);
 
-        // WebSocket connection closed for session: 1b8607c2-7211-2684-7499-3ef9db732f7e with status: CloseStatus[code=1008, reason=Disconnected due to turn timeout.]
+        // WebSocket connection closed for session: 1b8607c2-7211-2684-7499-3ef9db732f7e with
+        // status: CloseStatus[code=1008, reason=Disconnected due to turn timeout.]
         if (status.getCode() == 1008) {
             eventListener.publishEvent(TURN_TIMEOUT);
         } else {
             eventListener.publishEvent(CONNECTION_LOST);
             connectionCallback = null;
         }
-
-
-
     }
 
     @Override

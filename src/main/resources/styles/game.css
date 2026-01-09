@@ -112,6 +112,11 @@
     -fx-font-weight: 800;
     -fx-margin: 0 6 0 6;
 }
+
+.arrow-button-fixed {
+    -fx-background-color: rgba(243, 244, 246, 0.68);
+}
+
 .arrow-button-vertical {
     -fx-pref-width: 16;
 
@@ -128,6 +133,7 @@
 }
 .arrow-button:hover { -fx-background-color: #c2c4c8; }
 .arrow-button:pressed { -fx-background-color: #d1d5db; }
+
 
 
 .sidebar {
@@ -197,5 +203,16 @@
 
 .pill-button:hover { -fx-background-color: linear-gradient(to bottom, #f5f7fa, #e9edf3); }
 .pill-button:pressed { -fx-background-color: linear-gradient(to bottom, #d7dbe2, #cbd0d8); }
-.pill-button:disabled { -fx-opacity: 0.6; -fx-cursor: default; }
+.pill-button:disabled {
+   /* -fx-opacity: 0.6; */
+    -fx-cursor: default;
+    -fx-background-color: rgba(233, 237, 243, 0.35) !important;
+}
+
+.pill-button:bonus-active {
+    -fx-background-color: #267326 !important;
+}
+.pill-button:bonus-available{
+    -fx-effect: dropshadow(three-pass-box, yellow, 10, 0, 0, 0);
+}
 
