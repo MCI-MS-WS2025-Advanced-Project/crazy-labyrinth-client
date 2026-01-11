@@ -206,6 +206,8 @@ public class LobbyController extends BaseViewCleanup {
                     playerTable.getItems().clear();
 
                     boardSizeCombo.getItems().clear();
+
+                    countdownTimeline = null;
                 });
         cleanUpTask.run();
     }

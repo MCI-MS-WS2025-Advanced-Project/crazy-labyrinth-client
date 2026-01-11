@@ -1,6 +1,7 @@
 package mci.dibse.crazylabyrinth.client.view.viewmodel;
 
 import jakarta.annotation.PreDestroy;
+import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -20,10 +21,7 @@ import mci.dibse.crazylabyrinth.client.domain.context.PushTileCommandRecord;
 import mci.dibse.crazylabyrinth.client.domain.model.ClientPlayer;
 import mci.dibse.crazylabyrinth.client.infrastructure.exceptions.GeneralUiException;
 import mci.dibse.crazylabyrinth.client.infrastructure.util.JavaFXUtils;
-import mci.dibse.crazylabyrinth.client.service.ClientCommandService;
-import mci.dibse.crazylabyrinth.client.service.GameService;
-import mci.dibse.crazylabyrinth.client.service.LobbyService;
-import mci.dibse.crazylabyrinth.client.service.PlayerConnectedAckListener;
+import mci.dibse.crazylabyrinth.client.service.*;
 import mci.dibse.crazylabyrinth.client.view.viewmodel.item.*;
 import mci.dibse.crazylabyrinth.client.view.viewmodel.navigation.NavigationStateViewModel;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,6 +38,7 @@ public class GameViewModel extends BaseViewModel implements PlayerConnectedAckLi
     private final LobbyService lobbyService;
     private final GameService gameService;
     private ClientCommandService clientCommandService;
+    private final TimerService timerService;
 
     @Getter private GameBoardItem gameBoardItem;
     @Getter private List<PlayerStateItem> playerStatesSorted = new ArrayList<>();
@@ -73,11 +72,13 @@ public class GameViewModel extends BaseViewModel implements PlayerConnectedAckLi
             NavigationStateViewModel vm,
             LobbyService lobbyService,
             GameService gameService,
-            ClientCommandService clientCommandService) {
+            ClientCommandService clientCommandService,
+            TimerService timerService) {
         super(vm);
         this.lobbyService = lobbyService;
         this.gameService = gameService;
         this.clientCommandService = clientCommandService;
+        this.timerService = timerService;
         pendingRotationProperty.set(false);
 
         lobbyService.addPlayerListener(this);
@@ -93,7 +94,7 @@ public class GameViewModel extends BaseViewModel implements PlayerConnectedAckLi
     }
 
     public String getCurrentTurnStateLabelAsString() {
-        return mapTurnStateToLabel(currentTurnInfoItem.getTurnState().get());
+        return mapTurnStateToLabel(currentTurnInfoItem.getTurnStateProperty().get());
     }
 
     public boolean isClientPlayerTimeout() {
@@ -101,7 +102,7 @@ public class GameViewModel extends BaseViewModel implements PlayerConnectedAckLi
     }
 
     public SimpleStringProperty getCurrentPlayerIdProperty() {
-        return currentTurnInfoItem.getCurrentPlayerId();
+        return currentTurnInfoItem.getCurrentPlayerIdProperty();
     }
 
     public TileItem getSpareTileItem() {
@@ -113,11 +114,11 @@ public class GameViewModel extends BaseViewModel implements PlayerConnectedAckLi
     }
 
     public TurnState getCurrentTurnState() {
-        return currentTurnInfoItem.getTurnState().get();
+        return currentTurnInfoItem.getTurnStateProperty().get();
     }
 
     public SimpleObjectProperty<TurnState> getCurrentTurnStateProperty() {
-        return currentTurnInfoItem.getTurnState();
+        return currentTurnInfoItem.getTurnStateProperty();
     }
 
     public String getNextTreasureNameAsString() {
@@ -146,6 +147,11 @@ public class GameViewModel extends BaseViewModel implements PlayerConnectedAckLi
 
     public boolean isBeamTileBonusActive() {
         return isBeamTileBonusActiveProperty.get();
+    }
+
+    public void addListenerToCurrentTurnEndTime(
+            ChangeListener<OffsetDateTime> turnTimeChangeListener) {
+        currentTurnInfoItem.addListenerToTurnEndTimeProperty(turnTimeChangeListener);
     }
 
     public boolean isAnyBonusActive(BonusType bonusType) {
@@ -215,8 +221,8 @@ public class GameViewModel extends BaseViewModel implements PlayerConnectedAckLi
     public void handleTreasureCardEvent(NextTreasureCardEventPayload nextTreasureCard) {
         Runnable task =
                 () -> {
-                    System.out.println("set treasure");
                     TreasureItem treasureItem = new TreasureItem(nextTreasureCard.getTreasure());
+                    log.info("set new treasure: {}", treasureItem.getId());
                     nextTreasure.set(treasureItem);
                 };
         JavaFXUtils.runOnFxThread(task);
@@ -307,6 +313,23 @@ public class GameViewModel extends BaseViewModel implements PlayerConnectedAckLi
         } catch (GeneralUiException e) {
             setError(e.getMessage());
         }
+    }
+
+    public Long getRemainingGameTimeInSeconds() {
+        return Duration.between(
+                        timerService.getCurrentServerTimeWithGameServerOffset(), gameEndTime)
+                .toSeconds();
+    }
+
+    public Long getRemainingTurnTimeInSeconds() {
+        return Duration.between(
+                        timerService.getCurrentServerTimeWithGameServerOffset(),
+                        currentTurnInfoItem.getTurnEndTime())
+                .toSeconds();
+    }
+
+    public boolean isCurrentTurnTimeSet() {
+        return currentTurnInfoItem != null;
     }
 
     @Override
