@@ -113,7 +113,7 @@ public class GameServerSocketService implements PlayerConnectedAckListener {
     @EventListener
     public void handleBackToServerDashboard(ApplicationEvents event) {
         if (ApplicationEvents.BACK_TO_GAME_SERVER_DASHBOARD.equals(event)) {
-            log.debug("Handle Back-to-Lobby event");
+            log.debug("Handle Back-to-Server Dashboard event");
             this.identifierToken = null;
             this.serverUrl = null;
             this.clientUserName = null;

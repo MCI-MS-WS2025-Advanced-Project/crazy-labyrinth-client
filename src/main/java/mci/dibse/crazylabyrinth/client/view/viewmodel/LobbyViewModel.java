@@ -131,6 +131,7 @@ public class LobbyViewModel extends BaseViewModel
     @Override
     public void onLobbyStateUpdated(LobbyStateEventPayload lobbyState) {
         // checkAndSetIfClientIsAdmin(lobbyState);
+        log.debug("Lobby State updated");
         if (lobbyStateItem == null
                 || !navigationStateViewModel
                         .getCurrentScreenProperty()
@@ -173,6 +174,14 @@ public class LobbyViewModel extends BaseViewModel
             setError(e.getMessage());
         }
     }
+
+    public void addListenerToPlayersListProperty(
+            ListChangeListener<PlayerInfoItem> listener) {
+        this.getPlayersListProperty().addListener(listener);
+        playerListListener.add(listener);
+    }
+
+
 
     @Override
     protected boolean isErrorRelevant() {
@@ -218,9 +227,5 @@ public class LobbyViewModel extends BaseViewModel
                 && !NavigationStateViewModel.ScreenId.LOBBY.equals(newValue);
     }
 
-    public void addListenerToPlayersListProperty(
-            ListChangeListener<PlayerInfoItem> countDownTimerListener) {
-        this.getPlayersListProperty().addListener(countDownTimerListener);
-        playerListListener.add(countDownTimerListener);
-    }
+
 }

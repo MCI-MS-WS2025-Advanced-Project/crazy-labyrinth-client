@@ -108,6 +108,11 @@ public class LobbyController extends BaseViewCleanup {
 
         clientAdmin.set(lobbyViewModel.isClientAdmin());
         adminSettings.visibleProperty().bind(clientAdmin);
+        ListChangeListener<PlayerInfoItem> listener = (change) -> {
+            clientAdmin.set(lobbyViewModel.isClientAdmin());
+        };
+        lobbyViewModel.addListenerToPlayersListProperty(listener);
+
 
         maxPlayers.textProperty().bind(lobbyViewModel.getMaxPlayersProperty());
         connectedPlayers.textProperty().bind(lobbyViewModel.getPlayerCountProperty());
