@@ -7,14 +7,18 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
+
+import labyrinth.contracts.models.CommandType;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import mci.dibse.crazylabyrinth.client.domain.context.ApplicationEvents;
 import mci.dibse.crazylabyrinth.client.service.ServerEventService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
@@ -24,6 +28,8 @@ import org.springframework.web.socket.handler.TextWebSocketHandler;
 @Slf4j
 @Component
 public class ClientWebSocketHandler extends TextWebSocketHandler {
+
+    private boolean canReceiveMessages = true;
 
     private final ApplicationEventPublisher eventListener;
 
@@ -45,6 +51,10 @@ public class ClientWebSocketHandler extends TextWebSocketHandler {
     @Override
     protected void handleTextMessage(WebSocketSession session, TextMessage message) {
         log.debug("Received message from session {}: {}", session.getId(), message.getPayload());
+        if(!hasActiveSessions() || !canReceiveMessages) {
+            log.warn("No active sessions. Ignoring message");
+            return;
+        }
         webSocketExecutor.execute(
                 () -> {
                     try {
@@ -62,6 +72,7 @@ public class ClientWebSocketHandler extends TextWebSocketHandler {
     @Override
     public void afterConnectionEstablished(@NonNull WebSocketSession session) throws Exception {
         super.afterConnectionEstablished(session);
+        canReceiveMessages = true;
         sessions.put(session.getId(), session);
         if (connectionCallback != null) {
             connectionCallback.complete(null);
@@ -83,10 +94,11 @@ public class ClientWebSocketHandler extends TextWebSocketHandler {
         // status: CloseStatus[code=1008, reason=Disconnected due to turn timeout.]
         if (status.getCode() == 1008) {
             eventListener.publishEvent(TURN_TIMEOUT);
-        } else {
+        } else if (status.getCode() != 1000) {
             eventListener.publishEvent(CONNECTION_LOST);
             connectionCallback = null;
         }
+        canReceiveMessages = false;
     }
 
     @Override
@@ -99,6 +111,7 @@ public class ClientWebSocketHandler extends TextWebSocketHandler {
         // notify the client?
         sessions.remove(session.getId());
         eventListener.publishEvent(CONNECTION_LOST);
+        canReceiveMessages = false;
     }
 
     public void closeSession() {
@@ -117,6 +130,15 @@ public class ClientWebSocketHandler extends TextWebSocketHandler {
                             }
                         });
         sessions.clear();
+    }
+
+    @EventListener
+    public void handleDisconnectEvent(CommandType event) {
+        if(CommandType.DISCONNECT.equals(event)) {
+            canReceiveMessages = false;
+            log.debug("Handle disconnect event");
+            closeSession();
+        };
     }
 
     public boolean hasActiveSessions() {

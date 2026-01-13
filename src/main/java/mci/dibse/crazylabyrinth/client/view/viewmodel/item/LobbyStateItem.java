@@ -75,8 +75,15 @@ public class LobbyStateItem extends BaseItem<LobbyStateEventPayload> {
                                         .noneMatch(info -> info.getId().equals(playerId)));
         this.playerCount.set(String.valueOf(playerInfos.size()));
         playerInfos.stream()
-                .map(this::playerItemFromPlayerInfo)
-                .forEach(item -> byId.putIfAbsent(item.getId(), item));
+                .map(i -> {
+                    if (byId.containsKey(i.getId())) {
+                        PlayerInfoItem item = byId.get(i.getId());
+                        item.updateFrom(i);
+                        return item;
+                    } else {
+                        return playerItemFromPlayerInfo(i);
+                    }
+                }).forEach(item -> byId.putIfAbsent(item.getId(), item));
     }
 
     private PlayerInfoItem playerItemFromPlayerInfo(PlayerInfo playerInfo) {

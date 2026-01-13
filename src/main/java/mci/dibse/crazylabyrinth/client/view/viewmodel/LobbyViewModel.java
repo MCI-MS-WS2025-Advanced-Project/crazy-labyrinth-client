@@ -165,6 +165,7 @@ public class LobbyViewModel extends BaseViewModel
     @Override
     public void onLobbyStateUpdated(LobbyStateEventPayload lobbyState) {
         // checkAndSetIfClientIsAdmin(lobbyState);
+        log.debug("Lobby State updated");
         if (lobbyStateItem == null
                 || !navigationStateViewModel
                         .getCurrentScreenProperty()
