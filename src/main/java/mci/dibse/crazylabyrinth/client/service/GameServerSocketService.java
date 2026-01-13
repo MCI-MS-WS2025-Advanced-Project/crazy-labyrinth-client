@@ -70,6 +70,10 @@ public class GameServerSocketService implements PlayerConnectedAckListener {
         this.serverUrl = serverUrl.trim();
     }
 
+    public void setBlockForReceivingMessages(boolean canReceive) {
+        client.setBlockForReceivingMessages(canReceive);
+    }
+
     @EventListener
     public void handleDisconnectEvent(ApplicationEvents event) {
         if (ApplicationEvents.CONNECTION_LOST.equals(event)
@@ -117,6 +121,7 @@ public class GameServerSocketService implements PlayerConnectedAckListener {
             this.identifierToken = null;
             this.serverUrl = null;
             this.clientUserName = null;
+
         }
     }
 

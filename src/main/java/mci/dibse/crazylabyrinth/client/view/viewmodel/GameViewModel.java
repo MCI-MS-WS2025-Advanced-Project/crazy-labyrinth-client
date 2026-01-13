@@ -212,7 +212,8 @@ public class GameViewModel extends BaseViewModel implements PlayerConnectedAckLi
                         gameStarted(gameState);
                         return;
                     }
-                    gameUpdated(gameState);
+                    if(NavigationStateViewModel.ScreenId.GAMEBOARD.equals(navigationStateViewModel.getCurrentScreenId())) gameUpdated(gameState);
+
                 };
         JavaFXUtils.runOnFxThread(task);
     }

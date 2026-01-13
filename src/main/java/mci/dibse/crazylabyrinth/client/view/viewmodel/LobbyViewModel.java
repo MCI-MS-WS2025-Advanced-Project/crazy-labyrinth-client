@@ -88,7 +88,7 @@ public class LobbyViewModel extends BaseViewModel
     }
 
     public boolean isClientAdmin() {
-        if (clientPlayer == null) return false;
+        if (clientPlayer == null || lobbyStateItem == null) return false;
         PlayerInfoItem clientPlayerInof =
                 lobbyStateItem.getPlayerList().stream()
                         .filter(
