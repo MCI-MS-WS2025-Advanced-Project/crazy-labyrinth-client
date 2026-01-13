@@ -375,6 +375,7 @@ public class GameViewModel extends BaseViewModel implements PlayerConnectedAckLi
                 .forEach(
                         p -> {
                             String incomingId = p.getPlayerInfo().getId();
+                            checkIfLastTreasureIsFound(p);
                             playerStatesSorted.stream()
                                     .filter(
                                             playerItem ->
@@ -388,6 +389,15 @@ public class GameViewModel extends BaseViewModel implements PlayerConnectedAckLi
                         });
         this.currentTurnInfoItem.updateFrom(gameState.getCurrentTurnInfo());
         this.pendingRotationProperty.set(false);
+    }
+
+    private void checkIfLastTreasureIsFound(PlayerState p) {
+        if (p.getRemainingTreasureCount() > 0) return;
+        Treasure t = new Treasure();
+        t.setId(999);
+        t.setName("Zurück zum Start");
+        TreasureItem backToHome = new TreasureItem(t);
+        nextTreasure.set(backToHome);
     }
 
     private boolean isBonusEnabled(GameStateEventPayload gameState) {
