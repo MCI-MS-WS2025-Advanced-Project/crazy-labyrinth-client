@@ -65,8 +65,9 @@ public class ClientCommandService {
             log.error("Failed to send command");
             throw new GeneralUiException("Failed to send command");
         } finally {
-            eventPublisher.publishEvent(BACK_TO_GAME_SERVER_DASHBOARD);
+            gameServerSocketService.setBlockForReceivingMessages(false);
             eventPublisher.publishEvent(CommandType.DISCONNECT);
+            eventPublisher.publishEvent(BACK_TO_GAME_SERVER_DASHBOARD);
         }
 
     }

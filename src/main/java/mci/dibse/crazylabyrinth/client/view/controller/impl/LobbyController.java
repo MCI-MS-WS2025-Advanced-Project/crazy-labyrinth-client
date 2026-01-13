@@ -75,7 +75,7 @@ public class LobbyController extends BaseViewCleanup {
     private static final int MIN_BONUS_COUNT = 0;
     private static final int MAX_BONUS_COUNT = 20;
     private static final int DEFAULT_BONUS_COUNT = 0;
-    private static final int DEFAULT_START_GAME_TIMER = 30;
+    private static final int DEFAULT_START_GAME_TIMER = 60;
 
     private final BooleanProperty isStartButtonLocked = new SimpleBooleanProperty(false);
 
@@ -243,19 +243,22 @@ public class LobbyController extends BaseViewCleanup {
     }
 
     private void initCountdownTimeline() {
-        countdownTimeline =
-                new Timeline(
-                        new KeyFrame(
-                                Duration.seconds(1),
-                                e -> {
-                                    remainingTimer.set(remainingTimer.get() - 1);
-                                    if (remainingTimer.get() <= 0) {
-                                        countdownTimeline.stop();
-                                        if (lobbyViewModel.isClientAdmin()) startGame();
-                                    }
-                                }));
-        countdownTimeline.setCycleCount(
-                Animation.INDEFINITE); // we control stopping via remainingTimer
+        Timeline timeline = new Timeline();
+
+        timeline.getKeyFrames().add(
+                new KeyFrame(
+                        Duration.seconds(1),
+                        e -> {
+                            remainingTimer.set(remainingTimer.get() - 1);
+                            if (remainingTimer.get() <= 0) {
+                                timeline.stop();
+                                if (lobbyViewModel.isClientAdmin()) startGame();
+                            }
+                        }));
+
+        timeline.setCycleCount(
+                Animation.INDEFINITE);
+        this.countdownTimeline = timeline;
     }
 
     private void initListener() {

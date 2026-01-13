@@ -187,6 +187,10 @@ public class GameServerSocketClient {
         return connectionFuture;
     }
 
+    public void setBlockForReceivingMessages(boolean canReceive) {
+        webSocketHandler.setBlockForReceivingMessages(canReceive);
+    }
+
     private boolean canProceedWithReconnecting() {
         boolean ret = reconnectingFlag.compareAndSet(true, false);
         log.debug("reconnectAttemptInProgress : {}", ret);
@@ -265,6 +269,7 @@ public class GameServerSocketClient {
 
         return Duration.ofMillis(expMs);
     }
+
 
 
 }
