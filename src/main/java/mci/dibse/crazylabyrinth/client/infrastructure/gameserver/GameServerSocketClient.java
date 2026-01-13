@@ -6,6 +6,7 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import labyrinth.contracts.models.ActionErrorEventPayload;
+import labyrinth.contracts.models.CommandType;
 import labyrinth.contracts.models.ErrorCode;
 import lombok.extern.slf4j.Slf4j;
 import mci.dibse.crazylabyrinth.client.infrastructure.exceptions.ConnectionException;
@@ -23,7 +24,7 @@ import org.springframework.web.socket.client.standard.StandardWebSocketClient;
 @Slf4j
 public class GameServerSocketClient {
 
-    private final AtomicBoolean reconnecting = new AtomicBoolean(false);
+    private final AtomicBoolean reconnectingFlag = new AtomicBoolean(false);
     private final AtomicInteger reconnectAttempt = new AtomicInteger(0);
 
     private static final String SOCKET_GAME_PATH = "/game";
@@ -37,6 +38,7 @@ public class GameServerSocketClient {
     private static final Duration RECONNECT_MAX_DELAY = Duration.ofSeconds(10);
 
     private final ClientWebSocketHandler webSocketHandler;
+
     private final ServerEventService serverEventService;
 
     private WebSocketClient webSocketClient;
@@ -61,8 +63,8 @@ public class GameServerSocketClient {
     */
     private WebSocketConnectionManager connectionManager;
 
-    // todo isConnected needed?
-    private volatile boolean isConnected = false;
+
+    private volatile boolean shouldReconnect = false;
     private CompletableFuture<Void> connectionFuture;
 
     @Autowired
@@ -93,7 +95,7 @@ public class GameServerSocketClient {
         log.debug("Connecting to WebSocket server at: {}", serverUrl);
 
         if (connectionManager != null && connectionManager.isRunning()) {
-            log.warn("Already connected. Disconnecting first...");
+            log.warn("connectionManager connected. Disconnecting first...");
             disconnect();
         }
         connectionFuture = new CompletableFuture<>();
@@ -123,7 +125,6 @@ public class GameServerSocketClient {
                                     log.error(
                                             "Failed to connect to WebSocket server: {}",
                                             throwable.getMessage());
-                                    markDisconnected();
                                     return null;
                                 });
             }
@@ -146,7 +147,15 @@ public class GameServerSocketClient {
 
     @EventListener
     public void handleReconnectionAbort(ActionErrorEventPayload error) {
-        if (ErrorCode.PLAYER_NOT_FOUND.equals(error.getErrorCode())) reconnecting.set(true);
+        if (ErrorCode.PLAYER_NOT_FOUND.equals(error.getErrorCode())) reconnectingFlag.set(true);
+    }
+
+    @EventListener
+    public void ensureDisconnect(CommandType event) {
+        if (CommandType.DISCONNECT.equals(event)) {
+            disconnect();
+            shouldReconnect = false;
+        }
     }
 
     /**
@@ -161,31 +170,44 @@ public class GameServerSocketClient {
 
             // Close any remaining sessions
             webSocketHandler.closeSession();
-            markDisconnected();
         } catch (Exception e) {
             log.error("Error during disconnect: {}", e.getMessage());
         }
     }
 
+    public void reconnectToServerWithToken(String serverUrl, String reconnectPlay) {
+        Runnable callback =
+                () -> {
+                    sendMessage(reconnectPlay);
+                };
+        reconnect(serverUrl, callback);
+    }
+
+    public CompletableFuture<Void> getConnectionCallback() {
+        return connectionFuture;
+    }
+
     private boolean canProceedWithReconnecting() {
-        boolean ret = reconnecting.compareAndSet(false, true);
-        log.debug("reconnectAttemptInProgress : {}", !ret);
-        return !ret;
+        boolean ret = reconnectingFlag.compareAndSet(true, false);
+        log.debug("reconnectAttemptInProgress : {}", ret);
+        return ret;
     }
 
     private void resetReconnectionProgress() {
-        reconnecting.set(false);
+        if (canContinueToReconnect()) reconnectingFlag.set(true);
+    }
+
+    private boolean canContinueToReconnect() {
+        return shouldReconnect;
     }
 
     private void markConnected() {
-        isConnected = true;
-        reconnecting.set(false);
+        shouldReconnect = true;
+        reconnectingFlag.set(true);
         reconnectAttempt.set(0);
     }
 
-    private void markDisconnected() {
-        isConnected = false;
-    }
+
 
     private WebSocketSession findOpenSession() throws IllegalStateException {
         return webSocketHandler.getSessions().values().stream()
@@ -195,7 +217,7 @@ public class GameServerSocketClient {
     }
 
     private void scheduleReconnectAttempt(String lastServerUrl, Runnable callback) {
-        if (canProceedWithReconnecting()) return;
+        if (!canProceedWithReconnecting()) return;
         int attempt = reconnectAttempt.getAndIncrement();
         Duration delay = nextBackoffDelay(attempt);
 
@@ -244,15 +266,5 @@ public class GameServerSocketClient {
         return Duration.ofMillis(expMs);
     }
 
-    public void reconnectToServerWithToken(String serverUrl, String reconnectPlay) {
-        Runnable callback =
-                () -> {
-                    sendMessage(reconnectPlay);
-                };
-        reconnect(serverUrl, callback);
-    }
 
-    public CompletableFuture<Void> getConnectionCallback() {
-        return connectionFuture;
-    }
 }
