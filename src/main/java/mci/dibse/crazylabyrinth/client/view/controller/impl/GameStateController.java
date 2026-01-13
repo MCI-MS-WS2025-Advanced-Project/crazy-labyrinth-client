@@ -23,7 +23,10 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
+import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
+import javafx.scene.shape.Rectangle;
+import javafx.scene.shape.StrokeType;
 import javafx.util.Duration;
 import labyrinth.contracts.models.*;
 import lombok.extern.slf4j.Slf4j;
@@ -616,8 +619,9 @@ public class GameStateController extends BaseViewCleanup {
                                                                             == finalCol)
                                             .findFirst();
                             if (playerStateItemOptional.isPresent()) {
+                                PlayerStateItem playerStateItem = playerStateItemOptional.get();
                                 PlayerColor playerColor =
-                                        playerStateItemOptional.get().getPlayerColor();
+                                        playerStateItem.getPlayerColor();
                                 Circle playerPawn =
                                         new Circle(
                                                 10,
@@ -626,6 +630,8 @@ public class GameStateController extends BaseViewCleanup {
                                 playerPawn.setOpacity(0.7);
                                 cellContainer.getChildren().add(playerPawn);
                             }
+
+                            markPlayerHomeBase(row, col, cellContainer);
 
                             // set mouse clicks tuff for move Phase
                             cellContainer.setOnMouseClicked(
@@ -673,6 +679,51 @@ public class GameStateController extends BaseViewCleanup {
                     }
                 };
         JavaFXUtils.runOnFxThread(apply);
+    }
+
+    private void markPlayerHomeBase(int row, int col, StackPane cellContainer) {
+        gameViewModel.getPlayerStatesSorted().stream()
+                .filter(
+                        player ->
+                                player.getHomePosition().get().getColumnAsInt() == col
+                                        && player.getHomePosition().get().getRowAsInt() == row)
+                .findFirst()
+                .ifPresent(playerStateItem -> addStyleToPlayerHomeBase(cellContainer, playerStateItem));
+    }
+
+    private void addStyleToPlayerHomeBase(StackPane cellContainer, PlayerStateItem playerStateItem) {
+
+        String styleColor = playerStateItem.getPlayerColor().toString().toLowerCase();
+
+
+        Rectangle borderOverlay = new Rectangle();
+
+
+        borderOverlay.widthProperty().bind(cellContainer.widthProperty());
+        borderOverlay.heightProperty().bind(cellContainer.heightProperty());
+
+
+        borderOverlay.setFill(Color.TRANSPARENT);
+
+        Color baseColor = Color.web(styleColor); // web() handles standard color names like "red", "blue"
+        // Set the border color and thickness
+        Color softColor = new Color(
+                baseColor.getRed(),
+                baseColor.getGreen(),
+                baseColor.getBlue(),
+                0.5 // Reduce opacity to make it less intense
+        );
+
+        borderOverlay.setStroke(softColor);
+        borderOverlay.setStrokeWidth(1.5);
+        borderOverlay.setStrokeType(StrokeType.INSIDE);
+
+
+        borderOverlay.setMouseTransparent(true);
+
+
+        cellContainer.getChildren().add(borderOverlay);
+
     }
 
     private void initPushTileButtons() {
