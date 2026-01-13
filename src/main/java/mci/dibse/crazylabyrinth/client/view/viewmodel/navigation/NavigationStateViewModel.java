@@ -5,6 +5,7 @@ import javafx.beans.property.SimpleObjectProperty;
 import labyrinth.contracts.models.ActionErrorEventPayload;
 import labyrinth.contracts.models.ErrorCode;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import mci.dibse.crazylabyrinth.client.infrastructure.util.JavaFXUtils;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
@@ -14,6 +15,7 @@ import org.springframework.stereotype.Component;
  *  @author Julian Janetschek
  */
 @Component
+@Slf4j
 public class NavigationStateViewModel {
 
     public enum ScreenId {
@@ -38,6 +40,7 @@ public class NavigationStateViewModel {
     }
 
     public void navigateTo(ScreenId screen) {
+        log.debug("Navigating to screen: {}", screen);
         JavaFXUtils.runOnFxThread(() -> currentScreenProperty.set(screen));
     }
 }
