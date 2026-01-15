@@ -14,14 +14,17 @@ import javafx.beans.value.ChangeListener;
 import javafx.collections.ListChangeListener;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.scene.Group;
 import javafx.scene.control.*;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
+import javafx.scene.shape.Rectangle;
+import javafx.scene.transform.Scale;
 import javafx.util.Duration;
 import labyrinth.contracts.models.PlayerColor;
 import mci.dibse.crazylabyrinth.client.domain.model.record.StartGameRecord;
 import mci.dibse.crazylabyrinth.client.infrastructure.util.JavaFXUtils;
+import mci.dibse.crazylabyrinth.client.infrastructure.util.ScreenResolutionProperties;
 import mci.dibse.crazylabyrinth.client.view.viewmodel.LobbyViewModel;
 import mci.dibse.crazylabyrinth.client.view.viewmodel.item.PlayerInfoItem;
 import mci.dibse.crazylabyrinth.client.view.viewmodel.navigation.NavigationStateViewModel;
@@ -51,6 +54,11 @@ public class LobbyController extends BaseViewCleanup {
     @FXML public Spinner<Integer> bonusCountSpinner;
     @FXML public Button leaveLobby;
     @FXML private ListView<String> playerList;
+
+    @FXML public StackPane viewport;
+    @FXML public Rectangle rootClip;
+    @FXML public Group contentGroup;
+    @FXML public BorderPane root;
 
     // Admin Stuff
     @FXML public CheckBox bonusEnabledCheck;
@@ -86,14 +94,19 @@ public class LobbyController extends BaseViewCleanup {
 
     private Runnable cleanUpTask;
 
+    private ScreenResolutionProperties screenResolutionProperties;
+
     @Autowired
-    public LobbyController(NavigationStateViewModel navState, LobbyViewModel lobbyViewModel) {
+    public LobbyController(NavigationStateViewModel navState, LobbyViewModel lobbyViewModel, ScreenResolutionProperties screenResolutionProperties) {
         super(navState);
         this.lobbyViewModel = lobbyViewModel;
+        this.screenResolutionProperties = screenResolutionProperties;
     }
 
     @FXML
     public void initialize() {
+
+
         playerTable.setItems(lobbyViewModel.getPlayersListProperty());
 
         // Clip/cleanup
@@ -149,6 +162,15 @@ public class LobbyController extends BaseViewCleanup {
         setupCountDownTimer();
 
         setupErrorHandling();
+
+        initUiScaling();
+    }
+
+    private void initUiScaling() {
+        ScreenResolutionProperties.ResolutionProperties props = new ScreenResolutionProperties.ResolutionProperties(root,
+                viewport);
+        screenResolutionProperties.initUiScaling(props);
+
     }
 
     public void onleaveLobbyButtonClick(ActionEvent actionEvent) {
