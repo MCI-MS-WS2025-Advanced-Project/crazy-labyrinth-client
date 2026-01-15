@@ -33,11 +33,12 @@ class UiStateLogicTest {
 
     @BeforeAll
     static void initToolkit() {
-        // Initialize JavaFX toolkit to enable property testing and avoid IllegalStateException
         try {
+            // Wir starten das Toolkit ganz normal.
+            // Ob es "Headless" läuft, entscheiden wir über die Maven-Konfiguration (pom.xml)
             com.sun.javafx.application.PlatformImpl.startup(() -> {});
         } catch (IllegalStateException e) {
-            // Toolkit already initialized
+            // Toolkit bereits gestartet
         }
     }
 
