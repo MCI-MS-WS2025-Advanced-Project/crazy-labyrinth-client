@@ -6,6 +6,7 @@ import labyrinth.contracts.models.NextTreasureCardEventPayload;
 import mci.dibse.crazylabyrinth.client.service.GameService;
 import mci.dibse.crazylabyrinth.client.service.LobbyService;
 import mci.dibse.crazylabyrinth.client.service.ServerEventService;
+import mci.dibse.crazylabyrinth.client.service.TimerService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -20,6 +21,7 @@ class ServerEventServiceTest {
     private LobbyService lobbyServiceMock;
     private GameService gameServiceMock;
     private ApplicationEventPublisher eventPublisherMock;
+    private TimerService timerServiceMock;
 
     @BeforeEach
     void setUp() {
@@ -27,11 +29,13 @@ class ServerEventServiceTest {
         lobbyServiceMock = mock(LobbyService.class);
         gameServiceMock = mock(GameService.class);
         eventPublisherMock = mock(ApplicationEventPublisher.class);
+        timerServiceMock = mock(TimerService.class);
 
         eventService = new ServerEventService(
                 lobbyServiceMock,
                 gameServiceMock,
-                eventPublisherMock
+                eventPublisherMock,
+                timerServiceMock
         );
     }
 
