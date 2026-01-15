@@ -387,7 +387,7 @@ public class LobbyController extends BaseViewCleanup {
                 (obs, oldVal, newVal) -> {
                     if (Boolean.TRUE.equals(newVal)) {
                         String msg = lobbyViewModel.getErrorMessage().get();
-                        JavaFXUtils.showAlertModal(
+                        JavaFXUtils.showAlertErrorModal(
                                 ERROR_MODAL_TITLE, "", msg, lobbyViewModel::clearError);
                     }
                 };
