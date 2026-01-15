@@ -59,7 +59,7 @@ class UiStateLogicTest {
 
         // GIVEN: ViewModels are initialized with mocked services
         lobbyViewModel = new LobbyViewModel(navMock, mock(LobbyService.class), null);
-        gameViewModel = new GameViewModel(navMock, mock(LobbyService.class), null, null);
+        gameViewModel = new GameViewModel(navMock, mock(LobbyService.class), null, null, null);
 
         // GIVEN: GameInfoRecord is injected via reflection to avoid NullPointerException in lobby logic
         GameInfoRecord mockInfo = new GameInfoRecord(
