@@ -1,4 +1,8 @@
 /* Top bar and bottom timer formatting */
+.viewport {
+    -fx-background-color: black;
+}
+
 .topbar {
     -fx-padding: 10 14;
 }
