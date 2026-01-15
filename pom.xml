@@ -264,10 +264,13 @@
                         <artifactId>maven-surefire-plugin</artifactId>
                         <configuration>
                             <systemPropertyVariables>
-                                <glass.platform>Monocle</glass.platform>
-                                <monocle.platform>Headless</monocle.platform>
                                 <prism.order>sw</prism.order>
+                                <testfx.headless>true</testfx.headless>
+                                <glass.platform>gtk</glass.platform>
                             </systemPropertyVariables>
+                            <environmentVariables>
+                                <DISPLAY>:99</DISPLAY>
+                            </environmentVariables>
                         </configuration>
                     </plugin>
                 </plugins>

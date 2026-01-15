@@ -34,11 +34,11 @@ class UiStateLogicTest {
     @BeforeAll
     static void initToolkit() {
         try {
-            // Wir starten das Toolkit ganz normal.
-            // Ob es "Headless" läuft, entscheiden wir über die Maven-Konfiguration (pom.xml)
+            // Initializes the JavaFX Toolkit
+            // Graphics mode (Headless vs. GUI) is controlled externally via Maven profiles
             com.sun.javafx.application.PlatformImpl.startup(() -> {});
         } catch (IllegalStateException e) {
-            // Toolkit bereits gestartet
+            // Toolkit is already running, no further action needed
         }
     }
 
