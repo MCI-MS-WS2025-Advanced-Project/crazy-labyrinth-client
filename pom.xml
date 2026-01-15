@@ -248,6 +248,31 @@
                 <javafx.platform>mac</javafx.platform>
             </properties>
         </profile>
+
+        <profile>
+            <id>headless-test</id>
+            <activation>
+                <property>
+                    <name>env.GITHUB_ACTIONS</name>
+                    <value>true</value>
+                </property>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <configuration>
+                            <systemPropertyVariables>
+                                <glass.platform>Monocle</glass.platform>
+                                <monocle.platform>Headless</monocle.platform>
+                                <prism.order>sw</prism.order>
+                            </systemPropertyVariables>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
 	</profiles>
 
 </project>
