@@ -33,12 +33,21 @@ class UiStateLogicTest {
 
     @BeforeAll
     static void initToolkit() {
+        // Check if we are running in a headless environment (CI)
+        // Most CI runners set 'headless' or 'GITHUB_ACTIONS'
+        boolean isCi = System.getenv("GITHUB_ACTIONS") != null;
+
+        if (isCi) {
+            // Force Monocle for headless testing on Linux runners
+            System.setProperty("glass.platform", "Monocle");
+            System.setProperty("monocle.platform", "Headless");
+            System.setProperty("prism.order", "sw");
+        }
+
         try {
-            // Initializes the JavaFX Toolkit
-            // Graphics mode (Headless vs. GUI) is controlled externally via Maven profiles
             com.sun.javafx.application.PlatformImpl.startup(() -> {});
         } catch (IllegalStateException e) {
-            // Toolkit is already running, no further action needed
+            // Toolkit already initialized
         }
     }
 
