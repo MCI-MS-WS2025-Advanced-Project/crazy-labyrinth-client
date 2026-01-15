@@ -64,9 +64,12 @@ public class ClientCommandService {
         } catch (GeneralUiException _) {
             log.error("Failed to send command");
             throw new GeneralUiException("Failed to send command");
+        } finally {
+            gameServerSocketService.setBlockForReceivingMessages(false);
+            eventPublisher.publishEvent(CommandType.DISCONNECT);
+            eventPublisher.publishEvent(BACK_TO_GAME_SERVER_DASHBOARD);
         }
-        eventPublisher.publishEvent(CommandType.DISCONNECT);
-        eventPublisher.publishEvent(BACK_TO_GAME_SERVER_DASHBOARD);
+
     }
 
     public void sendStartGameCommand(StartGameRecord startGameRecord) throws GeneralUiException {

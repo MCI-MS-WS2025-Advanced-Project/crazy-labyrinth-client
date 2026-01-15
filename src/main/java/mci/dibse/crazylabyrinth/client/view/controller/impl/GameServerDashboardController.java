@@ -38,6 +38,7 @@ public class GameServerDashboardController extends BaseViewCleanup {
     @FXML public TableColumn<GameServerItem, String> actionCol;
 
     private static final String SERVER_ERROR_LOADING_STATUS = "Fehler beim Laden des Servers...";
+    private static final String SERVER_ERROR_TITLE          = "Fehler";
     private static final String NO_SERVERS_FOUND_STATUS =
             "Keine Server gefunden. Klicken Sie auf 'Aktualisieren', um das Verzeichnis"
                     + " abzufragen.";
@@ -235,11 +236,12 @@ public class GameServerDashboardController extends BaseViewCleanup {
                 .addListener(
                         (obs, oldVal, newVal) -> {
                             if (Boolean.TRUE.equals(newVal)) {
-                                JavaFXUtils.showAlertModal(
-                                        SERVER_ERROR_LOADING_STATUS,
+                                JavaFXUtils.showAlertErrorModal(
+                                        SERVER_ERROR_TITLE,
                                         "",
-                                        GENERAL_SERVER_ERROR_STATUS,
+                                        viewModel.getErrorMessage().get(),
                                         () -> viewModel.clearError());
+
                             }
                         });
     }
