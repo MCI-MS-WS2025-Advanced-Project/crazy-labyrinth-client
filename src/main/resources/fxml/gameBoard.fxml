@@ -24,23 +24,29 @@
 
     <!-- ================== TOP ================== -->
     <top>
-        <HBox alignment="CENTER"
-              prefHeight="48"
-              styleClass="card,topbar">
-            <Label fx:id="playerTurnLabel"
-                   styleClass="section-header"/>
+    <StackPane prefHeight="48" styleClass="card,topbar">
+        <Label fx:id="playerTurnLabel"
+               styleClass="section-header"
+               StackPane.alignment="CENTER"/>
+        <HBox alignment="CENTER_RIGHT"
+              spacing="8"
+              StackPane.alignment="CENTER_RIGHT">
+            <Label text="Spielzug Zeit:" styleClass="setting-label"/>
+            <Label fx:id="turnCounterLabel" styleClass="badge"/>
         </HBox>
-    </top>
+    </StackPane>
+</top>
 
     <!-- ================== BOTTOM ================== -->
     <bottom>
-        <HBox alignment="CENTER"
-              spacing="12"
-              prefHeight="56"
-              styleClass="card,timer-bar">
-            <Label text="Spiel Timer:" styleClass="setting-label"/>
-            <Label fx:id="gameCounterLabel" styleClass="badge"/>
-        </HBox>
+        <StackPane prefHeight="56" styleClass="card,timer-bar">
+            <HBox alignment="CENTER"
+                  spacing="12"> <!-- styleClass="card,timer-bar" -->
+                <Label text="Verbleibende Spiel Zeit:" styleClass="setting-label"/>
+                <Label fx:id="gameCounterLabel" styleClass="badge"/>
+            </HBox>
+            <Button StackPane.alignment="CENTER_RIGHT" alignment="CENTER" fx:id="leaveGameButton" onAction="#onLeaveGameButtonClick" text="Verlassen" styleClass="pill-button, leaveGameButton"/>
+        </StackPane>
     </bottom>
 
 

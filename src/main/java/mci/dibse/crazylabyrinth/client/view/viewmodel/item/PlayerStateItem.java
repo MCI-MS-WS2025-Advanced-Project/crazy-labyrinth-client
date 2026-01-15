@@ -128,7 +128,7 @@ public class PlayerStateItem extends BaseItem<PlayerState> {
         treasuresFound.clear();
         achievementTypes.clear();
         availableBonusTypes.clear();
-        playerInfo.set(null);
+    //    playerInfo.set(null);
         currentPosition.set(null);
         homePosition.set(null);
     }

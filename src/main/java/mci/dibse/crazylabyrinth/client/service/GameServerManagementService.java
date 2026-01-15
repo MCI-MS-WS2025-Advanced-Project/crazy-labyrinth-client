@@ -132,8 +132,7 @@ public class GameServerManagementService {
     }
 
     private void refresh(Collection<GameServer> updatedServers) {
-        System.out.println("refresh");
-
+        log.info("Refreshing game server list");
         Set<UUID> toRemove = new HashSet<>(servers.keySet());
         if (updatedServers != null) {
             for (GameServer incoming : updatedServers) {

@@ -1,11 +1,17 @@
 package mci.dibse.crazylabyrinth.client.view.controller.impl;
 
 import jakarta.annotation.Nullable;
+import java.time.OffsetDateTime;
 import java.util.*;
+import javafx.animation.Animation;
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
+import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.css.PseudoClass;
 import javafx.event.ActionEvent;
@@ -18,6 +24,7 @@ import javafx.scene.control.Label;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.scene.shape.Circle;
+import javafx.util.Duration;
 import labyrinth.contracts.models.*;
 import lombok.extern.slf4j.Slf4j;
 import mci.dibse.crazylabyrinth.client.domain.context.PushTileCommandRecord;
@@ -90,6 +97,9 @@ public class GameStateController extends BaseViewCleanup {
     @FXML public Label gameCounterLabel;
     @FXML public StackPane centerWrapper;
 
+    @FXML public HBox turnCounterBox;
+    @FXML public Label turnCounterLabel;
+
     private static final int GAP_BETWEEN_TILES = 2;
     private static final int MAX_PLAYERS = 4;
     private static final String TIMEOUT_LABEL = "Timeout aufgrund von Untätigkeit";
@@ -99,10 +109,22 @@ public class GameStateController extends BaseViewCleanup {
     private static final PseudoClass AVAILABLE_BONUS_BUTTON_PSEUDO_CLASS =
             PseudoClass.getPseudoClass("bonus-available");
 
+
+    private static final String QUIT_GAME_MODAL_TITLE   = "Beenden";
+    private static final String QUIT_GAME_MODAL_HEADER  = "Spiel wirklich beenden?";
+    private static final String QUIT_GAME_MODAL_CONTENT = "Das laufende Spiel wird beendet und Sie kehren zur Serverübersicht zurück";
+
     private final GameViewModel gameViewModel;
     private final Map<String, Label> idToPlayerLabel = new HashMap<>();
 
     private Map<BonusType, ChangeListener<Boolean>> bonusAvailableListeners = new HashMap<>();
+
+    private IntegerProperty remainingGameTimer = new SimpleIntegerProperty();
+    private Timeline gameTimeline;
+
+    private IntegerProperty remainingTurnTimer = new SimpleIntegerProperty();
+    private Timeline turnTimeline;
+    private ChangeListener<OffsetDateTime> turnTimeChangeListener;
 
     @Autowired
     public GameStateController(NavigationStateViewModel vm, GameViewModel gameViewModel) {
@@ -131,11 +153,11 @@ public class GameStateController extends BaseViewCleanup {
 
         initNextTreasure();
 
-        initGameCounter();
-
         initBoni();
 
         setupErrorHandling();
+
+        initGameTimer();
     }
 
     @Override
@@ -194,6 +216,8 @@ public class GameStateController extends BaseViewCleanup {
         bonusPushFixedButton
                 .disableProperty()
                 .removeListener(bonusAvailableListeners.get(BonusType.PUSH_FIXED));
+
+        gameCounterLabel.textProperty().unbind();
     }
 
     @EventListener
@@ -288,6 +312,49 @@ public class GameStateController extends BaseViewCleanup {
                                 },
                                 gameViewModel.getCurrentPlayerIdProperty(),
                                 gameViewModel.getCurrentTurnStateProperty()));
+
+        initTurnCounter();
+    }
+
+    private void initTurnCounter() {
+
+        initTurnCounterTimeline();
+        turnCounterLabel
+                .textProperty()
+                .bind(
+                        Bindings.createStringBinding(
+                                () -> {
+                                    int totalSeconds = remainingTurnTimer.get();
+                                    long minutes = totalSeconds / 60;
+                                    long seconds = totalSeconds % 60;
+                                    return String.format("%02d:%02d", minutes, seconds);
+                                },
+                                remainingTurnTimer));
+        ChangeListener<OffsetDateTime> turnTimeChangeListener =
+                (obs, oldValue, newValue) -> {
+                    turnTimeline.stop();
+                    Long turnTimeInSeconds = gameViewModel.getRemainingTurnTimeInSeconds();
+                    log.info("Turn time in seconds: {}", turnTimeInSeconds);
+                    remainingTurnTimer.set(Math.toIntExact(turnTimeInSeconds));
+                    turnTimeline.playFromStart();
+                };
+        gameViewModel.addListenerToCurrentTurnEndTime(turnTimeChangeListener);
+        if (gameViewModel.isCurrentTurnTimeSet()) turnTimeChangeListener.changed(null, null, null);
+    }
+
+    private void initTurnCounterTimeline() {
+        turnTimeline =
+                new Timeline(
+                        new KeyFrame(
+                                Duration.seconds(1),
+                                e -> {
+                                    remainingTurnTimer.set(remainingTurnTimer.get() - 1);
+                                    if (remainingTurnTimer.get() <= 0
+                                            || gameViewModel.isClientPlayerTimeout()) {
+                                        turnTimeline.stop();
+                                    }
+                                }));
+        turnTimeline.setCycleCount(Animation.INDEFINITE);
     }
 
     private void initPlayerLabels() {
@@ -1177,7 +1244,7 @@ public class GameStateController extends BaseViewCleanup {
                 .addListener(
                         (obs, oldVal, newVal) -> {
                             if (Boolean.TRUE.equals(newVal) && shouldErrorBeShownAsModal()) {
-                                JavaFXUtils.showAlertModal(
+                                JavaFXUtils.showAlertErrorModal(
                                         GENERAL_ERROR_TITLE,
                                         "",
                                         gameViewModel.getErrorMessage().get(),
@@ -1195,10 +1262,55 @@ public class GameStateController extends BaseViewCleanup {
         };
     }
 
+    public void onLeaveGameButtonClick(ActionEvent actionEvent) {
+        log.debug("onLeaveGameButtonClick");
+        Runnable onConfirm = gameViewModel::leaveGame;
+        JavaFXUtils.showConfirmationModal(
+                QUIT_GAME_MODAL_TITLE, QUIT_GAME_MODAL_HEADER, QUIT_GAME_MODAL_CONTENT, onConfirm);
+    }
+
     private enum BONUS_TYPE {
         SWAP,
         BEAM,
         PUSH_TWICE,
         PUSH_FIXED;
+    }
+
+    private void initGameTimer() {
+        Long gameTimeSeconds = gameViewModel.getRemainingGameTimeInSeconds();
+        remainingGameTimer.set(Math.toIntExact(gameTimeSeconds));
+
+        initCountdownTimeline(gameTimeSeconds);
+
+        gameCounterLabel
+                .textProperty()
+                .bind(
+                        Bindings.createStringBinding(
+                                () -> {
+                                    int totalSeconds = remainingGameTimer.get();
+                                    long minutes = totalSeconds / 60;
+                                    long seconds = totalSeconds % 60;
+                                    return String.format("%02d:%02d", minutes, seconds);
+                                },
+                                remainingGameTimer // dependency: re-calculate when this property
+                                // changes
+                                ));
+
+        gameTimeline.playFromStart();
+    }
+
+    private void initCountdownTimeline(Long gameTimeSeconds) {
+        gameTimeline =
+                new Timeline(
+                        new KeyFrame(
+                                javafx.util.Duration.seconds(1),
+                                e -> {
+                                    remainingGameTimer.set(remainingGameTimer.get() - 1);
+                                    if (remainingGameTimer.get() <= 0
+                                            || gameViewModel.isClientPlayerTimeout()) {
+                                        gameTimeline.stop();
+                                    }
+                                }));
+        gameTimeline.setCycleCount(Animation.INDEFINITE); // we control stopping via remainingTimer
     }
 }
