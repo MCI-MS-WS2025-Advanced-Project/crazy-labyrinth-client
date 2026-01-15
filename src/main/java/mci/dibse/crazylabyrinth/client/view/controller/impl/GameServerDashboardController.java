@@ -236,7 +236,7 @@ public class GameServerDashboardController extends BaseViewCleanup {
                 .addListener(
                         (obs, oldVal, newVal) -> {
                             if (Boolean.TRUE.equals(newVal)) {
-                                JavaFXUtils.showAlertModal(
+                                JavaFXUtils.showAlertErrorModal(
                                         SERVER_ERROR_TITLE,
                                         "",
                                         viewModel.getErrorMessage().get(),

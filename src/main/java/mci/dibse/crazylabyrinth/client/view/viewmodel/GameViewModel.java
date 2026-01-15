@@ -407,4 +407,8 @@ public class GameViewModel extends BaseViewModel implements PlayerConnectedAckLi
                 .flatMap(Arrays::stream)
                 .anyMatch(tile -> tile.getBonus() != null);
     }
+
+    public void leaveGame() {
+        clientCommandService.sendDisconnectCommand();
+    }
 }
