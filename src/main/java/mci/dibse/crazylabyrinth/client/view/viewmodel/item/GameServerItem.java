@@ -7,6 +7,7 @@ import javafx.beans.property.*;
 import lombok.Getter;
 import mci.dibse.crazylabyrinth.client.domain.model.enums.GameStatus;
 import mci.dibse.crazylabyrinth.client.domain.model.management.GameServer;
+import mci.dibse.crazylabyrinth.client.infrastructure.util.JavaFXUtils;
 
 /**
  *  UI representation of GameServer
@@ -26,9 +27,14 @@ public class GameServerItem extends BaseItem<GameServer> implements ViewItem {
     @Getter private final ReadOnlyBooleanWrapper joinable = new ReadOnlyBooleanWrapper();
 
     public GameServerItem(GameServer source) {
-        setJoinableProperty();
+        super();
         this.id = source.getId();
-        updateFrom(source);
+        Runnable apply = () -> {
+            setJoinableProperty();
+            updateFrom(source);
+        };
+        JavaFXUtils.runOnFxThread(apply);
+
     }
 
     private void setJoinableProperty() {
@@ -75,6 +81,6 @@ public class GameServerItem extends BaseItem<GameServer> implements ViewItem {
 
     @Override
     protected void disposeItem() {
-        // todo?
+        joinable.unbind();
     }
 }
