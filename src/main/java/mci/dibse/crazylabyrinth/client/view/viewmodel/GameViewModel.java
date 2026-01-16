@@ -212,7 +212,8 @@ public class GameViewModel extends BaseViewModel implements PlayerConnectedAckLi
                         gameStarted(gameState);
                         return;
                     }
-                    gameUpdated(gameState);
+                    if(NavigationStateViewModel.ScreenId.GAMEBOARD.equals(navigationStateViewModel.getCurrentScreenId())) gameUpdated(gameState);
+
                 };
         JavaFXUtils.runOnFxThread(task);
     }
@@ -374,6 +375,7 @@ public class GameViewModel extends BaseViewModel implements PlayerConnectedAckLi
                 .forEach(
                         p -> {
                             String incomingId = p.getPlayerInfo().getId();
+                            checkIfLastTreasureIsFound(p);
                             playerStatesSorted.stream()
                                     .filter(
                                             playerItem ->
@@ -389,11 +391,24 @@ public class GameViewModel extends BaseViewModel implements PlayerConnectedAckLi
         this.pendingRotationProperty.set(false);
     }
 
+    private void checkIfLastTreasureIsFound(PlayerState p) {
+        if (p.getRemainingTreasureCount() > 0) return;
+        Treasure t = new Treasure();
+        t.setId(999);
+        t.setName("Zurück zum Start");
+        TreasureItem backToHome = new TreasureItem(t);
+        nextTreasure.set(backToHome);
+    }
+
     private boolean isBonusEnabled(GameStateEventPayload gameState) {
         GameBoard initialBoard = gameState.getBoard();
         if (initialBoard.getSpareTile().getBonus() != null) return true;
         return Arrays.stream(initialBoard.getTiles())
                 .flatMap(Arrays::stream)
                 .anyMatch(tile -> tile.getBonus() != null);
+    }
+
+    public void leaveGame() {
+        clientCommandService.sendDisconnectCommand();
     }
 }

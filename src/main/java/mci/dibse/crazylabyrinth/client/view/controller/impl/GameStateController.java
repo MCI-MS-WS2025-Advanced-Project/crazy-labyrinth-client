@@ -109,6 +109,11 @@ public class GameStateController extends BaseViewCleanup {
     private static final PseudoClass AVAILABLE_BONUS_BUTTON_PSEUDO_CLASS =
             PseudoClass.getPseudoClass("bonus-available");
 
+
+    private static final String QUIT_GAME_MODAL_TITLE   = "Beenden";
+    private static final String QUIT_GAME_MODAL_HEADER  = "Spiel wirklich beenden?";
+    private static final String QUIT_GAME_MODAL_CONTENT = "Das laufende Spiel wird beendet und Sie kehren zur Serverübersicht zurück";
+
     private final GameViewModel gameViewModel;
     private final Map<String, Label> idToPlayerLabel = new HashMap<>();
 
@@ -1239,7 +1244,7 @@ public class GameStateController extends BaseViewCleanup {
                 .addListener(
                         (obs, oldVal, newVal) -> {
                             if (Boolean.TRUE.equals(newVal) && shouldErrorBeShownAsModal()) {
-                                JavaFXUtils.showAlertModal(
+                                JavaFXUtils.showAlertErrorModal(
                                         GENERAL_ERROR_TITLE,
                                         "",
                                         gameViewModel.getErrorMessage().get(),
@@ -1255,6 +1260,13 @@ public class GameStateController extends BaseViewCleanup {
             case INVALID_MOVE -> false;
             default -> true;
         };
+    }
+
+    public void onLeaveGameButtonClick(ActionEvent actionEvent) {
+        log.debug("onLeaveGameButtonClick");
+        Runnable onConfirm = gameViewModel::leaveGame;
+        JavaFXUtils.showConfirmationModal(
+                QUIT_GAME_MODAL_TITLE, QUIT_GAME_MODAL_HEADER, QUIT_GAME_MODAL_CONTENT, onConfirm);
     }
 
     private enum BONUS_TYPE {

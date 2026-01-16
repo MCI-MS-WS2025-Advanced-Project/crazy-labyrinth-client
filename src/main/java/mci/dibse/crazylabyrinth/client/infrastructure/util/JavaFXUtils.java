@@ -8,6 +8,7 @@ import javafx.beans.value.ChangeListener;
 import javafx.geometry.Bounds;
 import javafx.scene.Node;
 import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.Skin;
 import javafx.scene.control.TableView;
 import javafx.scene.shape.Rectangle;
@@ -31,7 +32,7 @@ public class JavaFXUtils {
         }
     }
 
-    public static void showAlertModal(
+    public static void showAlertErrorModal(
             String title, String header, String content, Runnable onClose) {
         runOnFxThread(
                 () -> {

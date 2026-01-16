@@ -146,4 +146,8 @@ public class ClientWebSocketHandler extends TextWebSocketHandler {
         sessions.entrySet().removeIf(entry -> !entry.getValue().isOpen());
         return !sessions.isEmpty();
     }
+
+    public void setBlockForReceivingMessages(boolean canReceive) {
+        this.canReceiveMessages = canReceive;
+    }
 }

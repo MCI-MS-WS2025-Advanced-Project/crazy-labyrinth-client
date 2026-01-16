@@ -90,7 +90,7 @@ public class LobbyController extends BaseViewCleanup {
     private static final int MIN_BONUS_COUNT = 0;
     private static final int MAX_BONUS_COUNT = 20;
     private static final int DEFAULT_BONUS_COUNT = 0;
-    private static final int DEFAULT_START_GAME_TIMER = 30;
+    private static final int DEFAULT_START_GAME_TIMER = 60;
 
     private final BooleanProperty isStartButtonLocked = new SimpleBooleanProperty(false);
 
@@ -481,7 +481,7 @@ public class LobbyController extends BaseViewCleanup {
                 (obs, oldVal, newVal) -> {
                     if (Boolean.TRUE.equals(newVal)) {
                         String msg = lobbyViewModel.getErrorMessage().get();
-                        JavaFXUtils.showAlertModal(
+                        JavaFXUtils.showAlertErrorModal(
                                 ERROR_MODAL_TITLE, "", msg, lobbyViewModel::clearError);
                     }
                 };
