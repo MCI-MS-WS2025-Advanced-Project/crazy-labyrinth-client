@@ -48,6 +48,24 @@ public class JavaFXUtils {
                 });
     }
 
+    public static void showConfirmationModal(
+            String title, String header, String content, Runnable onConfirm) {
+        runOnFxThread(
+                () -> {
+                    Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+                    alert.setTitle(title);
+                    alert.setHeaderText(header);
+                    alert.setContentText(content);
+
+                    alert.showAndWait().ifPresent(response -> {
+                        if (response == ButtonType.OK) {
+                            onConfirm.run();
+                        }
+                    });
+                });
+    }
+
+
     public static <T> Runnable setupTableClip(TableView<T> table, Double fixedCellSize) {
        if (fixedCellSize != null) table.setFixedCellSize(fixedCellSize);
 
