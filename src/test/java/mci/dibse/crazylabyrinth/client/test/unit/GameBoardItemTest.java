@@ -49,7 +49,6 @@ class GameBoardItemTest {
             }
         }
 
-        // 3. doReturn syntax to prevent UnfinishedStubbingException
         doReturn(rows).when(mockBoard).getRows();
         doReturn(cols).when(mockBoard).getCols();
         doReturn(dummyTiles).when(mockBoard).getTiles();
@@ -58,10 +57,19 @@ class GameBoardItemTest {
         gameBoardItem = new GameBoardItem(mockBoard);
     }
 
+    // Helper to create a Tile mock that satisfies TileItem's logic
     private Tile createMockTile() {
         Tile t = mock(Tile.class);
-        // Ensure no NPE during Arrays.asList()
-        doReturn(new Direction[0]).when(t).getEntrances();
+
+        // Setup directions
+        Direction[] validEntrances = new Direction[]{ Direction.UP, Direction.RIGHT };
+        doReturn(validEntrances).when(t).getEntrances();
+
+        // Prevent NPEs for other properties used in TileItem constructor
+        doReturn(false).when(t).getIsFixed();
+        doReturn(null).when(t).getTreasure();
+        doReturn(null).when(t).getBonus();
+
         return t;
     }
 
