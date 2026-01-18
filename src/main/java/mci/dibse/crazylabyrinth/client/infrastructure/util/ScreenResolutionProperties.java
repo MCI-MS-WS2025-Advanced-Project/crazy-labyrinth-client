@@ -3,6 +3,7 @@ package mci.dibse.crazylabyrinth.client.infrastructure.util;
 import jakarta.annotation.PostConstruct;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.DoubleBinding;
+import javafx.geometry.Pos;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
@@ -59,55 +60,71 @@ public class ScreenResolutionProperties {
         }
     }
 
+
     public void initUiScaling(ResolutionProperties props) {
         double screenHeight = height - HEIGHT_OFFSET_TO_VIEWPORT_HEIGHT_ON_SCREEN;
-        Scale scale = new Scale(1, 1, 0, 0);
-        props.root.getTransforms().add(scale);
+
         Runnable apply = () -> {
+            // Center the root inside the StackPane
+            StackPane.setAlignment(props.root, Pos.CENTER);
+
             // Available content area inside the viewport, excluding insets
             DoubleBinding availableW = Bindings.createDoubleBinding(
                     () -> {
                         System.out.println("availableW: " + props.viewport.getWidth() + " - " + props.viewport.getInsets().getLeft() + " - " + props.viewport.getInsets().getRight());
                         props.root.setPrefWidth(width);
                         return props.viewport.getWidth()
-                            - props.viewport.getInsets().getLeft()
-                            - props.viewport.getInsets().getRight();},
+                                - props.viewport.getInsets().getLeft()
+                                - props.viewport.getInsets().getRight();
+                    },
                     props.viewport.widthProperty(),
                     props.viewport.insetsProperty()
             );
+
             DoubleBinding availableH = Bindings.createDoubleBinding(
                     () -> {
                         System.out.println("availableH: " + props.viewport.getHeight() + " - " + props.viewport.getInsets().getTop() + " - " + props.viewport.getInsets().getBottom());
                         props.root.setPrefHeight(screenHeight);
                         return props.viewport.getHeight()
-                            - props.viewport.getInsets().getTop()
-                            - props.viewport.getInsets().getBottom();},
+                                - props.viewport.getInsets().getTop()
+                                - props.viewport.getInsets().getBottom();
+                    },
                     props.viewport.heightProperty(),
                     props.viewport.insetsProperty()
             );
-
-
 
             // Scale factor based on available area vs. design (root) size
             DoubleBinding scaleFactor = Bindings.createDoubleBinding(() -> {
                 double scaleX = availableW.get() / width;
                 double scaleY = availableH.get() / screenHeight;
-
                 return Math.min(scaleX, scaleY);
-
             }, availableW, availableH);
 
-
+            // Fix root to design size
             props.root.setPrefWidth(width);
             props.root.setPrefHeight(screenHeight);
             props.root.setMinSize(Region.USE_PREF_SIZE, Region.USE_PREF_SIZE);
             props.root.setMaxSize(Region.USE_PREF_SIZE, Region.USE_PREF_SIZE);
 
+            // Create scale and bind to factor + pivot at center
+            Scale scale = new Scale(1, 1);
+            props.root.getTransforms().setAll(scale);
             scale.xProperty().bind(scaleFactor);
             scale.yProperty().bind(scaleFactor);
 
+            // Use layoutBounds to determine visual center for pivot
+            DoubleBinding pivotX = Bindings.createDoubleBinding(
+                    () -> props.root.getLayoutBounds().getWidth() / 2.0,
+                    props.root.layoutBoundsProperty()
+            );
+            DoubleBinding pivotY = Bindings.createDoubleBinding(
+                    () -> props.root.getLayoutBounds().getHeight() / 2.0,
+                    props.root.layoutBoundsProperty()
+            );
+            scale.pivotXProperty().bind(pivotX);
+            scale.pivotYProperty().bind(pivotY);
 
-
+            // Clip to available area
             Rectangle clip = (Rectangle) props.viewport.getClip();
             clip.xProperty().bind(Bindings.createDoubleBinding(
                     () -> props.viewport.getInsets().getLeft(),
@@ -120,6 +137,7 @@ public class ScreenResolutionProperties {
             clip.widthProperty().bind(availableW);
             clip.heightProperty().bind(availableH);
         };
+
         JavaFXUtils.runOnFxThread(apply);
     }
 
