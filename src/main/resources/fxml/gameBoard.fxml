@@ -23,7 +23,7 @@
     <clip>
         <Rectangle fx:id="rootClip"/>
     </clip >
-    <Group fx:id="contentGroup" style="-fx-background-color: green !important;">
+    <!-- Group fx:id="contentGroup" -->
     <BorderPane xmlns="http://javafx.com/javafx"
                 xmlns:fx="http://javafx.com/fxml"
                 fx:id="root"
@@ -291,6 +291,6 @@
         </center>
 
     </BorderPane>
-    </Group>
+    <!-- /Group -->
 </StackPane>
 
