@@ -375,7 +375,7 @@ public class GameViewModel extends BaseViewModel implements PlayerConnectedAckLi
                 .forEach(
                         p -> {
                             String incomingId = p.getPlayerInfo().getId();
-                            checkIfLastTreasureIsFound(p);
+                            if (incomingId.equals(clientPlayer.getId())) checkIfLastTreasureIsFound(p);
                             playerStatesSorted.stream()
                                     .filter(
                                             playerItem ->
