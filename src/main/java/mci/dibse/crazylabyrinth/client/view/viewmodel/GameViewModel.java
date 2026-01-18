@@ -12,6 +12,7 @@ import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.value.ChangeListener;
+import javafx.scene.image.Image;
 import labyrinth.contracts.models.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -48,7 +49,7 @@ public class GameViewModel extends BaseViewModel implements PlayerConnectedAckLi
     @Getter private CurrentTurnInfoItem currentTurnInfoItem;
 
     @Getter
-    private final SimpleObjectProperty<TreasureItem> nextTreasure = new SimpleObjectProperty<>();
+    private final SimpleObjectProperty<TreasureItem> nextTreasureItemProperty = new SimpleObjectProperty<>();
 
     @Getter final SimpleBooleanProperty pendingRotationProperty = new SimpleBooleanProperty();
     @Getter final SimpleBooleanProperty turnTimeoutProperty = new SimpleBooleanProperty();
@@ -122,7 +123,7 @@ public class GameViewModel extends BaseViewModel implements PlayerConnectedAckLi
     }
 
     public String getNextTreasureNameAsString() {
-        return nextTreasure.get().getName();
+        return nextTreasureItemProperty.get().getName();
     }
 
     public boolean isPendingRotation() {
@@ -152,6 +153,10 @@ public class GameViewModel extends BaseViewModel implements PlayerConnectedAckLi
     public void addListenerToCurrentTurnEndTime(
             ChangeListener<OffsetDateTime> turnTimeChangeListener) {
         currentTurnInfoItem.addListenerToTurnEndTimeProperty(turnTimeChangeListener);
+    }
+
+    public SimpleObjectProperty<Image> getNextTreasureImageProperty() {
+        return nextTreasureItemProperty.get().getTreasureImageProperty();
     }
 
     public boolean isAnyBonusActive(BonusType bonusType) {
@@ -224,7 +229,7 @@ public class GameViewModel extends BaseViewModel implements PlayerConnectedAckLi
                 () -> {
                     TreasureItem treasureItem = new TreasureItem(nextTreasureCard.getTreasure());
                     log.info("set new treasure: {}", treasureItem.getId());
-                    nextTreasure.set(treasureItem);
+                    nextTreasureItemProperty.set(treasureItem);
                 };
         JavaFXUtils.runOnFxThread(task);
     }
@@ -375,7 +380,7 @@ public class GameViewModel extends BaseViewModel implements PlayerConnectedAckLi
                 .forEach(
                         p -> {
                             String incomingId = p.getPlayerInfo().getId();
-                            checkIfLastTreasureIsFound(p);
+                            if (incomingId.equals(clientPlayer.getId())) checkIfLastTreasureIsFound(p);
                             playerStatesSorted.stream()
                                     .filter(
                                             playerItem ->
@@ -393,11 +398,12 @@ public class GameViewModel extends BaseViewModel implements PlayerConnectedAckLi
 
     private void checkIfLastTreasureIsFound(PlayerState p) {
         if (p.getRemainingTreasureCount() > 0) return;
+        System.out.println("last treasure found");
         Treasure t = new Treasure();
-        t.setId(999);
+        t.setId(24);
         t.setName("Zurück zum Start");
         TreasureItem backToHome = new TreasureItem(t);
-        nextTreasure.set(backToHome);
+        nextTreasureItemProperty.set(backToHome);
     }
 
     private boolean isBonusEnabled(GameStateEventPayload gameState) {

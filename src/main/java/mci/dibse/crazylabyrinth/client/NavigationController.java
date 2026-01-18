@@ -33,6 +33,7 @@ import org.springframework.stereotype.Component;
 public class NavigationController {
 
 
+    private boolean startUp = true;
 
     private static final String MAIN_VIEW = "gameServerDashboard.fxml";
     private static final String LOBBY_VIEW = "gameLobby.fxml";
@@ -75,7 +76,7 @@ public class NavigationController {
         String viewFile = mapScreenIdToFile(newScreen);
         try {
             Parent mainRoot = viewLoader.loadFXML(viewFile);
-            setStageMinMaxSizes();
+            setStageMinMaxSizes(newScreen);
             setUpStageAndScene(newScreen, mainRoot);
         } catch (IOException | IllegalArgumentException e) {
             throw new RuntimeException(e);
@@ -87,7 +88,6 @@ public class NavigationController {
         setupFullScreen(scene);
         primaryStage.setFullScreenExitKeyCombination(new KeyCodeCombination(KeyCode.ESCAPE));
         primaryStage.setScene(scene);
-        primaryStage.centerOnScreen();
         primaryStage.setTitle("The Amazing Labyrinth");
         primaryStage.show();
     }
@@ -101,10 +101,12 @@ public class NavigationController {
         };
     }
 
-    private void setStageMinMaxSizes() {
+    private void setStageMinMaxSizes(NavigationStateViewModel.ScreenId newScreen) {
         primaryStage.setMinWidth(screenResolutionProperties.getMinViewWidth());
         primaryStage.setMinHeight(screenResolutionProperties.getMinViewHeight());
 
+        if(!startUp) return;
+        startUp = false;
         primaryStage.setWidth(screenResolutionProperties.getWidth());
         primaryStage.setHeight(screenResolutionProperties.getHeight());
 
@@ -118,6 +120,7 @@ public class NavigationController {
             }
         });
     }
+
 
 
 }

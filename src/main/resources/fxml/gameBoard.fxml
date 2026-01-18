@@ -23,7 +23,7 @@
     <clip>
         <Rectangle fx:id="rootClip"/>
     </clip >
-    <Group fx:id="contentGroup">
+    <Group fx:id="contentGroup" style="-fx-background-color: green !important;">
     <BorderPane xmlns="http://javafx.com/javafx"
                 xmlns:fx="http://javafx.com/fxml"
                 fx:id="root"
@@ -164,7 +164,8 @@
                     <VBox spacing="12" alignment="TOP_CENTER" styleClass="card">
                         <Label text="Nächster Schatz" styleClass="section-header"/>
                         <StackPane fx:id="nextTreasurePane" styleClass="card,compact-card">
-                            <Label fx:id="nextTreasure" styleClass="value-label"/>
+                            <!--Label fx:id="nextTreasure" styleClass="value-label"/ -->
+                            <ImageView fx:id="nextTreasureImage" fitWidth="110" fitHeight="110" />
                         </StackPane>
                     </VBox>
 
@@ -223,27 +224,51 @@
                 </StackPane>
 
                 <!-- RIGHT SIDEBAR -->
-                <VBox fx:id="rightSidebar" spacing="16" alignment="TOP_CENTER" styleClass="sidebar" GridPane.columnIndex="2">
-                    <!-- ... content from your old <right> section ... -->
-                    <VBox fx:id="playerLabelsWrapper" spacing="16" alignment="TOP_CENTER" styleClass="card">
+                <VBox fx:id="rightSidebar"  styleClass="sidebar-right"  GridPane.columnIndex="2">
+
+                    <VBox fx:id="playerLabelsWrapper"  spacing="10" styleClass="card">
                         <Label text="Spieler" styleClass="section-header"/>
                         <VBox spacing="8" alignment="CENTER_LEFT">
-                            <HBox fx:id="player1Box" spacing="10" alignment="CENTER_LEFT" styleClass="list-item">
-                                <Circle fx:id="player1Circle" radius="7" />
-                                <Label fx:id="player1" styleClass="value-label"/>
-                            </HBox>
-                            <HBox fx:id="player2Box" spacing="10" alignment="CENTER_LEFT" styleClass="list-item">
-                                <Circle fx:id="player2Circle" radius="7" />
-                                <Label fx:id="player2" styleClass="value-label"/>
-                            </HBox>
-                            <HBox fx:id="player3Box" spacing="10" alignment="CENTER_LEFT" styleClass="list-item">
-                                <Circle fx:id="player3Circle" radius="7" />
-                                <Label fx:id="player3" styleClass="value-label"/>
-                            </HBox>
-                            <HBox fx:id="player4Box" spacing="10" alignment="CENTER_LEFT" styleClass="list-item">
-                                <Circle fx:id="player4Circle" radius="7" />
-                                <Label fx:id="player4" styleClass="value-label"/>
-                            </HBox>
+                            <VBox fx:id="player1Box" spacing="5" alignment="CENTER_LEFT" styleClass="list-item">
+                                <HBox spacing="5">
+                                    <Circle fx:id="player1Circle" radius="7"/>
+                                    <Label fx:id="player1" styleClass="value-label"/>
+                                </HBox>
+                                <HBox spacing="5" alignment="CENTER_LEFT">
+                                    <Region minWidth="0" prefWidth="14" maxWidth="14" />
+                                    <Label fx:id="player1Status" text="Playerholder" styleClass="value-label"/>
+                                </HBox>
+                            </VBox>
+                            <VBox fx:id="player2Box" spacing="5" alignment="CENTER_LEFT" styleClass="list-item">
+                                <HBox spacing="5">
+                                    <Circle fx:id="player2Circle" radius="7"/>
+                                    <Label fx:id="player2" styleClass="value-label"/>
+                                </HBox>
+                                <HBox spacing="5" alignment="CENTER_LEFT">
+                                    <Region minWidth="0" prefWidth="14" maxWidth="14" />
+                                    <Label fx:id="player2Status" text="Playerholder" styleClass="value-label"/>
+                                </HBox>
+                            </VBox>
+                            <VBox fx:id="player3Box" spacing="5" alignment="CENTER_LEFT" styleClass="list-item">
+                                <HBox spacing="5">
+                                    <Circle fx:id="player3Circle" radius="7"/>
+                                    <Label fx:id="player3" styleClass="value-label"/>
+                                </HBox>
+                                <HBox spacing="5" alignment="CENTER_LEFT">
+                                    <Region  minWidth="0" prefWidth="14" maxWidth="14"/>
+                                    <Label fx:id="player3Status" text="Playerholder" styleClass="value-label"/>
+                                </HBox>
+                            </VBox>
+                            <VBox fx:id="player4Box" spacing="5" alignment="CENTER_LEFT" styleClass="list-item">
+                                <HBox spacing="5">
+                                    <Circle fx:id="player4Circle" radius="7"/>
+                                    <Label fx:id="player4" styleClass="value-label"/>
+                                </HBox>
+                                <HBox spacing="5" alignment="CENTER_LEFT">
+                                    <Region  minWidth="0" prefWidth="14" maxWidth="14"/>
+                                    <Label fx:id="player4Status" text="Playerholder" styleClass="value-label"/>
+                                </HBox>
+                            </VBox>
                         </VBox>
                     </VBox>
 
@@ -252,8 +277,9 @@
                     <VBox fx:id="extraTileWrapper" fillWidth="false" alignment="CENTER" spacing="12" styleClass="card">
                         <Label text="Gang Karte" styleClass="section-header"/>
                         <StackPane fx:id="extraTileContainer" styleClass="card,image-card">
-                            <ImageView fx:id="extraTile" fitWidth="110" fitHeight="110" />
-                            <Label fx:id="extraTileTreasureLabel" styleClass="tile-treasure-label"/>
+                            <ImageView fx:id="extraTile" fitWidth="110" fitHeight="110"/> <!-- fitWidth="110" fitHeight="110" -->
+                            <!--Label fx:id="extraTileTreasureLabel" styleClass="tile-treasure-label"/-->
+                            <ImageView fx:id="extraTileTreasure"/>
                             <Label fx:id="extraTileBonusLabel" styleClass="tile-bonus-label"/>
                         </StackPane>
                         <HBox spacing="12" alignment="CENTER">

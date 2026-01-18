@@ -67,6 +67,7 @@ public class ScreenResolutionProperties {
             // Available content area inside the viewport, excluding insets
             DoubleBinding availableW = Bindings.createDoubleBinding(
                     () -> {
+                        System.out.println("availableW: " + props.viewport.getWidth() + " - " + props.viewport.getInsets().getLeft() + " - " + props.viewport.getInsets().getRight());
                         props.root.setPrefWidth(width);
                         return props.viewport.getWidth()
                             - props.viewport.getInsets().getLeft()
@@ -76,6 +77,7 @@ public class ScreenResolutionProperties {
             );
             DoubleBinding availableH = Bindings.createDoubleBinding(
                     () -> {
+                        System.out.println("availableH: " + props.viewport.getHeight() + " - " + props.viewport.getInsets().getTop() + " - " + props.viewport.getInsets().getBottom());
                         props.root.setPrefHeight(screenHeight);
                         return props.viewport.getHeight()
                             - props.viewport.getInsets().getTop()
