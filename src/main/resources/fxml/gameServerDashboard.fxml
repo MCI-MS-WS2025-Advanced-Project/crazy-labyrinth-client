@@ -30,7 +30,7 @@
     <clip>
         <Rectangle fx:id="rootClip"/>
     </clip >
-    <Group fx:id="contentGroup">
+    <!-- Group fx:id="contentGroup"-->
 
         <stylesheets>
             <URL value="@/styles/shared.css"/>
@@ -99,5 +99,5 @@
             </bottom>
 
         </BorderPane>
-    </Group>
+    <!-- /Group -->
 </StackPane>
