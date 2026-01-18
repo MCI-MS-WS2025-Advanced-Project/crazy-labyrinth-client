@@ -1,8 +1,9 @@
 package mci.dibse.crazylabyrinth.client;
 
-import java.util.Locale;
 import javafx.application.Application;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+import java.util.Locale;
 
 /**
  * Entry point for the Crazy Labyrinth client application.
