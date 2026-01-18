@@ -7,6 +7,7 @@ import javafx.beans.value.ChangeListener;
 import labyrinth.contracts.models.CurrentTurnInfo;
 import labyrinth.contracts.models.TurnState;
 import lombok.Getter;
+import mci.dibse.crazylabyrinth.client.infrastructure.util.JavaFXUtils;
 
 public class CurrentTurnInfoItem extends BaseItem<CurrentTurnInfo> {
 
@@ -21,9 +22,14 @@ public class CurrentTurnInfoItem extends BaseItem<CurrentTurnInfo> {
     private ChangeListener<OffsetDateTime> turnTimeChangeListener;
 
     public CurrentTurnInfoItem(CurrentTurnInfo currentTurnInfo) {
-        currentPlayerIdProperty.set(currentTurnInfo.getCurrentPlayerId());
-        turnEndTimeProperty.set(currentTurnInfo.getTurnEndTime());
-        turnStateProperty.set(currentTurnInfo.getState());
+        super();
+        Runnable apply = () -> {
+            currentPlayerIdProperty.set(currentTurnInfo.getCurrentPlayerId());
+            turnEndTimeProperty.set(currentTurnInfo.getTurnEndTime());
+            turnStateProperty.set(currentTurnInfo.getState());
+        };
+        JavaFXUtils.runOnFxThread(apply);
+
     }
 
     public String getCurrentPlayerIdAsString() {

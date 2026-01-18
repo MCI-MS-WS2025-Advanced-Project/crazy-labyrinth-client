@@ -35,6 +35,7 @@ public class PlayerStateItem extends BaseItem<PlayerState> {
             new SimpleListProperty<>(FXCollections.observableArrayList());
 
     public PlayerStateItem(PlayerState source) {
+        super();
         List<TreasureItem> treasureItems =
                 Arrays.stream(source.getTreasuresFound()).map(TreasureItem::new).toList();
         List<AchievementType> achievements = Arrays.stream(source.getAchievements()).toList();
@@ -128,8 +129,9 @@ public class PlayerStateItem extends BaseItem<PlayerState> {
         treasuresFound.clear();
         achievementTypes.clear();
         availableBonusTypes.clear();
-    //    playerInfo.set(null);
-        currentPosition.set(null);
-        homePosition.set(null);
+
+        playerInfo.unbind();
+        currentPosition.unbind();
+        homePosition.unbind();
     }
 }
