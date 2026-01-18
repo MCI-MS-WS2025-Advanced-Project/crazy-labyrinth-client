@@ -223,27 +223,51 @@
                 </StackPane>
 
                 <!-- RIGHT SIDEBAR -->
-                <VBox fx:id="rightSidebar" spacing="16" alignment="TOP_CENTER" styleClass="sidebar" GridPane.columnIndex="2">
-                    <!-- ... content from your old <right> section ... -->
-                    <VBox fx:id="playerLabelsWrapper" spacing="16" alignment="TOP_CENTER" styleClass="card">
+                <VBox fx:id="rightSidebar" styleClass="sidebar-right" GridPane.vgrow="ALWAYS" GridPane.columnIndex="2">
+
+                    <VBox fx:id="playerLabelsWrapper" spacing="10" styleClass="card">
                         <Label text="Spieler" styleClass="section-header"/>
                         <VBox spacing="8" alignment="CENTER_LEFT">
-                            <HBox fx:id="player1Box" spacing="10" alignment="CENTER_LEFT" styleClass="list-item">
-                                <Circle fx:id="player1Circle" radius="7" />
-                                <Label fx:id="player1" styleClass="value-label"/>
-                            </HBox>
-                            <HBox fx:id="player2Box" spacing="10" alignment="CENTER_LEFT" styleClass="list-item">
-                                <Circle fx:id="player2Circle" radius="7" />
-                                <Label fx:id="player2" styleClass="value-label"/>
-                            </HBox>
-                            <HBox fx:id="player3Box" spacing="10" alignment="CENTER_LEFT" styleClass="list-item">
-                                <Circle fx:id="player3Circle" radius="7" />
-                                <Label fx:id="player3" styleClass="value-label"/>
-                            </HBox>
-                            <HBox fx:id="player4Box" spacing="10" alignment="CENTER_LEFT" styleClass="list-item">
-                                <Circle fx:id="player4Circle" radius="7" />
-                                <Label fx:id="player4" styleClass="value-label"/>
-                            </HBox>
+                            <VBox fx:id="player1Box" spacing="5" alignment="CENTER_LEFT" styleClass="list-item">
+                                <HBox spacing="5">
+                                    <Circle fx:id="player1Circle" radius="7"/>
+                                    <Label fx:id="player1" styleClass="value-label"/>
+                                </HBox>
+                                <HBox spacing="5" alignment="CENTER_LEFT">
+                                    <Region minWidth="0" prefWidth="14" />
+                                    <Label fx:id="player1Status" styleClass="value-label"/>
+                                </HBox>
+                            </VBox>
+                            <VBox fx:id="player2Box" spacing="5" alignment="CENTER_LEFT" styleClass="list-item">
+                                <HBox spacing="5">
+                                    <Circle fx:id="player2Circle" radius="7"/>
+                                    <Label fx:id="player2" styleClass="value-label"/>
+                                </HBox>
+                                <HBox spacing="5" alignment="CENTER_LEFT">
+                                    <Region minWidth="0" prefWidth="14" />
+                                    <Label fx:id="player2Status" styleClass="value-label"/>
+                                </HBox>
+                            </VBox>
+                            <VBox fx:id="player3Box" spacing="5" alignment="CENTER_LEFT" styleClass="list-item">
+                                <HBox spacing="5">
+                                    <Circle fx:id="player3Circle" radius="7"/>
+                                    <Label fx:id="player3" styleClass="value-label"/>
+                                </HBox>
+                                <HBox spacing="5" alignment="CENTER_LEFT">
+                                    <Region  minWidth="0" prefWidth="14" />
+                                    <Label fx:id="player3Status" styleClass="value-label"/>
+                                </HBox>
+                            </VBox>
+                            <VBox fx:id="player4Box" spacing="5" alignment="CENTER_LEFT" styleClass="list-item">
+                                <HBox spacing="5">
+                                    <Circle fx:id="player4Circle" radius="7"/>
+                                    <Label fx:id="player4" styleClass="value-label"/>
+                                </HBox>
+                                <HBox spacing="5" alignment="CENTER_LEFT">
+                                    <Region  minWidth="0" prefWidth="14" />
+                                    <Label fx:id="player4Status" styleClass="value-label"/>
+                                </HBox>
+                            </VBox>
                         </VBox>
                     </VBox>
 
@@ -261,6 +285,7 @@
                         </HBox>
                     </VBox>
                 </VBox>
+
             </GridPane>
         </center>
 
