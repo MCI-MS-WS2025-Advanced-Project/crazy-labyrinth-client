@@ -3,14 +3,17 @@ package mci.dibse.crazylabyrinth.client.view.viewmodel;
 import static mci.dibse.crazylabyrinth.client.domain.context.ApplicationEvents.BACK_TO_GAME_SERVER_DASHBOARD;
 
 import jakarta.annotation.PostConstruct;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+
+import java.util.*;
+
+import javafx.beans.property.ReadOnlyObjectProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.StringProperty;
+import javafx.beans.value.ChangeListener;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
-import labyrinth.contracts.models.LobbyStateEventPayload;
-import labyrinth.contracts.models.PlayerInfo;
+import javafx.collections.transformation.SortedList;
+import labyrinth.contracts.models.*;
 import lombok.extern.slf4j.Slf4j;
 import mci.dibse.crazylabyrinth.client.domain.context.ApplicationEvents;
 import mci.dibse.crazylabyrinth.client.domain.model.ClientPlayer;
@@ -21,6 +24,7 @@ import mci.dibse.crazylabyrinth.client.service.ClientCommandService;
 import mci.dibse.crazylabyrinth.client.service.LobbyService;
 import mci.dibse.crazylabyrinth.client.service.LobbyStateUpdateListener;
 import mci.dibse.crazylabyrinth.client.service.PlayerConnectedAckListener;
+import mci.dibse.crazylabyrinth.client.view.viewmodel.item.GameOverItem;
 import mci.dibse.crazylabyrinth.client.view.viewmodel.item.LobbyStateItem;
 import mci.dibse.crazylabyrinth.client.view.viewmodel.item.PlayerInfoItem;
 import mci.dibse.crazylabyrinth.client.view.viewmodel.navigation.NavigationStateViewModel;
@@ -33,6 +37,10 @@ import org.springframework.stereotype.Component;
 @Slf4j
 public class LobbyViewModel extends BaseViewModel
         implements LobbyStateUpdateListener, PlayerConnectedAckListener {
+
+
+    public final SimpleBooleanProperty isResultsAvailable = new SimpleBooleanProperty(false);
+
 
     @Value("${game.default.bonus.enabled:false}")
     private boolean GAME_DEFAULT_BONUS_ENABLED;
@@ -54,6 +62,9 @@ public class LobbyViewModel extends BaseViewModel
 
     private LobbyStateItem lobbyStateItem = null;
     private List<ListChangeListener<PlayerInfoItem>> playerListListener = new ArrayList<>();
+
+    private GameOverItem gameOverItem = null;
+    private ChangeListener<Boolean> resultsListener;
 
     @Autowired
     public LobbyViewModel(
@@ -116,6 +127,21 @@ public class LobbyViewModel extends BaseViewModel
         return GAME_DEFAULT_TIMER_ENABLED;
     }
 
+    public boolean isResultsAvailable() {
+        return isResultsAvailable.get();
+    }
+
+    public ObservableList<RankingEntry> getRankingEntries() {
+        return gameOverItem.getRankingEntries();
+    }
+    public SortedList<RankingEntry> getSortedRankingEntries() {
+        return gameOverItem.getSortedRankings();
+    }
+
+    public String getWinnerId() {
+        return gameOverItem.getWinnerIdProperty().get();
+    }
+
     @EventListener
     public void saveGameInfoData(GameInfoRecord gameInfo) {
         this.gameInfo = gameInfo;
@@ -127,6 +153,14 @@ public class LobbyViewModel extends BaseViewModel
             navigationStateViewModel.navigateTo(NavigationStateViewModel.ScreenId.MAIN);
         }
     }
+
+    @EventListener
+    public void handleGameOverEvent(GameOverEventPayload gameOverEvent) {
+        log.debug("Game Over Event received: {}", gameOverEvent);
+        gameOverItem = new GameOverItem(gameOverEvent);
+        isResultsAvailable.set(true);
+    }
+
 
     @Override
     public void onLobbyStateUpdated(LobbyStateEventPayload lobbyState) {
@@ -157,6 +191,12 @@ public class LobbyViewModel extends BaseViewModel
         //  this.clientPlayer = null;
         lobbyStateItem.dispose();
         this.lobbyStateItem = null;
+
+        isResultsAvailable.removeListener(resultsListener);
+        isResultsAvailable.set(false);
+        if(gameOverItem != null) gameOverItem.dispose();
+        gameOverItem = null;
+
     }
 
     public void startGame(StartGameRecord startGameRecord) {
@@ -176,12 +216,16 @@ public class LobbyViewModel extends BaseViewModel
     }
 
     public void addListenerToPlayersListProperty(
-            ListChangeListener<PlayerInfoItem> listener) {
-        this.getPlayersListProperty().addListener(listener);
-        playerListListener.add(listener);
+            ListChangeListener<PlayerInfoItem> countDownTimerListener) {
+        this.getPlayersListProperty().addListener(countDownTimerListener);
+        playerListListener.add(countDownTimerListener);
     }
 
-
+    public void addListenerToResultsAvailableProperty(ChangeListener<Boolean> resultsListener) {
+        this.resultsListener = resultsListener;
+        isResultsAvailable.addListener(resultsListener);
+        if (isResultsAvailable.get()) resultsListener.changed(isResultsAvailable, false, true);
+    }
 
     @Override
     protected boolean isErrorRelevant() {
@@ -228,4 +272,18 @@ public class LobbyViewModel extends BaseViewModel
     }
 
 
+    public String getPlayerNameForId(String item) {
+        Optional<PlayerInfoItem> playerOptional = lobbyStateItem.getPlayerList().stream()
+                .filter(player -> player.getId().equals(item))
+                .findFirst();
+        if (playerOptional.isPresent()) {
+            return playerOptional.get().getName();
+        }
+        log.info("Player with id {} not found in lobby", item);
+        return item;
+    }
+
+    public void bindSortedRankingsComparator(ReadOnlyObjectProperty<Comparator<RankingEntry>> comparatorReadOnlyObjectProperty) {
+        gameOverItem.bindSortedRankingsComparator(comparatorReadOnlyObjectProperty);
+    }
 }

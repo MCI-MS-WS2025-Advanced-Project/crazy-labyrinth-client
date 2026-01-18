@@ -17,17 +17,20 @@ public class ServerEventService {
     private final LobbyService lobbyService;
     private final GameService gameService;
     private final TimerService timerService;
+    private final AchievementService achievementService;
 
     @Autowired
     public ServerEventService(
             LobbyService lobbyService,
             GameService gameService,
             ApplicationEventPublisher applicationEventPublisher,
-            TimerService timerService) {
+            TimerService timerService,
+            AchievementService achievementService) {
         this.lobbyService = lobbyService;
         this.gameService = gameService;
         this.applicationEventPublisher = applicationEventPublisher;
         this.timerService = timerService;
+        this.achievementService = achievementService;
     }
 
     public void handleEvent(String event) {
@@ -94,9 +97,12 @@ public class ServerEventService {
 
     private void handleAchievement(AchievementUnlockedEventPayload achievement) {
         log.debug("achievement unlocked event received{}", achievement);
+        //applicationEventPublisher.publishEvent(achievement);
+        achievementService.handleAchievementEvent(achievement);
     }
 
     private void handleGameOver(GameOverEventPayload gameOver) {
         log.debug("game over event received {}", gameOver);
+        applicationEventPublisher.publishEvent(gameOver);
     }
 }
