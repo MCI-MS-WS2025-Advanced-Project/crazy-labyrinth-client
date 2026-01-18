@@ -91,16 +91,20 @@ public class GameStateController extends BaseViewCleanup {
 
     @FXML public Label player1;
     @FXML public Circle player1Circle;
-    @FXML public HBox player1Box;
+    @FXML public VBox player1Box;
+    @FXML public Label player1Status;
     @FXML public Label player2;
     @FXML public Circle player2Circle;
-    @FXML public HBox player2Box;
+    @FXML public VBox player2Box;
+    @FXML public Label player2Status;
     @FXML public Label player3;
     @FXML public Circle player3Circle;
-    @FXML public HBox player3Box;
+    @FXML public VBox player3Box;
+    @FXML public Label player3Status;
     @FXML public Label player4;
     @FXML public Circle player4Circle;
-    @FXML public HBox player4Box;
+    @FXML public VBox player4Box;
+    @FXML public Label player4Status;
 
     @FXML public Label gameCounterLabel;
     @FXML public StackPane centerWrapper;
@@ -136,6 +140,7 @@ public class GameStateController extends BaseViewCleanup {
 
     private final GameViewModel gameViewModel;
     private final Map<String, Label> idToPlayerLabel = new HashMap<>();
+    private final Map<String, Label> idToPlayerStatusLabel = new HashMap<>();
 
 
     private Map<BonusType, ChangeListener<Boolean>> bonusAvailableListeners = new HashMap<>();
@@ -286,6 +291,16 @@ public class GameStateController extends BaseViewCleanup {
         };
     }
 
+    private Label getPlayerStatusLabelByIndex(int index) {
+        return switch (index) {
+            case 0 -> player1Status;
+            case 1 -> player2Status;
+            case 2 -> player3Status;
+            case 3 -> player4Status;
+            default -> throw new IllegalArgumentException("Invalid player index: " + index);
+        };
+    }
+
     private void initPlayerTurnLabel() {
 
         playerTurnLabel
@@ -409,7 +424,7 @@ public class GameStateController extends BaseViewCleanup {
 
         for (int i = 0; i < playerStates.size(); i++) {
 
-            HBox box = getPlayerBoxByIndex(i);
+            VBox box = getPlayerBoxByIndex(i);
             box.setVisible(true);
             box.setManaged(true);
 
@@ -419,12 +434,15 @@ public class GameStateController extends BaseViewCleanup {
                             PlayerPawnUtils.mapPlayerColorToFxColor(
                                     playerStateItem.getPlayerColor()));
             idToPlayerLabel.put(playerStateItem.getPlayerIdAsString(), getPlayerLabelByIndex(i));
+            idToPlayerStatusLabel.put(playerStateItem.getPlayerIdAsString(), getPlayerStatusLabelByIndex(i));
         }
 
         // clientPlayer always first
         Label clientLabel = idToPlayerLabel.get(clientPlayerId);
         PlayerStateItem clientState = gameViewModel.getClientPlayerState();
         bindPlayerLabel(clientLabel, clientState, true);
+        Label clientStatusLabel = idToPlayerStatusLabel.get(clientPlayerId);
+        bindPlayerStatusLabel(clientStatusLabel, clientState);
 
         playerStates
                 .subList(1, playerStates.size())
@@ -432,35 +450,45 @@ public class GameStateController extends BaseViewCleanup {
                         playerState -> {
                             Label playerLabel =
                                     idToPlayerLabel.get(playerState.getPlayerIdAsString());
+                            Label playerStatusLabel = idToPlayerStatusLabel.get(playerState.getPlayerIdAsString());
                             bindPlayerLabel(playerLabel, playerState, false);
+                            bindPlayerStatusLabel(playerStatusLabel, playerState);
                         });
     }
 
-    private void bindPlayerLabel(Label label, PlayerStateItem player, boolean isClient) {
+    private void bindPlayerStatusLabel(Label statusLabel, PlayerStateItem playerState) {
         String maxAvailableTreasurePerPlayer =
-                String.valueOf(player.getRemainingTreasureCountAsInt());
+                String.valueOf(playerState.getRemainingTreasureCountAsInt());
+        int found = playerState.getTreasuresFound().size();
+
+        statusLabel.textProperty().unbind();
+        statusLabel.textProperty().bind(
+                Bindings.createStringBinding(
+                        () -> {
+                            String playerStatusLabelString =
+                                    "Schätze ("
+                                            + found
+                                            + " / "
+                                            + maxAvailableTreasurePerPlayer
+                                            + ")";
+                            if (playerState.isPlayerAiControlled()) playerStatusLabelString += " - (AI)";
+                            return playerStatusLabelString;
+                        },        playerState.getPlayerInfo().get().isAiControlledProperty(),
+                        playerState.getTreasuresFound()));
+
+    }
+
+    private void bindPlayerLabel(Label label, PlayerStateItem player, boolean isClient) {
         label.textProperty().unbind();
         label.textProperty()
                 .bind(
                         Bindings.createStringBinding(
                                 () -> {
                                     String prefix = isClient ? "Du: " : "";
-                                    String name = player.getPlayerNameAsString();
-                                    int found = player.getTreasuresFound().size();
-                                    String playerLabel =
-                                            prefix
-                                                    + name
-                                                    + " ("
-                                                    + found
-                                                    + " / "
-                                                    + maxAvailableTreasurePerPlayer
-                                                    + ")";
-                                    if (player.isPlayerAiControlled()) playerLabel += " (AI)";
-                                    return playerLabel;
+                                    System.out.println(prefix + player.getPlayerNameAsString());
+                                    return prefix + player.getPlayerNameAsString();
                                 },
-                                player.getPlayerInfo(),
-                                player.getPlayerInfo().get().isAiControlledProperty(),
-                                player.getTreasuresFound()));
+                                player.getPlayerInfo()));
     }
 
     private void initSpareTile() {
@@ -609,20 +637,18 @@ public class GameStateController extends BaseViewCleanup {
                     boardGrid.setVgap(GAP_BETWEEN_TILES);
                     boardGrid.setSnapToPixel(true);
                     boardGrid.setPadding(Insets.EMPTY);
+                    GridPane.setMargin(boardGrid, Insets.EMPTY);
 
                     if (gameContainer.getParent() instanceof Region parent) {
 
-
-
                         var squareSize =
-                                Bindings.min(parent.widthProperty(), parent.heightProperty())
-                                        .subtract(20); // padding
+                                Bindings.min(parent.widthProperty(), parent.heightProperty());
+
 
                         gameContainer.minWidthProperty().bind(squareSize);
                         gameContainer.minHeightProperty().bind(squareSize);
                         gameContainer.maxWidthProperty().bind(squareSize);
                         gameContainer.maxHeightProperty().bind(squareSize);
-
 
                     }
 
@@ -1304,7 +1330,7 @@ public class GameStateController extends BaseViewCleanup {
         else Platform.runLater(apply);
     }
 
-    private HBox getPlayerBoxByIndex(int index) {
+    private VBox getPlayerBoxByIndex(int index) {
         return switch (index) {
             case 0 -> player1Box;
             case 1 -> player2Box;

@@ -140,10 +140,12 @@
 
 
 
-.sidebar {
-    -fx-padding: 60 14 60 14; /* top right bottom left */
+.sidebar-left {
+    -fx-padding: 45 0 60 10; /* top right bottom left */
 }
-
+.sidebar-right {
+    -fx-padding: 45 10 60 0; /* top right bottom left */
+}
 
 
 .game-container {
