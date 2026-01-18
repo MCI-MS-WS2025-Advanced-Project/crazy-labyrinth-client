@@ -11,20 +11,27 @@ import javafx.beans.property.*;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
+import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.scene.Group;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.*;
+import javafx.scene.layout.*;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
+import javafx.scene.shape.Rectangle;
+import javafx.scene.transform.Scale;
 import javafx.util.Duration;
 import labyrinth.contracts.models.*;
 import lombok.extern.slf4j.Slf4j;
+import labyrinth.contracts.models.RankingEntry;
 import mci.dibse.crazylabyrinth.client.domain.model.record.StartGameRecord;
 import mci.dibse.crazylabyrinth.client.infrastructure.util.JavaFXUtils;
+import mci.dibse.crazylabyrinth.client.infrastructure.util.ScreenResolutionProperties;
 import mci.dibse.crazylabyrinth.client.service.AchievementService;
 import mci.dibse.crazylabyrinth.client.view.viewmodel.GameViewModel;
 import mci.dibse.crazylabyrinth.client.view.viewmodel.LobbyViewModel;
@@ -67,6 +74,11 @@ public class LobbyController extends BaseViewCleanup {
     @FXML public TableColumn<RankingEntry, RankingEntry> achievements;
     @FXML private ListView<String> playerList;
 
+    @FXML public StackPane viewport;
+    @FXML public Rectangle rootClip;
+    @FXML public Group contentGroup;
+    @FXML public BorderPane root;
+
     // Admin Stuff
     @FXML public CheckBox bonusEnabledCheck;
     @FXML public ComboBox<String> boardSizeCombo;
@@ -102,16 +114,21 @@ public class LobbyController extends BaseViewCleanup {
     private Runnable cleanUpTaskPlayerTable;
     private Runnable cleanUpTaskResultsTable;
 
+    private ScreenResolutionProperties screenResolutionProperties;
+
     @Autowired
-    public LobbyController(NavigationStateViewModel navState, LobbyViewModel lobbyViewModel, GameViewModel gameViewModel, AchievementService achievementService) {
+    public LobbyController(NavigationStateViewModel navState, LobbyViewModel lobbyViewModel, ScreenResolutionProperties screenResolutionProperties, GameViewModel gameViewModel, AchievementService achievementService) {
         super(navState);
         this.lobbyViewModel = lobbyViewModel;
+        this.screenResolutionProperties = screenResolutionProperties;
         this.gameViewModel = gameViewModel;
         this.achievementService = achievementService;
     }
 
     @FXML
     public void initialize() {
+
+
         playerTable.setItems(lobbyViewModel.getPlayersListProperty());
 
         // Clip/cleanup
@@ -169,6 +186,15 @@ public class LobbyController extends BaseViewCleanup {
         setupErrorHandling();
 
         setupResultsTable();
+
+        initUiScaling();
+    }
+
+    private void initUiScaling() {
+        ScreenResolutionProperties.ResolutionProperties props = new ScreenResolutionProperties.ResolutionProperties(root,
+                viewport);
+        screenResolutionProperties.initUiScaling(props);
+
     }
 
     private void setupResultsTable() {
@@ -186,7 +212,7 @@ public class LobbyController extends BaseViewCleanup {
 
 
                 int numberEntries = rankingEntriesSorted.size();
-               // numberEntries
+                // numberEntries
                 cleanUpTaskResultsTable = JavaFXUtils.setupTableClip(resultsTable, 30.0);
 
                 resultNameColumn.setCellValueFactory(cd -> new SimpleStringProperty(cd.getValue().getPlayerId()));
@@ -222,7 +248,7 @@ public class LobbyController extends BaseViewCleanup {
                                         return;
                                     }
 
-                                  //  setGraphic(createAchievementGraphicForPlayer(item));
+                                    //  setGraphic(createAchievementGraphicForPlayer(item));
                                     String achievements = getAchievementResultsStringForPlayer(item);
                                     setText(achievements);
                                 }

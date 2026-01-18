@@ -9,6 +9,7 @@ import javafx.animation.Timeline;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
+import javafx.beans.binding.DoubleBinding;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleIntegerProperty;
@@ -18,6 +19,8 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.scene.Cursor;
+import javafx.scene.Group;
+import javafx.scene.Parent;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -27,12 +30,14 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.shape.StrokeType;
+import javafx.scene.transform.Scale;
 import javafx.util.Duration;
 import labyrinth.contracts.models.*;
 import lombok.extern.slf4j.Slf4j;
 import mci.dibse.crazylabyrinth.client.domain.context.PushTileCommandRecord;
 import mci.dibse.crazylabyrinth.client.infrastructure.util.JavaFXUtils;
 import mci.dibse.crazylabyrinth.client.infrastructure.util.PlayerPawnUtils;
+import mci.dibse.crazylabyrinth.client.infrastructure.util.ScreenResolutionProperties;
 import mci.dibse.crazylabyrinth.client.service.GameServerSocketService;
 import mci.dibse.crazylabyrinth.client.view.viewmodel.GameViewModel;
 import mci.dibse.crazylabyrinth.client.view.viewmodel.item.GameBoardItem;
@@ -99,9 +104,20 @@ public class GameStateController extends BaseViewCleanup {
 
     @FXML public Label gameCounterLabel;
     @FXML public StackPane centerWrapper;
+    @FXML public StackPane centerStackPane;
+    @FXML public VBox leftSidebar;
+    @FXML public VBox rightSidebar;
+    @FXML public VBox playerLabelsWrapper;
 
     @FXML public HBox turnCounterBox;
     @FXML public Label turnCounterLabel;
+
+    @FXML public BorderPane root;
+    @FXML public Rectangle rootClip;
+    @FXML public StackPane viewport;
+    @FXML public Group contentGroup;
+    @FXML public GridPane mainLayoutGrid;
+
 
     private static final int GAP_BETWEEN_TILES = 2;
     private static final int MAX_PLAYERS = 4;
@@ -117,8 +133,10 @@ public class GameStateController extends BaseViewCleanup {
     private static final String QUIT_GAME_MODAL_HEADER  = "Spiel wirklich beenden?";
     private static final String QUIT_GAME_MODAL_CONTENT = "Das laufende Spiel wird beendet und Sie kehren zur Serverübersicht zurück";
 
+
     private final GameViewModel gameViewModel;
     private final Map<String, Label> idToPlayerLabel = new HashMap<>();
+
 
     private Map<BonusType, ChangeListener<Boolean>> bonusAvailableListeners = new HashMap<>();
 
@@ -129,11 +147,15 @@ public class GameStateController extends BaseViewCleanup {
     private Timeline turnTimeline;
     private ChangeListener<OffsetDateTime> turnTimeChangeListener;
 
+    private ScreenResolutionProperties screenResolutionProperties;
+
     @Autowired
-    public GameStateController(NavigationStateViewModel vm, GameViewModel gameViewModel) {
+    public GameStateController(NavigationStateViewModel vm, GameViewModel gameViewModel, ScreenResolutionProperties screenResolutionProperties) {
         super(vm);
         this.gameViewModel = gameViewModel;
+        this.screenResolutionProperties = screenResolutionProperties;
     }
+
 
     @FXML
     public void initialize() {
@@ -161,7 +183,18 @@ public class GameStateController extends BaseViewCleanup {
         setupErrorHandling();
 
         initGameTimer();
+
+        initUiScaling();
     }
+
+    private void initUiScaling() {
+            ScreenResolutionProperties.ResolutionProperties props = new ScreenResolutionProperties.ResolutionProperties(root,
+                    viewport);
+            screenResolutionProperties.initUiScaling(props);
+        }
+
+
+
 
     @Override
     protected boolean customCleanupCheckpoint(
@@ -493,18 +526,43 @@ public class GameStateController extends BaseViewCleanup {
                                     () -> currentTile.getTileImage().get(),
                                     gameViewModel.getSpareTileProperty(),
                                     currentTile.getRotation()));
+
+/*
+            DoubleBinding squareSize = Bindings.createDoubleBinding(
+                    () -> Math.min(extraTileWrapper.getWidth(), extraTileWrapper.getHeight() * 0.6),
+                    extraTileWrapper.widthProperty(),
+                    extraTileWrapper.heightProperty()
+            );
+
+            extraTile.fitWidthProperty().bind(squareSize);
+            extraTile.fitHeightProperty().bind(squareSize);
+
+ */
+            //todo
+            /*
+            extraTile.setPreserveRatio(true);
+
+            DoubleBinding squareSize = Bindings.createDoubleBinding(
+                    () -> Math.min(rightSidebar.getWidth(), rightSidebar.getHeight()),
+                    rightSidebar.widthProperty(), rightSidebar.heightProperty()
+            );
+
+            extraTile.fitHeightProperty().bind(squareSize.divide(2));
+            extraTileWrapper.prefWidthProperty().bind(squareSize);
+            extraTileWrapper.prefHeightProperty().bind(squareSize);
+            extraTileWrapper.maxWidthProperty().bind(squareSize);
+            extraTileWrapper.maxHeightProperty().bind(squareSize);
+           // extraTileWrapper.heightProperty().bind()
+
+
+
+
+
+ */
+            //todo end
+
             extraTile.rotateProperty().bindBidirectional(currentTile.getRotation());
         }
-
-        /*
-               rotateLeftButton.visibleProperty().bind(Bindings.createBooleanBinding(
-                       () -> {
-                           String playerId = playerStateClient.getPlayerIdAsString();
-                               return  (playerId.equals(gameViewModel.getCurrentPlayerIdAsString())
-                                       && gameViewModel.getCurrentTurnState().equals(TurnState.WAITING_FOR_PUSH));
-                       }, gameViewModel.getCurrentPlayerIdProperty(), gameViewModel.getCurrentTurnStateProperty()
-               ));
-        */
 
         rotateRightButton
                 .visibleProperty()
@@ -553,6 +611,9 @@ public class GameStateController extends BaseViewCleanup {
                     boardGrid.setPadding(Insets.EMPTY);
 
                     if (gameContainer.getParent() instanceof Region parent) {
+
+
+
                         var squareSize =
                                 Bindings.min(parent.widthProperty(), parent.heightProperty())
                                         .subtract(20); // padding
@@ -561,9 +622,15 @@ public class GameStateController extends BaseViewCleanup {
                         gameContainer.minHeightProperty().bind(squareSize);
                         gameContainer.maxWidthProperty().bind(squareSize);
                         gameContainer.maxHeightProperty().bind(squareSize);
+
+
                     }
 
+
+
+
                     for (int i = 0; i < rows; i++) {
+
                         ColumnConstraints cc = new ColumnConstraints();
                         cc.setPercentWidth(100.0 / cols);
                         cc.setHgrow(Priority.ALWAYS);
@@ -573,6 +640,8 @@ public class GameStateController extends BaseViewCleanup {
                         rc.setPercentHeight(100.0 / rows);
                         rc.setVgrow(Priority.ALWAYS);
                         boardGrid.getRowConstraints().add(rc);
+
+
                     }
 
                     for (int row = 0; row < rows; row++) {

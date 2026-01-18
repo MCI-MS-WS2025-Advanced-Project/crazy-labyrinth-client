@@ -11,158 +11,260 @@
 <?import java.net.URL?>
 
 <?import javafx.scene.shape.Rectangle?>
-<BorderPane xmlns="http://javafx.com/javafx"
-            xmlns:fx="http://javafx.com/fxml"
-            fx:controller="mci.dibse.crazylabyrinth.client.view.controller.impl.GameStateController"
-            prefHeight="800" prefWidth="1000"
-            styleClass="root">
-
-    <stylesheets>
-        <URL value="@/styles/shared.css"/>
-        <URL value="@/styles/game.css"/>
-    </stylesheets>
-
-    <!-- ================== TOP ================== -->
-    <top>
-    <StackPane prefHeight="48" styleClass="card,topbar">
-        <Label fx:id="playerTurnLabel"
-               styleClass="section-header"
-               StackPane.alignment="CENTER"/>
-        <HBox alignment="CENTER_RIGHT"
-              spacing="8"
-              StackPane.alignment="CENTER_RIGHT">
-            <Label text="Spielzug Zeit:" styleClass="setting-label"/>
-            <Label fx:id="turnCounterLabel" styleClass="badge"/>
-        </HBox>
-    </StackPane>
-</top>
-
-    <!-- ================== BOTTOM ================== -->
-    <bottom>
-        <StackPane prefHeight="56" styleClass="card,timer-bar">
-            <HBox alignment="CENTER"
-                  spacing="12"> <!-- styleClass="card,timer-bar" -->
-                <Label text="Verbleibende Spiel Zeit:" styleClass="setting-label"/>
-                <Label fx:id="gameCounterLabel" styleClass="badge"/>
-            </HBox>
-            <Button StackPane.alignment="CENTER_RIGHT" alignment="CENTER" fx:id="leaveGameButton" onAction="#onLeaveGameButtonClick" text="Verlassen" styleClass="pill-button, leaveGameButton"/>
-        </StackPane>
-    </bottom>
+<StackPane xmlns="http://javafx.com/javafx"
+           xmlns:fx="http://javafx.com/fxml"
+           fx:controller="mci.dibse.crazylabyrinth.client.view.controller.impl.GameStateController"
+           fx:id="viewport"
+           style="-fx-background-color: black;"
+           styleClass="viewport">
 
 
 
+    <clip>
+        <Rectangle fx:id="rootClip"/>
+    </clip >
+    <Group fx:id="contentGroup">
+    <BorderPane xmlns="http://javafx.com/javafx"
+                xmlns:fx="http://javafx.com/fxml"
+                fx:id="root"
+                styleClass="root">
 
-    <!-- ================== LEFT SIDEBAR ================== -->
-    <left>
-        <VBox spacing="12" styleClass="sidebar" prefWidth="220">
-            <VBox spacing="12" alignment="TOP_CENTER" styleClass="card">
-                <Label text="Nächster Schatz" styleClass="section-header"/>
-                <StackPane fx:id="nextTreasurePane" styleClass="card,compact-card">
-                    <Label fx:id="nextTreasure" styleClass="value-label"/>
-                </StackPane>
-            </VBox>
 
-            <VBox spacing="12" fx:id="bonusBox" alignment="TOP_CENTER"  fillWidth="true" styleClass="card,bonus-box">
-                <Label text="Verfügbare Boni" styleClass="section-header"/>
-                <HBox fx:id="bonusSwapBox" spacing="10"   styleClass="bonus-row">
-                    <Label text="Swap" styleClass="bonus-label"/>
-                    <Region HBox.hgrow="ALWAYS"/>
-                    <Label fx:id="bonusSwapCount" styleClass="count-pill"/>
-                    <Button fx:id="bonusSwapButton" onAction="#onBonusSwapButtonClick" text="▷" styleClass="pill-button"/>
+        <stylesheets>
+            <URL value="@/styles/shared.css"/>
+            <URL value="@/styles/game.css"/>
+        </stylesheets>
+
+        <!-- ================== TOP ================== -->
+        <top>
+            <StackPane prefHeight="48" styleClass="card,topbar">
+                <Label fx:id="playerTurnLabel"
+                       styleClass="section-header"
+                       StackPane.alignment="CENTER"/>
+                <HBox alignment="CENTER_RIGHT"
+                      spacing="8"
+                      StackPane.alignment="CENTER_RIGHT">
+                    <Label text="Spielzug Zeit:" styleClass="setting-label"/>
+                    <Label fx:id="turnCounterLabel" styleClass="badge"/>
                 </HBox>
-                <HBox fx:id="bonusBeamBox" spacing="10"   styleClass="bonus-row">
-                    <Label text="Beam" styleClass="bonus-label"/>
-                    <Region HBox.hgrow="ALWAYS"/>
-                    <Label fx:id="bonusBeamCount" styleClass="count-pill"/>
-                    <Button fx:id="bonusBeamButton" onAction="#onBonusBeamButtonClick" text="▷" styleClass="pill-button"/>
-                </HBox>
-                <HBox fx:id="bonusPushTwiceBox" spacing="10"  styleClass="bonus-row">
-                    <Label text="Push twice" styleClass="bonus-label"/>
-                    <Region HBox.hgrow="ALWAYS"/>
-                    <Label fx:id="bonusPushTwiceCount" styleClass="count-pill"/>
-                    <Button fx:id="bonusPushTwiceButton" onAction="#onBonusPushTwiceButtonClick" text="▷" styleClass="pill-button"/>
-                </HBox>
-                <HBox fx:id="bonusPushFixedBox" spacing="10" styleClass="bonus-row">
-                    <Label text="Push fixed" styleClass="bonus-label"/>
-                    <Region HBox.hgrow="ALWAYS"/>
-                    <Label fx:id="bonusPushFixedCount" styleClass="count-pill"/>
-                    <Button fx:id="bonusPushFixedButton" onAction="#onBonusPushFixedButtonClick" text="▷" styleClass="pill-button"/>
-                </HBox>
-            </VBox>
-        </VBox>
-    </left>
+            </StackPane>
+        </top>
 
-    <!-- ================== RIGHT SIDEBAR ================== -->
-    <right>
-        <VBox spacing="16" alignment="TOP_CENTER" styleClass="sidebar" prefWidth="240">
-            <VBox spacing="16" alignment="TOP_CENTER" styleClass="card">
-                <Label text="Spieler" styleClass="section-header"/>
-                <VBox spacing="8" alignment="CENTER_LEFT">
-                    <HBox fx:id="player1Box" spacing="10" alignment="CENTER_LEFT" styleClass="list-item">
-                        <Circle fx:id="player1Circle" radius="7" />
-                        <Label fx:id="player1" styleClass="value-label"/>
+        <!-- ================== BOTTOM ================== -->
+        <bottom>
+            <StackPane prefHeight="56" styleClass="card,timer-bar">
+                <HBox alignment="CENTER"
+                      spacing="12"> <!-- styleClass="card,timer-bar" -->
+                    <Label text="Verbleibende Spiel Zeit:" styleClass="setting-label"/>
+                    <Label fx:id="gameCounterLabel" styleClass="badge"/>
+                </HBox>
+                <Button StackPane.alignment="CENTER_RIGHT" alignment="CENTER" fx:id="leaveGameButton" onAction="#onLeaveGameButtonClick" text="Verlassen" styleClass="pill-button, leaveGameButton"/>
+            </StackPane>
+        </bottom>
+
+
+
+
+        <!-- ================== LEFT SIDEBAR ================== -->
+        <!--left>
+            <VBox fx:id="leftSidebar" spacing="12" styleClass="sidebar" >
+                <VBox spacing="12" alignment="TOP_CENTER" styleClass="card">
+                    <Label text="Nächster Schatz" styleClass="section-header"/>
+                    <StackPane fx:id="nextTreasurePane" styleClass="card,compact-card">
+                        <Label fx:id="nextTreasure" styleClass="value-label"/>
+                    </StackPane>
+                </VBox>
+
+                <VBox spacing="12" fx:id="bonusBox" alignment="TOP_CENTER"  fillWidth="true" styleClass="card,bonus-box">
+                    <Label text="Verfügbare Boni" styleClass="section-header"/>
+                    <HBox fx:id="bonusSwapBox" spacing="10"   styleClass="bonus-row">
+                        <Label text="Swap" styleClass="bonus-label"/>
+                        <Region HBox.hgrow="ALWAYS"/>
+                        <Label fx:id="bonusSwapCount" styleClass="count-pill"/>
+                        <Button fx:id="bonusSwapButton" onAction="#onBonusSwapButtonClick" text="▷" styleClass="pill-button"/>
                     </HBox>
-                    <HBox fx:id="player2Box" spacing="10" alignment="CENTER_LEFT" styleClass="list-item">
-                        <Circle fx:id="player2Circle" radius="7" />
-                        <Label fx:id="player2" styleClass="value-label"/>
+                    <HBox fx:id="bonusBeamBox" spacing="10"   styleClass="bonus-row">
+                        <Label text="Beam" styleClass="bonus-label"/>
+                        <Region HBox.hgrow="ALWAYS"/>
+                        <Label fx:id="bonusBeamCount" styleClass="count-pill"/>
+                        <Button fx:id="bonusBeamButton" onAction="#onBonusBeamButtonClick" text="▷" styleClass="pill-button"/>
                     </HBox>
-                    <HBox fx:id="player3Box" spacing="10" alignment="CENTER_LEFT" styleClass="list-item">
-                        <Circle fx:id="player3Circle" radius="7" />
-                        <Label fx:id="player3" styleClass="value-label"/>
+                    <HBox fx:id="bonusPushTwiceBox" spacing="10"  styleClass="bonus-row">
+                        <Label text="Push twice" styleClass="bonus-label"/>
+                        <Region HBox.hgrow="ALWAYS"/>
+                        <Label fx:id="bonusPushTwiceCount" styleClass="count-pill"/>
+                        <Button fx:id="bonusPushTwiceButton" onAction="#onBonusPushTwiceButtonClick" text="▷" styleClass="pill-button"/>
                     </HBox>
-                    <HBox fx:id="player4Box" spacing="10" alignment="CENTER_LEFT" styleClass="list-item">
-                        <Circle fx:id="player4Circle" radius="7" />
-                        <Label fx:id="player4" styleClass="value-label"/>
+                    <HBox fx:id="bonusPushFixedBox" spacing="10" styleClass="bonus-row">
+                        <Label text="Push fixed" styleClass="bonus-label"/>
+                        <Region HBox.hgrow="ALWAYS"/>
+                        <Label fx:id="bonusPushFixedCount" styleClass="count-pill"/>
+                        <Button fx:id="bonusPushFixedButton" onAction="#onBonusPushFixedButtonClick" text="▷" styleClass="pill-button"/>
                     </HBox>
                 </VBox>
             </VBox>
+        </left -->
 
-            <Region VBox.vgrow="ALWAYS"/>
+        <!-- ================== RIGHT SIDEBAR ================== -->
+        <!-- right>
+            <VBox fx:id="rightSidebar" spacing="16" alignment="TOP_CENTER" styleClass="sidebar" >
+                <VBox fx:id="playerLabelsWrapper" spacing="16" alignment="TOP_CENTER" styleClass="card">
+                    <Label text="Spieler" styleClass="section-header"/>
+                    <VBox spacing="8" alignment="CENTER_LEFT">
+                        <HBox fx:id="player1Box" spacing="10" alignment="CENTER_LEFT" styleClass="list-item">
+                            <Circle fx:id="player1Circle" radius="7" />
+                            <Label fx:id="player1" styleClass="value-label"/>
+                        </HBox>
+                        <HBox fx:id="player2Box" spacing="10" alignment="CENTER_LEFT" styleClass="list-item">
+                            <Circle fx:id="player2Circle" radius="7" />
+                            <Label fx:id="player2" styleClass="value-label"/>
+                        </HBox>
+                        <HBox fx:id="player3Box" spacing="10" alignment="CENTER_LEFT" styleClass="list-item">
+                            <Circle fx:id="player3Circle" radius="7" />
+                            <Label fx:id="player3" styleClass="value-label"/>
+                        </HBox>
+                        <HBox fx:id="player4Box" spacing="10" alignment="CENTER_LEFT" styleClass="list-item">
+                            <Circle fx:id="player4Circle" radius="7" />
+                            <Label fx:id="player4" styleClass="value-label"/>
+                        </HBox>
+                    </VBox>
+                </VBox>
 
-            <VBox fx:id="extraTileWrapper" fillWidth="false" alignment="CENTER" spacing="12" styleClass="card">
-                <Label text="Gang Karte" styleClass="section-header"/>
-                <StackPane fx:id="extraTileContainer" styleClass="card,image-card">
-                    <ImageView fx:id="extraTile" fitWidth="110" fitHeight="110" />
-                    <Label fx:id="extraTileTreasureLabel" styleClass="tile-treasure-label"/>
-                    <Label fx:id="extraTileBonusLabel" styleClass="tile-bonus-label"/>
-                </StackPane>
-                <HBox spacing="12" alignment="CENTER">
-                    <!--Button fx:id="rotateLeftButton" text="⟲" prefWidth="44" styleClass="round-button,secondary-button"/-->
-                    <Button fx:id="rotateRightButton" text="⟳" prefWidth="44" styleClass="round-button,secondary-button"/>
-                </HBox>
-            </VBox>
-        </VBox>
-    </right>
+                <Region VBox.vgrow="ALWAYS"/>
 
-    <!-- ================== MAIN GAME AREA ================== -->
-    <center>
-        <StackPane>
-            <BorderPane fx:id="gameContainer" styleClass="game-container">
-                <center>
-                    <StackPane fx:id="centerWrapper">
-                        <GridPane fx:id="boardGrid" alignment="CENTER" styleClass="board"/>
+                <VBox fx:id="extraTileWrapper" fillWidth="false" alignment="CENTER" spacing="12" styleClass="card">
+                    <Label text="Gang Karte" styleClass="section-header"/>
+                    <StackPane fx:id="extraTileContainer" styleClass="card,image-card">
+                        <ImageView fx:id="extraTile" fitWidth="110" fitHeight="110" />
+                        <Label fx:id="extraTileTreasureLabel" styleClass="tile-treasure-label"/>
+                        <Label fx:id="extraTileBonusLabel" styleClass="tile-bonus-label"/>
                     </StackPane>
-                </center>
-
-                <!-- ARROWS -->
-                <top>
-                    <HBox fx:id="topArrowBox" alignment="CENTER" fillHeight="false" styleClass="arrow-bar,top-arrow-bar">
+                    <HBox spacing="12" alignment="CENTER">
+                        <Button fx:id="rotateRightButton" text="⟳" prefWidth="44" styleClass="round-button,secondary-button"/>
                     </HBox>
-                </top>
-                <bottom>
-                    <HBox fx:id="bottomArrowBox" alignment="CENTER_LEFT" fillHeight="false"  styleClass="arrow-bar,bottom-arrow-bar">
+                </VBox>
+            </VBox>
+        </right -->
 
-                    </HBox>
-                </bottom>
-                <left>
-                    <VBox fx:id="leftArrowBox" alignment="CENTER" fillWidth="false"  styleClass="arrow-bar,left-arrow-bar">
+        <!-- ================== MAIN GAME AREA ================== -->
+        <center>
+            <GridPane fx:id="mainLayoutGrid" styleClass="main-grid">
+                <columnConstraints>
+                    <ColumnConstraints percentWidth="18.0" hgrow="ALWAYS" />
+                    <ColumnConstraints percentWidth="64.0" hgrow="ALWAYS" />
+                    <ColumnConstraints percentWidth="18.0" hgrow="ALWAYS" />
+                </columnConstraints>
+                <rowConstraints>
+                    <RowConstraints vgrow="ALWAYS" />
+                </rowConstraints>
+
+                <!-- LEFT SIDEBAR -->
+                <VBox fx:id="leftSidebar" spacing="12" styleClass="sidebar" GridPane.columnIndex="0">
+                    <!-- ... content from your old <left> section ... -->
+                    <VBox spacing="12" alignment="TOP_CENTER" styleClass="card">
+                        <Label text="Nächster Schatz" styleClass="section-header"/>
+                        <StackPane fx:id="nextTreasurePane" styleClass="card,compact-card">
+                            <Label fx:id="nextTreasure" styleClass="value-label"/>
+                        </StackPane>
                     </VBox>
-                </left>
-                <right>
-                    <VBox fx:id="rightArrowBox" alignment="CENTER" fillWidth="false"  styleClass="arrow-bar,right-arrow-bar">
+
+                    <VBox spacing="12" fx:id="bonusBox" alignment="TOP_CENTER" fillWidth="true" styleClass="card,bonus-box">
+                        <Label text="Verfügbare Boni" styleClass="section-header"/>
+                        <HBox fx:id="bonusSwapBox" spacing="10" styleClass="bonus-row">
+                            <Label text="Swap" styleClass="bonus-label"/>
+                            <Region HBox.hgrow="ALWAYS"/>
+                            <Label fx:id="bonusSwapCount" styleClass="count-pill"/>
+                            <Button fx:id="bonusSwapButton" onAction="#onBonusSwapButtonClick" text="▷" styleClass="pill-button"/>
+                        </HBox>
+                        <HBox fx:id="bonusBeamBox" spacing="10" styleClass="bonus-row">
+                            <Label text="Beam" styleClass="bonus-label"/>
+                            <Region HBox.hgrow="ALWAYS"/>
+                            <Label fx:id="bonusBeamCount" styleClass="count-pill"/>
+                            <Button fx:id="bonusBeamButton" onAction="#onBonusBeamButtonClick" text="▷" styleClass="pill-button"/>
+                        </HBox>
+                        <HBox fx:id="bonusPushTwiceBox" spacing="10" styleClass="bonus-row">
+                            <Label text="Push twice" styleClass="bonus-label"/>
+                            <Region HBox.hgrow="ALWAYS"/>
+                            <Label fx:id="bonusPushTwiceCount" styleClass="count-pill"/>
+                            <Button fx:id="bonusPushTwiceButton" onAction="#onBonusPushTwiceButtonClick" text="▷" styleClass="pill-button"/>
+                        </HBox>
+                        <HBox fx:id="bonusPushFixedBox" spacing="10" styleClass="bonus-row">
+                            <Label text="Push fixed" styleClass="bonus-label"/>
+                            <Region HBox.hgrow="ALWAYS"/>
+                            <Label fx:id="bonusPushFixedCount" styleClass="count-pill"/>
+                            <Button fx:id="bonusPushFixedButton" onAction="#onBonusPushFixedButtonClick" text="▷" styleClass="pill-button"/>
+                        </HBox>
                     </VBox>
-                </right>
-            </BorderPane>
-        </StackPane>
-    </center>
-</BorderPane>
+                </VBox>
+
+                <!-- CENTER GAME AREA -->
+                <StackPane fx:id="centerStackPane" GridPane.columnIndex="1">
+                    <BorderPane fx:id="gameContainer" styleClass="game-container">
+                        <center>
+                            <StackPane fx:id="centerWrapper">
+                                <GridPane fx:id="boardGrid" alignment="CENTER" styleClass="board"/>
+                            </StackPane>
+                        </center>
+
+                        <!-- ARROWS -->
+                        <top>
+                            <HBox fx:id="topArrowBox" alignment="CENTER" fillHeight="false" styleClass="arrow-bar,top-arrow-bar"/>
+                        </top>
+                        <bottom>
+                            <HBox fx:id="bottomArrowBox" alignment="CENTER_LEFT" fillHeight="false" styleClass="arrow-bar,bottom-arrow-bar"/>
+                        </bottom>
+                        <left>
+                            <VBox fx:id="leftArrowBox" alignment="CENTER" fillWidth="false" styleClass="arrow-bar,left-arrow-bar"/>
+                        </left>
+                        <right>
+                            <VBox fx:id="rightArrowBox" alignment="CENTER" fillWidth="false" styleClass="arrow-bar,right-arrow-bar"/>
+                        </right>
+                    </BorderPane>
+                </StackPane>
+
+                <!-- RIGHT SIDEBAR -->
+                <VBox fx:id="rightSidebar" spacing="16" alignment="TOP_CENTER" styleClass="sidebar" GridPane.columnIndex="2">
+                    <!-- ... content from your old <right> section ... -->
+                    <VBox fx:id="playerLabelsWrapper" spacing="16" alignment="TOP_CENTER" styleClass="card">
+                        <Label text="Spieler" styleClass="section-header"/>
+                        <VBox spacing="8" alignment="CENTER_LEFT">
+                            <HBox fx:id="player1Box" spacing="10" alignment="CENTER_LEFT" styleClass="list-item">
+                                <Circle fx:id="player1Circle" radius="7" />
+                                <Label fx:id="player1" styleClass="value-label"/>
+                            </HBox>
+                            <HBox fx:id="player2Box" spacing="10" alignment="CENTER_LEFT" styleClass="list-item">
+                                <Circle fx:id="player2Circle" radius="7" />
+                                <Label fx:id="player2" styleClass="value-label"/>
+                            </HBox>
+                            <HBox fx:id="player3Box" spacing="10" alignment="CENTER_LEFT" styleClass="list-item">
+                                <Circle fx:id="player3Circle" radius="7" />
+                                <Label fx:id="player3" styleClass="value-label"/>
+                            </HBox>
+                            <HBox fx:id="player4Box" spacing="10" alignment="CENTER_LEFT" styleClass="list-item">
+                                <Circle fx:id="player4Circle" radius="7" />
+                                <Label fx:id="player4" styleClass="value-label"/>
+                            </HBox>
+                        </VBox>
+                    </VBox>
+
+                    <Region VBox.vgrow="ALWAYS"/>
+
+                    <VBox fx:id="extraTileWrapper" fillWidth="false" alignment="CENTER" spacing="12" styleClass="card">
+                        <Label text="Gang Karte" styleClass="section-header"/>
+                        <StackPane fx:id="extraTileContainer" styleClass="card,image-card">
+                            <ImageView fx:id="extraTile" fitWidth="110" fitHeight="110" />
+                            <Label fx:id="extraTileTreasureLabel" styleClass="tile-treasure-label"/>
+                            <Label fx:id="extraTileBonusLabel" styleClass="tile-bonus-label"/>
+                        </StackPane>
+                        <HBox spacing="12" alignment="CENTER">
+                            <Button fx:id="rotateRightButton" text="⟳" prefWidth="44" styleClass="round-button,secondary-button"/>
+                        </HBox>
+                    </VBox>
+                </VBox>
+            </GridPane>
+        </center>
+
+    </BorderPane>
+    </Group>
+</StackPane>
+
