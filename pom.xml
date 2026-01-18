@@ -130,6 +130,12 @@
 			<artifactId>hibernate-validator</artifactId>
 			<version>${hibernate.validation.version}</version>
 		</dependency>
+
+        <dependency>
+            <groupId>org.testfx</groupId>
+            <artifactId>openjfx-monocle</artifactId>
+            <version>jdk-12.0.1+2</version> <scope>test</scope>
+        </dependency>
 	</dependencies>
 
 	<build>
@@ -223,15 +229,59 @@
 			</properties>
 		</profile>
 
-		<profile>
-			<id>mac</id>
-			<activation>
-				<os><name>mac os x</name></os>
-			</activation>
-			<properties>
-				<javafx.platform>mac</javafx.platform>
-			</properties>
-		</profile>
+        <profile>
+            <id>mac-arm</id>
+            <activation>
+                <os>
+                    <family>mac</family>
+                    <arch>aarch64</arch>
+                </os>
+            </activation>
+            <properties>
+                <javafx.platform>mac-aarch64</javafx.platform>
+            </properties>
+        </profile>
+
+        <profile>
+            <id>mac-intel</id>
+            <activation>
+                <os>
+                    <family>mac</family>
+                    <arch>x86_64</arch>
+                </os>
+            </activation>
+            <properties>
+                <javafx.platform>mac</javafx.platform>
+            </properties>
+        </profile>
+
+        <profile>
+            <id>headless-test</id>
+            <activation>
+                <property>
+                    <name>env.GITHUB_ACTIONS</name>
+                    <value>true</value>
+                </property>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <configuration>
+                            <systemPropertyVariables>
+                                <prism.order>sw</prism.order>
+                                <testfx.headless>true</testfx.headless>
+                                <glass.platform>gtk</glass.platform>
+                            </systemPropertyVariables>
+                            <environmentVariables>
+                                <DISPLAY>:99</DISPLAY>
+                            </environmentVariables>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
 	</profiles>
 
 </project>
