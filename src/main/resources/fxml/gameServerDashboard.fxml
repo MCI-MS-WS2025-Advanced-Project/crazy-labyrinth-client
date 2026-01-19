@@ -19,6 +19,7 @@
 
 <?import javafx.scene.shape.Rectangle?>
 <?import javafx.scene.Group?>
+<?import javafx.scene.layout.Region?>
 <StackPane xmlns="http://javafx.com/javafx"
            xmlns:fx="http://javafx.com/fxml"
            fx:id="viewport"
@@ -49,6 +50,8 @@
                     <Button fx:id="refreshButton" text="Refresh" mnemonicParsing="false" />
                     <Separator orientation="VERTICAL" />
                     <CheckBox fx:id="showOnlyJoinable" text="Only joinable" />
+                    <Region HBox.hgrow="ALWAYS"/>
+                    <Button fx:id="exitButton" text="Exit" onAction="#onExitButtonClick" styleClass="pill-button"/>
                 </ToolBar>
             </top>
 
