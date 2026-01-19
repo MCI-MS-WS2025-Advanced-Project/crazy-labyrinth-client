@@ -4,8 +4,11 @@ import static mci.dibse.crazylabyrinth.client.infrastructure.util.JavaFXUtils.ru
 
 import java.time.Instant;
 import java.util.Optional;
+
+import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.value.ObservableValue;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.Group;
 import javafx.scene.control.*;
@@ -122,6 +125,12 @@ public class GameServerDashboardController extends BaseViewCleanup {
                     viewModel.getSorted().comparatorProperty().unbind();
                 };
         runOnFxThread(cleanup);
+    }
+
+    public void onExitButtonClick(ActionEvent actionEvent) {
+        JavaFXUtils.showConfirmationModal(
+                "Beenden", "Wollen Sie das Programm beenden?", "", Platform::exit);
+
     }
 
     @Override
@@ -314,4 +323,6 @@ public class GameServerDashboardController extends BaseViewCleanup {
                 };
         runOnFxThread(dialogTask);
     }
+
+
 }
