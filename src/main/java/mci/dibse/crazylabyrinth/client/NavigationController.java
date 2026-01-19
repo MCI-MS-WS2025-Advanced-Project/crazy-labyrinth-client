@@ -70,13 +70,14 @@ public class NavigationController {
 
     public void showMainScreen() {
         showScreen(NavigationStateViewModel.ScreenId.MAIN);
+        setStageMinMaxSizes(null);
     }
 
     private void showScreen(NavigationStateViewModel.ScreenId newScreen) {
         String viewFile = mapScreenIdToFile(newScreen);
         try {
             Parent mainRoot = viewLoader.loadFXML(viewFile);
-            setStageMinMaxSizes(newScreen);
+         //   setStageMinMaxSizes(newScreen);
             setUpStageAndScene(newScreen, mainRoot);
         } catch (IOException | IllegalArgumentException e) {
             throw new RuntimeException(e);

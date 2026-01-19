@@ -159,9 +159,9 @@
                 </rowConstraints>
 
                 <!-- LEFT SIDEBAR -->
-                <VBox fx:id="leftSidebar" spacing="12" styleClass="sidebar" GridPane.columnIndex="0">
+                <VBox fx:id="leftSidebar" spacing="12" styleClass="sidebar-left" GridPane.columnIndex="0">
                     <!-- ... content from your old <left> section ... -->
-                    <VBox spacing="12" alignment="TOP_CENTER" styleClass="card">
+                    <VBox spacing="12" alignment="TOP_RIGHT" styleClass="card">
                         <Label text="Nächster Schatz" styleClass="section-header"/>
                         <StackPane fx:id="nextTreasurePane" styleClass="card,compact-card">
                             <!--Label fx:id="nextTreasure" styleClass="value-label"/ -->
@@ -169,7 +169,7 @@
                         </StackPane>
                     </VBox>
 
-                    <VBox spacing="12" fx:id="bonusBox" alignment="TOP_CENTER" fillWidth="true" styleClass="card,bonus-box">
+                    <VBox spacing="12" fx:id="bonusBox" alignment="TOP_RIGHT" fillWidth="true" styleClass="card,bonus-box">
                         <Label text="Verfügbare Boni" styleClass="section-header"/>
                         <HBox fx:id="bonusSwapBox" spacing="10" styleClass="bonus-row">
                             <Label text="Swap" styleClass="bonus-label"/>
@@ -225,9 +225,8 @@
 
                 <!-- RIGHT SIDEBAR -->
                 <VBox fx:id="rightSidebar"  styleClass="sidebar-right"  GridPane.columnIndex="2">
-
                     <VBox fx:id="playerLabelsWrapper"  spacing="10" styleClass="card">
-                        <Label text="Spieler" styleClass="section-header"/>
+                        <Label text="Spieler" styleClass="section-header" alignment="TOP_CENTER"/>
                         <VBox spacing="8" alignment="CENTER_LEFT">
                             <VBox fx:id="player1Box" spacing="5" alignment="CENTER_LEFT" styleClass="list-item">
                                 <HBox spacing="5">
@@ -235,7 +234,7 @@
                                     <Label fx:id="player1" styleClass="value-label"/>
                                 </HBox>
                                 <HBox spacing="5" alignment="CENTER_LEFT">
-                                    <Region minWidth="0" prefWidth="14" maxWidth="14" />
+                                    <Region minWidth="14" prefWidth="14" maxWidth="14" />
                                     <Label fx:id="player1Status" text="Playerholder" styleClass="value-label"/>
                                 </HBox>
                             </VBox>
@@ -245,7 +244,7 @@
                                     <Label fx:id="player2" styleClass="value-label"/>
                                 </HBox>
                                 <HBox spacing="5" alignment="CENTER_LEFT">
-                                    <Region minWidth="0" prefWidth="14" maxWidth="14" />
+                                    <Region minWidth="14" prefWidth="14" maxWidth="14" />
                                     <Label fx:id="player2Status" text="Playerholder" styleClass="value-label"/>
                                 </HBox>
                             </VBox>
@@ -255,7 +254,7 @@
                                     <Label fx:id="player3" styleClass="value-label"/>
                                 </HBox>
                                 <HBox spacing="5" alignment="CENTER_LEFT">
-                                    <Region  minWidth="0" prefWidth="14" maxWidth="14"/>
+                                    <Region  minWidth="14" prefWidth="14" maxWidth="14"/>
                                     <Label fx:id="player3Status" text="Playerholder" styleClass="value-label"/>
                                 </HBox>
                             </VBox>
@@ -265,7 +264,7 @@
                                     <Label fx:id="player4" styleClass="value-label"/>
                                 </HBox>
                                 <HBox spacing="5" alignment="CENTER_LEFT">
-                                    <Region  minWidth="0" prefWidth="14" maxWidth="14"/>
+                                    <Region  minWidth="14" prefWidth="14" maxWidth="14"/>
                                     <Label fx:id="player4Status" text="Playerholder" styleClass="value-label"/>
                                 </HBox>
                             </VBox>

@@ -400,7 +400,7 @@ public class GameViewModel extends BaseViewModel implements PlayerConnectedAckLi
         if (p.getRemainingTreasureCount() > 0) return;
         System.out.println("last treasure found");
         Treasure t = new Treasure();
-        t.setId(24);
+        t.setId(0);
         t.setName("Zurück zum Start");
         TreasureItem backToHome = new TreasureItem(t);
         nextTreasureItemProperty.set(backToHome);

@@ -10,31 +10,31 @@ public class TreasureMapper {
 
 
 
-    private final static String TREASURE_0 = "Schatz1";
-    private final static String TREASURE_1 = "Gold";
+    private final static String TREASURE_0 = "BackToHome";
+    private final static String TREASURE_1 = "Schatz2";
     private final static String TREASURE_2 = "Iron";
-    private final static String TREASURE_3 = "Schatz2";
-    private final static String TREASURE_4 = "Schatz2";
-    private final static String TREASURE_5 = "Schatz2";
-    private final static String TREASURE_6 = "Schatz2";
-    private final static String TREASURE_7 = "Schatz2";
-    private final static String TREASURE_8 = "Schatz2";
-    private final static String TREASURE_9 = "Schatz2";
-    private final static String TREASURE_10 = "Schatz2";
-    private final static String TREASURE_11 = "Schatz2";
-    private final static String TREASURE_12 = "Schatz2";
-    private final static String TREASURE_13 = "Schatz2";
-    private final static String TREASURE_14 = "Schatz2";
-    private final static String TREASURE_15 = "Schatz2";
-    private final static String TREASURE_16 = "Schatz2";
-    private final static String TREASURE_17 = "Schatz2";
-    private final static String TREASURE_18 = "Schatz2";
-    private final static String TREASURE_19 = "Schatz2";
-    private final static String TREASURE_20 = "Schatz2";
-    private final static String TREASURE_21 = "Schatz2";
-    private final static String TREASURE_22 = "Schatz2";
-    private final static String TREASURE_23 = "Schatz2";
-    private final static String TREASURE_24 = "BackToHome";
+    private final static String TREASURE_3 = "Gold";
+    private final static String TREASURE_4 = "Apple_red";
+    private final static String TREASURE_5 = "Bombe";
+    private final static String TREASURE_6 = "Fackel";
+    private final static String TREASURE_7 = "GoldMünze";
+    private final static String TREASURE_8 = "Kelch";
+    private final static String TREASURE_9 = "Kette";
+    private final static String TREASURE_10 = "Kompass";
+    private final static String TREASURE_11 = "Krone";
+    private final static String TREASURE_12 = "Kugel";
+    private final static String TREASURE_13 = "Pilz";
+    private final static String TREASURE_14 = "Ring";
+    private final static String TREASURE_15 = "Schatzkarte";
+    private final static String TREASURE_16 = "Schlüssel";
+    private final static String TREASURE_17 = "Schwert";
+    private final static String TREASURE_18 = "Seil";
+    private final static String TREASURE_19 = "Spitzhacke";
+    private final static String TREASURE_20 = "Trank_blau";
+    private final static String TREASURE_21 = "Zaubersprüche";
+    private final static String TREASURE_22 = "Knochen";
+    private final static String TREASURE_23 = "ZeitUhr";
+    private final static String TREASURE_24 = "Schatz1";
 
 
     static {
