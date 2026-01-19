@@ -6,6 +6,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validator;
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.Collection;
@@ -105,8 +107,33 @@ public class GameServerManagementService {
             throws IOException, IllegalArgumentException {
         List<GameServerDTO> gameServersDTO = parseGameServerDTOsFromBytes(raw);
         validateGameServerDTOs(gameServersDTO);
+        validateGameServerUrl(gameServersDTO);
         List<GameServer> gameServers = mapToGameServers(gameServersDTO);
         refresh(gameServers);
+    }
+
+    private void validateGameServerUrl(List<GameServerDTO> gameServersDTO) {
+        gameServersDTO.forEach(dto -> {
+            URI uri = dto.getUri();
+            String path = uri.getPath();
+            if (path == null || !uri.getPath().startsWith("/game")) {
+                URI baseWithPath = null;
+                try {
+                    baseWithPath = new URI(
+                            uri.getScheme(),
+                            uri.getUserInfo(),
+                            uri.getHost(),
+                            uri.getPort(),
+                            "/game",
+                            uri.getQuery(),
+                            uri.getFragment()
+                    );
+                } catch (URISyntaxException e) {
+                    throw new RuntimeException(e);
+                }
+                dto.setUri(baseWithPath);
+            }
+        });
     }
 
     private List<GameServerDTO> parseGameServerDTOsFromBytes(byte[] raw) throws IOException {
