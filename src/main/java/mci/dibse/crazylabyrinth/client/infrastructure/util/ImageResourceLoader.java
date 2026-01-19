@@ -199,8 +199,8 @@ public class ImageResourceLoader {
                     }
                 });
 
-       // return image;
-        return copyImage(image);
+        return image;
+        //return copyImage(image);
     }
 
     /**

@@ -4,11 +4,11 @@
 }
 
 .topbar {
-    -fx-padding: 10 14;
+    -fx-padding: 5 14;
 }
 
 .timer-bar {
-    -fx-padding: 10 14;
+    -fx-padding:5 14;
 }
 
 /* Compact card variants for small content blocks */
@@ -152,7 +152,7 @@
 
 
 .game-container {
-    -fx-padding: 0;
+    -fx-padding: 5 0 5 0;
     -fx-background-color: rgb(0,0,0,0);
 
 }
