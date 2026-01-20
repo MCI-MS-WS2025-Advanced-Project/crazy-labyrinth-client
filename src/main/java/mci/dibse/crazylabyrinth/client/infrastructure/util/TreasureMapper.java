@@ -17,7 +17,7 @@ public class TreasureMapper {
     private final static String TREASURE_4 = "Apple_red";
     private final static String TREASURE_5 = "Bombe";
     private final static String TREASURE_6 = "Fackel";
-    private final static String TREASURE_7 = "GoldMünze";
+    private final static String TREASURE_7 = "GoldMuenze";
     private final static String TREASURE_8 = "Kelch";
     private final static String TREASURE_9 = "Kette";
     private final static String TREASURE_10 = "Kompass";
@@ -26,12 +26,12 @@ public class TreasureMapper {
     private final static String TREASURE_13 = "Pilz";
     private final static String TREASURE_14 = "Ring";
     private final static String TREASURE_15 = "Schatzkarte";
-    private final static String TREASURE_16 = "Schlüssel";
+    private final static String TREASURE_16 = "Schluessel";
     private final static String TREASURE_17 = "Schwert";
     private final static String TREASURE_18 = "Seil";
     private final static String TREASURE_19 = "Spitzhacke";
     private final static String TREASURE_20 = "Trank_blau";
-    private final static String TREASURE_21 = "Zaubersprüche";
+    private final static String TREASURE_21 = "Zaubersprueche";
     private final static String TREASURE_22 = "Knochen";
     private final static String TREASURE_23 = "ZeitUhr";
     private final static String TREASURE_24 = "Schatz1";
