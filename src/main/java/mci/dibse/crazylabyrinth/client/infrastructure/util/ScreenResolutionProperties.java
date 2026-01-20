@@ -67,11 +67,13 @@ public class ScreenResolutionProperties {
         Runnable apply = () -> {
             // Center the root inside the StackPane
             StackPane.setAlignment(props.root, Pos.CENTER);
-
+            props.root.setPrefWidth(width);
+            props.root.setPrefHeight(screenHeight);
             // Available content area inside the viewport, excluding insets
             DoubleBinding availableW = Bindings.createDoubleBinding(
                     () -> {
-                        props.root.setPrefWidth(width);
+
+
                         return props.viewport.getWidth()
                                 - props.viewport.getInsets().getLeft()
                                 - props.viewport.getInsets().getRight();
@@ -82,7 +84,7 @@ public class ScreenResolutionProperties {
 
             DoubleBinding availableH = Bindings.createDoubleBinding(
                     () -> {
-                        props.root.setPrefHeight(screenHeight);
+
                         return props.viewport.getHeight()
                                 - props.viewport.getInsets().getTop()
                                 - props.viewport.getInsets().getBottom();

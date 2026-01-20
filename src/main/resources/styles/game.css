@@ -4,11 +4,11 @@
 }
 
 .topbar {
-    -fx-padding: 10 14;
+    -fx-padding: 5 14;
 }
 
 .timer-bar {
-    -fx-padding: 10 14;
+    -fx-padding:5 14;
 }
 
 /* Compact card variants for small content blocks */
@@ -54,6 +54,12 @@
     -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.45), 10, 0.2, 0, 0);
 }
 
+.treasure-image {
+
+    -fx-effect: dropshadow(gaussian, #ffcc33, 12, 0.3, 0, 0);
+    /*-fx-effect: innershadow(gaussian, #ffd700, 6, 0.4, 0, 0); */
+}
+
 .tile-bonus-label {
     -fx-translate-y: -20;
     -fx-font-size: 11px;
@@ -72,10 +78,7 @@
     -fx-padding: 0;
 }
 
-/* Game container and board */
-.game-container {
-    -fx-padding: 0;
-}
+
 
 .board {
     -fx-background-color: #6a816a;  /*  #6a816a; light green grid lines */
@@ -147,9 +150,8 @@
     -fx-padding: 45 10 60 0; /* top right bottom left */
 }
 
-
 .game-container {
-    -fx-padding: 10;
+    -fx-padding: 5 0 5 0;
     -fx-background-color: rgb(0,0,0,0);
 
 }
@@ -227,4 +229,7 @@
     -fx-pref-height: 30 !important;
     -fx-alignment: CENTER;
 }
+
+
+
 
