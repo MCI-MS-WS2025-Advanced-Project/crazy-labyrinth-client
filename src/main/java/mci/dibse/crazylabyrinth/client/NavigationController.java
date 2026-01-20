@@ -85,11 +85,22 @@ public class NavigationController {
     }
 
     private void setUpStageAndScene(NavigationStateViewModel.ScreenId newScreen, Parent mainRoot) {
+        boolean ismaximized = primaryStage.isMaximized();
+        boolean isFullScreen = primaryStage.isFullScreen();
+
+        double prevWidth = primaryStage.getWidth();
+        double prevHeight = primaryStage.getHeight();
+
+        primaryStage.setWidth(prevWidth);
+        primaryStage.setHeight(prevHeight);
+
         Scene scene = new Scene(mainRoot);
         setupFullScreen(scene);
         primaryStage.setFullScreenExitKeyCombination(new KeyCodeCombination(KeyCode.ESCAPE));
         primaryStage.setScene(scene);
         primaryStage.setTitle("The Amazing Labyrinth");
+        primaryStage.setFullScreen(isFullScreen);
+        primaryStage.setMaximized(ismaximized);
         primaryStage.show();
     }
 
