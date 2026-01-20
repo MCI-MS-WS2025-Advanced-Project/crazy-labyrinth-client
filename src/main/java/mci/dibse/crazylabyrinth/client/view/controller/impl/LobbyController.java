@@ -29,6 +29,7 @@ import javafx.util.Duration;
 import labyrinth.contracts.models.*;
 import lombok.extern.slf4j.Slf4j;
 import labyrinth.contracts.models.RankingEntry;
+import mci.dibse.crazylabyrinth.client.domain.context.ApplicationEvents;
 import mci.dibse.crazylabyrinth.client.domain.model.record.StartGameRecord;
 import mci.dibse.crazylabyrinth.client.infrastructure.util.JavaFXUtils;
 import mci.dibse.crazylabyrinth.client.infrastructure.util.ScreenResolutionProperties;
@@ -38,6 +39,7 @@ import mci.dibse.crazylabyrinth.client.view.viewmodel.LobbyViewModel;
 import mci.dibse.crazylabyrinth.client.view.viewmodel.item.PlayerInfoItem;
 import mci.dibse.crazylabyrinth.client.view.viewmodel.navigation.NavigationStateViewModel;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -187,7 +189,16 @@ public class LobbyController extends BaseViewCleanup {
 
         setupResultsTable();
 
-        initUiScaling();
+        viewport.sceneProperty().addListener((obs, oldScene, newScene) -> {
+            if (newScene != null) {
+                // First pulse: attach
+                Platform.runLater(() -> {
+                    root.applyCss();
+                    root.layout(); // ensures layoutBounds valid now
+                    initUiScaling();   // sets up bindings only (no pref in lambdas)
+                });
+            }
+        });
     }
 
     private void initUiScaling() {
