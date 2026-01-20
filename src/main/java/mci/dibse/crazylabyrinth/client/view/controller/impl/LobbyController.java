@@ -294,6 +294,16 @@ public class LobbyController extends BaseViewCleanup {
         startGame();
     }
 
+    @EventListener
+    public void handleDisconnectEvent(ApplicationEvents event) {
+        if (NavigationStateViewModel.ScreenId.LOBBY.equals(navigationStateViewModel.getCurrentScreenId())) {
+            try {
+                cancelCountdown();
+            } catch (Exception e) {}
+
+        }
+    }
+
     @Override
     protected boolean customCleanupCheckpoint(
             NavigationStateViewModel.ScreenId oldValue,
