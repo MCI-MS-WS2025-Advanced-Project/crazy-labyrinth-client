@@ -161,15 +161,15 @@
                 <!-- LEFT SIDEBAR -->
                 <VBox fx:id="leftSidebar" spacing="12" styleClass="sidebar-left" GridPane.columnIndex="0">
                     <!-- ... content from your old <left> section ... -->
-                    <VBox spacing="12" alignment="TOP_RIGHT" styleClass="card">
-                        <Label text="Nächster Schatz" styleClass="section-header"/>
+                    <VBox spacing="12" alignment="TOP_CENTER" styleClass="card">
+                        <Label text="Nächster Schatz"  styleClass="section-header"/>
                         <StackPane fx:id="nextTreasurePane" styleClass="card,compact-card">
                             <!--Label fx:id="nextTreasure" styleClass="value-label"/ -->
-                            <ImageView fx:id="nextTreasureImage" fitWidth="110" fitHeight="110" />
+                            <ImageView fx:id="nextTreasureImage" fitWidth="110" fitHeight="100" />
                         </StackPane>
                     </VBox>
 
-                    <VBox spacing="12" fx:id="bonusBox" alignment="TOP_RIGHT" fillWidth="true" styleClass="card,bonus-box">
+                    <VBox spacing="12" fx:id="bonusBox" alignment="TOP_CENTER" fillWidth="true" styleClass="card,bonus-box">
                         <Label text="Verfügbare Boni" styleClass="section-header"/>
                         <HBox fx:id="bonusSwapBox" spacing="10" styleClass="bonus-row">
                             <Label text="Swap" styleClass="bonus-label"/>
@@ -199,7 +199,7 @@
                 </VBox>
 
                 <!-- CENTER GAME AREA -->
-                <StackPane fx:id="centerStackPane" GridPane.columnIndex="1">
+                <StackPane fx:id="centerStackPane"  GridPane.columnIndex="1">
                     <BorderPane fx:id="gameContainer" styleClass="game-container">
                         <center>
                             <StackPane fx:id="centerWrapper">
@@ -224,9 +224,9 @@
                 </StackPane>
 
                 <!-- RIGHT SIDEBAR -->
-                <VBox fx:id="rightSidebar"  styleClass="sidebar-right"  GridPane.columnIndex="2">
-                    <VBox fx:id="playerLabelsWrapper"  spacing="10" styleClass="card">
-                        <Label text="Spieler" styleClass="section-header" alignment="TOP_CENTER"/>
+                <VBox fx:id="rightSidebar" alignment="TOP_CENTER"  styleClass="sidebar-right"  GridPane.columnIndex="2">
+                    <VBox fx:id="playerLabelsWrapper" alignment="TOP_CENTER" spacing="10" styleClass="card">
+                        <Label text="Spieler" styleClass="section-header" />
                         <VBox spacing="8" alignment="CENTER_LEFT">
                             <VBox fx:id="player1Box" spacing="5" alignment="CENTER_LEFT" styleClass="list-item">
                                 <HBox spacing="5">
