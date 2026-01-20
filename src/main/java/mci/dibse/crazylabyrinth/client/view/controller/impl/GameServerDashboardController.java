@@ -4,6 +4,8 @@ import static mci.dibse.crazylabyrinth.client.infrastructure.util.JavaFXUtils.ru
 
 import java.time.Instant;
 import java.util.Optional;
+
+import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXML;
@@ -81,8 +83,17 @@ public class GameServerDashboardController extends BaseViewCleanup {
         setupTableRowFactory();
         setupControls();
         setupErrorHandling();
-        initUiScaling();
         viewModel.refreshServerList();
+        viewport.sceneProperty().addListener((obs, oldScene, newScene) -> {
+            if (newScene != null) {
+                // First pulse: attach
+                Platform.runLater(() -> {
+                    root.applyCss();
+                    root.layout(); // ensures layoutBounds valid now
+                    initUiScaling();   // sets up bindings only (no pref in lambdas)
+                });
+            }
+        });
     }
 
     private void initUiScaling() {

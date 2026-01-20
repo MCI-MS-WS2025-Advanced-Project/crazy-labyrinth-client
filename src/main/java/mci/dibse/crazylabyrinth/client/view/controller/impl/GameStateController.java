@@ -164,8 +164,6 @@ public class GameStateController extends BaseViewCleanup {
 
         initSpareTile();
 
-        initGameGrid();
-
         ChangeListener<TurnState> turnStateChangeListener =
                 (observable, oldValue, newValue) -> {
                     initGameGrid();
@@ -182,7 +180,17 @@ public class GameStateController extends BaseViewCleanup {
 
         initGameTimer();
 
-        initUiScaling();
+        viewport.sceneProperty().addListener((obs, oldScene, newScene) -> {
+            if (newScene != null) {
+                // First pulse: attach
+                Platform.runLater(() -> {
+                    root.applyCss();
+                    root.layout(); // ensures layoutBounds valid now
+                    initUiScaling();   // sets up bindings only (no pref in lambdas)
+                    initGameGrid();    // builds grid once sizes are non-zero
+                });
+            }
+        });
     }
 
     private void initUiScaling() {
@@ -481,7 +489,7 @@ public class GameStateController extends BaseViewCleanup {
                         Bindings.createStringBinding(
                                 () -> {
                                     String prefix = isClient ? "Du: " : "";
-                                    System.out.println(prefix + player.getPlayerNameAsString());
+
                                     return prefix + player.getPlayerNameAsString();
                                 },
                                 player.getPlayerInfo()));
@@ -748,7 +756,8 @@ public class GameStateController extends BaseViewCleanup {
                         }
                     }
                 };
-        JavaFXUtils.runOnFxThread(apply);
+        Platform.runLater(apply);
+        //JavaFXUtils.runOnFxThread(apply);
     }
 
     private void offsetPlayerPawnOnTreasurePresence(TileItem tile, ImageView playerImage) {
