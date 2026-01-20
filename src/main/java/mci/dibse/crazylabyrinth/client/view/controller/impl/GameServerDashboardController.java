@@ -84,8 +84,17 @@ public class GameServerDashboardController extends BaseViewCleanup {
         setupTableRowFactory();
         setupControls();
         setupErrorHandling();
-        initUiScaling();
         viewModel.refreshServerList();
+        viewport.sceneProperty().addListener((obs, oldScene, newScene) -> {
+            if (newScene != null) {
+                // First pulse: attach
+                Platform.runLater(() -> {
+                    root.applyCss();
+                    root.layout(); // ensures layoutBounds valid now
+                    initUiScaling();   // sets up bindings only (no pref in lambdas)
+                });
+            }
+        });
     }
 
     private void initUiScaling() {

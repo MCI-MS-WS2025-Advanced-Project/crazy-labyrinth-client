@@ -1,11 +1,15 @@
 package mci.dibse.crazylabyrinth.client.view.viewmodel.item;
 
+import javafx.beans.property.SimpleObjectProperty;
+import javafx.scene.image.Image;
 import labyrinth.contracts.models.Treasure;
 import lombok.Getter;
+import mci.dibse.crazylabyrinth.client.infrastructure.util.ImageResourceLoader;
+import mci.dibse.crazylabyrinth.client.infrastructure.util.JavaFXUtils;
 
 public class TreasureItem extends BaseItem<Treasure> {
 
-
+    @Getter private SimpleObjectProperty<Image> treasureImageProperty = new SimpleObjectProperty<>();
 
     @Getter private int id;
     @Getter private String name;
@@ -13,6 +17,11 @@ public class TreasureItem extends BaseItem<Treasure> {
     public TreasureItem(Treasure source) {
         id = source.getId();
         name = source.getName();
+        JavaFXUtils.runOnFxThread(() -> treasureImageProperty.set(ImageResourceLoader.loadTreasureImage(id)));
+    }
+
+    public Image getTreasureImage() {
+        return treasureImageProperty.get();
     }
 
     @Override

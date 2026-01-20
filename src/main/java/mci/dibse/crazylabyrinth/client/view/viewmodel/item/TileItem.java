@@ -34,6 +34,10 @@ public class TileItem extends BaseItem<Tile> {
         return bonus.get();
     }
 
+    public boolean hasTreasure() {
+        return treasure.get() != null;
+    }
+
     public TileItem(Tile source) {
         super();
         List<Direction> directionList = new ArrayList<>(Arrays.asList(source.getEntrances()));

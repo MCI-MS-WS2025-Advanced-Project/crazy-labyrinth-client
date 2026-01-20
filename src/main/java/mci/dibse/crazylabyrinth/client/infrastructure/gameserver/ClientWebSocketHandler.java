@@ -55,6 +55,7 @@ public class ClientWebSocketHandler extends TextWebSocketHandler {
             log.warn("No active sessions. Ignoring message");
             return;
         }
+        /*
         webSocketExecutor.execute(
                 () -> {
                     try {
@@ -67,11 +68,25 @@ public class ClientWebSocketHandler extends TextWebSocketHandler {
                                 e);
                     }
                 });
+
+         */
+
+        try {
+
+            serverEventService.handleEvent(message.getPayload());
+        } catch (Exception e) {
+            log.error(
+                    "Something went terribly wrong. Should have never happened. Very"
+                            + " sorry",
+                    e);
+        }
     }
 
     @Override
     public void afterConnectionEstablished(@NonNull WebSocketSession session) throws Exception {
         super.afterConnectionEstablished(session);
+        session.setTextMessageSizeLimit(1024 * 1024);
+
         canReceiveMessages = true;
         sessions.put(session.getId(), session);
         if (connectionCallback != null) {

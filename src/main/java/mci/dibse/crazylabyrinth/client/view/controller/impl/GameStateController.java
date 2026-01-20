@@ -9,7 +9,6 @@ import javafx.animation.Timeline;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
-import javafx.beans.binding.DoubleBinding;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleIntegerProperty;
@@ -20,24 +19,21 @@ import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.scene.Cursor;
 import javafx.scene.Group;
-import javafx.scene.Parent;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.shape.StrokeType;
-import javafx.scene.transform.Scale;
 import javafx.util.Duration;
 import labyrinth.contracts.models.*;
 import lombok.extern.slf4j.Slf4j;
 import mci.dibse.crazylabyrinth.client.domain.context.PushTileCommandRecord;
-import mci.dibse.crazylabyrinth.client.infrastructure.util.JavaFXUtils;
-import mci.dibse.crazylabyrinth.client.infrastructure.util.PlayerPawnUtils;
-import mci.dibse.crazylabyrinth.client.infrastructure.util.ScreenResolutionProperties;
+import mci.dibse.crazylabyrinth.client.infrastructure.util.*;
 import mci.dibse.crazylabyrinth.client.service.GameServerSocketService;
 import mci.dibse.crazylabyrinth.client.view.viewmodel.GameViewModel;
 import mci.dibse.crazylabyrinth.client.view.viewmodel.item.GameBoardItem;
@@ -60,17 +56,14 @@ public class GameStateController extends BaseViewCleanup {
     @FXML public VBox leftArrowBox;
     @FXML public HBox bottomArrowBox;
 
-    @FXML public StackPane nextTreasurePane;
-    // todo rework
-    // @FXML public ImageView nextTreasure;
-    @FXML public Label nextTreasure;
+    @FXML public ImageView nextTreasureImage;
 
     @FXML public StackPane extraTileContainer;
     @FXML public Label extraTileTreasureLabel;
     @FXML public Label extraTileBonusLabel;
     @FXML public VBox extraTileWrapper;
     @FXML public ImageView extraTile;
-    // @FXML public Button rotateLeftButton;
+    @FXML public ImageView extraTileTreasure;
     @FXML public Button rotateRightButton;
 
     @FXML public VBox bonusBox;
@@ -171,8 +164,6 @@ public class GameStateController extends BaseViewCleanup {
 
         initSpareTile();
 
-        initGameGrid();
-
         ChangeListener<TurnState> turnStateChangeListener =
                 (observable, oldValue, newValue) -> {
                     initGameGrid();
@@ -189,7 +180,17 @@ public class GameStateController extends BaseViewCleanup {
 
         initGameTimer();
 
-        initUiScaling();
+        viewport.sceneProperty().addListener((obs, oldScene, newScene) -> {
+            if (newScene != null) {
+                // First pulse: attach
+                Platform.runLater(() -> {
+                    root.applyCss();
+                    root.layout(); // ensures layoutBounds valid now
+                    initUiScaling();   // sets up bindings only (no pref in lambdas)
+                    initGameGrid();    // builds grid once sizes are non-zero
+                });
+            }
+        });
     }
 
     private void initUiScaling() {
@@ -216,13 +217,15 @@ public class GameStateController extends BaseViewCleanup {
         playerTurnLabel.textProperty().unbind();
         playerTurnLabel.graphicProperty().unbind();
         idToPlayerLabel.values().forEach(l -> l.textProperty().unbind());
-        extraTileTreasureLabel.textProperty().unbind();
         extraTile.imageProperty().unbind();
         extraTile.rotateProperty().unbind();
+        extraTile.fitWidthProperty().unbind();
         rotateRightButton.visibleProperty().unbind();
 
-        nextTreasure.textProperty().unbind();
-
+        nextTreasureImage.imageProperty().unbind();
+        extraTileTreasure.fitWidthProperty().unbind();
+        extraTileTreasure.imageProperty().unbind();
+        extraTile.fitHeightProperty().unbind();
         bonusBox.visibleProperty().unbind();
         bonusBox.managedProperty().unbind();
 
@@ -473,7 +476,7 @@ public class GameStateController extends BaseViewCleanup {
                                             + ")";
                             if (playerState.isPlayerAiControlled()) playerStatusLabelString += " - (AI)";
                             return playerStatusLabelString;
-                        },        playerState.getPlayerInfo().get().isAiControlledProperty(),
+                        },playerState.getPlayerInfo().get().isAiControlledProperty(),
                         playerState.getTreasuresFound()));
 
     }
@@ -485,7 +488,7 @@ public class GameStateController extends BaseViewCleanup {
                         Bindings.createStringBinding(
                                 () -> {
                                     String prefix = isClient ? "Du: " : "";
-                                    System.out.println(prefix + player.getPlayerNameAsString());
+
                                     return prefix + player.getPlayerNameAsString();
                                 },
                                 player.getPlayerInfo()));
@@ -493,21 +496,9 @@ public class GameStateController extends BaseViewCleanup {
 
     private void initSpareTile() {
         extraTileWrapper.visibleProperty().set(true);
-        extraTileTreasureLabel.visibleProperty().set(true);
 
-        extraTileTreasureLabel
-                .textProperty()
-                .bind(
-                        Bindings.createStringBinding(
-                                () -> {
-                                    TileItem tile = gameViewModel.getSpareTileItem();
-                                    if (tile != null && tile.getTreasureItem() != null) {
-                                        return String.valueOf(tile.getTreasure().get().getId());
-                                    } else {
-                                        return "";
-                                    }
-                                },
-                                gameViewModel.getGameBoardItem().getSpareTileProperty()));
+
+
 
         extraTileBonusLabel.visibleProperty().set(true);
         extraTileBonusLabel
@@ -529,67 +520,17 @@ public class GameStateController extends BaseViewCleanup {
                     if (oldValue != null) {
                         oldValue.dispose();
                     }
-                    extraTile.imageProperty().unbind();
-                    extraTile.rotateProperty().unbind();
-                    // Add null check for newValue
                     if (newValue != null) {
-                        extraTile
-                                .imageProperty()
-                                .bind(
-                                        Bindings.createObjectBinding(
-                                                () -> newValue.getTileImage().get(),
-                                                gameViewModel.getSpareTileProperty(),
-                                                newValue.getRotation()));
-                        extraTile.rotateProperty().bindBidirectional(newValue.getRotation());
+                        bindSpareTileImage(newValue);
+                        bindSpareTileTreasureImage(newValue);
                     }
                 };
 
         gameViewModel.addListenerToSpareTileProperty(spareTileListener);
         if (gameViewModel.getSpareTileItem() != null) {
             TileItem currentTile = gameViewModel.getSpareTileItem();
-            extraTile
-                    .imageProperty()
-                    .bind(
-                            Bindings.createObjectBinding(
-                                    () -> currentTile.getTileImage().get(),
-                                    gameViewModel.getSpareTileProperty(),
-                                    currentTile.getRotation()));
-
-/*
-            DoubleBinding squareSize = Bindings.createDoubleBinding(
-                    () -> Math.min(extraTileWrapper.getWidth(), extraTileWrapper.getHeight() * 0.6),
-                    extraTileWrapper.widthProperty(),
-                    extraTileWrapper.heightProperty()
-            );
-
-            extraTile.fitWidthProperty().bind(squareSize);
-            extraTile.fitHeightProperty().bind(squareSize);
-
- */
-            //todo
-            /*
-            extraTile.setPreserveRatio(true);
-
-            DoubleBinding squareSize = Bindings.createDoubleBinding(
-                    () -> Math.min(rightSidebar.getWidth(), rightSidebar.getHeight()),
-                    rightSidebar.widthProperty(), rightSidebar.heightProperty()
-            );
-
-            extraTile.fitHeightProperty().bind(squareSize.divide(2));
-            extraTileWrapper.prefWidthProperty().bind(squareSize);
-            extraTileWrapper.prefHeightProperty().bind(squareSize);
-            extraTileWrapper.maxWidthProperty().bind(squareSize);
-            extraTileWrapper.maxHeightProperty().bind(squareSize);
-           // extraTileWrapper.heightProperty().bind()
-
-
-
-
-
- */
-            //todo end
-
-            extraTile.rotateProperty().bindBidirectional(currentTile.getRotation());
+            bindSpareTileImage(currentTile);
+            bindSpareTileTreasureImage(currentTile);
         }
 
         rotateRightButton
@@ -620,6 +561,48 @@ public class GameStateController extends BaseViewCleanup {
                     gameViewModel.getPendingRotationProperty().set(true);
                     gameViewModel.onRightRotationOfSpareTile();
                 });
+    }
+
+    private void bindSpareTileTreasureImage(TileItem currentTile) {
+        extraTileTreasure.fitWidthProperty().unbind();
+        extraTileTreasure.imageProperty().unbind();
+
+        if (!currentTile.hasTreasure()) {
+            extraTileTreasure.setVisible(false);
+            extraTileTreasure.setManaged(false);
+            return;
+        }
+
+
+        extraTileTreasure.setPreserveRatio(true);
+
+        extraTileTreasure.imageProperty().bind(
+                Bindings.createObjectBinding(
+                        () -> currentTile.getTreasureItem().getTreasureImage(),
+                        gameViewModel.getSpareTileProperty()));
+        extraTileTreasure.getStyleClass().add("treasure-image");
+
+        extraTileTreasure.setRotate(currentTile.getRotation().get().doubleValue());
+
+        extraTileTreasure.fitWidthProperty().bind(extraTileWrapper.widthProperty().multiply(0.2));
+        extraTileTreasure.setVisible(true);
+        extraTileTreasure.setManaged(true);
+    }
+
+    private void bindSpareTileImage(TileItem currentTile) {
+
+        extraTile.imageProperty().unbind();
+        extraTile.rotateProperty().unbind();
+        extraTile.fitWidthProperty().unbind();
+        extraTile.setPreserveRatio(true);
+        extraTile
+                .imageProperty()
+                .bind(
+                        Bindings.createObjectBinding(
+                                () -> currentTile.getTileImage().get(),
+                                gameViewModel.getSpareTileProperty(),
+                                currentTile.getRotation()));
+        extraTile.rotateProperty().bindBidirectional(currentTile.getRotation());
     }
 
     private void initGameGrid() {
@@ -693,12 +676,21 @@ public class GameStateController extends BaseViewCleanup {
 
                             cellContainer.getChildren().add(imageView);
 
-                            // todo use decicated treasure image
-                            //    ImageView treasureImage = new ImageView(new Image());
-                            if (tile.getTreasure().get() != null) {
-                                Label treasureNode =
-                                        tempLabelImplforTreasure(tile.getTreasure().get());
-                                cellContainer.getChildren().add(treasureNode);
+
+                            if (tile.hasTreasure()) {
+
+                                TreasureItem treasureItem = tile.getTreasureItem();
+                                ImageView treasureImage = new ImageView(treasureItem.getTreasureImage());
+                                treasureImage.setPreserveRatio(true);
+                                double scale = 0.4;
+
+                                treasureImage.fitWidthProperty().bind(cellContainer.widthProperty().multiply(scale));
+                                treasureImage.fitHeightProperty().bind(cellContainer.heightProperty().multiply(scale));
+                                treasureImage.setRotate(tile.getRotation().get().doubleValue());
+
+                                cellContainer.getChildren().add(treasureImage);
+
+
                             }
 
                             if (tile.getBonus().get() != null) {
@@ -720,15 +712,23 @@ public class GameStateController extends BaseViewCleanup {
                                             .findFirst();
                             if (playerStateItemOptional.isPresent()) {
                                 PlayerStateItem playerStateItem = playerStateItemOptional.get();
+
                                 PlayerColor playerColor =
                                         playerStateItem.getPlayerColor();
-                                Circle playerPawn =
-                                        new Circle(
-                                                10,
-                                                PlayerPawnUtils.mapPlayerColorToFxColor(
-                                                        playerColor));
-                                playerPawn.setOpacity(0.7);
-                                cellContainer.getChildren().add(playerPawn);
+
+
+                                ImageView playerImage = new ImageView();
+                                Image image = ImageResourceLoader.loadPlayerImage(playerColor);
+                                playerImage.setPreserveRatio(true);
+                                playerImage.setImage(image);
+                                ImageViewStyler.applyPlayerStylingToImageView(playerImage, playerColor);
+
+                                if(tile.hasTreasure()) offsetPlayerPawnOnTreasurePresence(tile, playerImage);
+                                double scale = 0.45;
+                                playerImage.fitWidthProperty().bind(cellContainer.widthProperty().multiply(scale));
+                                playerImage.fitHeightProperty().bind(cellContainer.heightProperty().multiply(scale));
+                                cellContainer.getChildren().add(playerImage);
+
                             }
 
                             markPlayerHomeBase(row, col, cellContainer);
@@ -739,28 +739,6 @@ public class GameStateController extends BaseViewCleanup {
                                         sendMoveOrBonusCommand(
                                                 finalRow, finalCol, playerStateItemOptional);
                                     });
-                            /*
-                                                       BooleanBinding isMyTurnAndMovePhase =
-                                                               Bindings.createBooleanBinding(
-                                                                       () -> {
-                                                                           return gameViewModel
-                                                                                           .getCurrentPlayerIdAsString()
-                                                                                           .equals(
-                                                                                                   gameViewModel
-                                                                                                           .getClientPlayer()
-                                                                                                           .getId())
-                                                                                   && (gameViewModel.getCurrentTurnState()
-                                                                                                   != null
-                                                                                           && gameViewModel
-                                                                                                   .getCurrentTurnState()
-                                                                                                   .equals(
-                                                                                                           TurnState
-                                                                                                                   .WAITING_FOR_MOVE))
-                                                                                   && !gameViewModel.isClientPlayerTimeout();
-                                                                       },
-                                                                       gameViewModel.getCurrentPlayerIdProperty());
-
-                            */
 
                             boardGrid.add(cellContainer, col, row);
                             cellContainer
@@ -778,7 +756,21 @@ public class GameStateController extends BaseViewCleanup {
                         }
                     }
                 };
-        JavaFXUtils.runOnFxThread(apply);
+        Platform.runLater(apply);
+        //JavaFXUtils.runOnFxThread(apply);
+    }
+
+    private void offsetPlayerPawnOnTreasurePresence(TileItem tile, ImageView playerImage) {
+        List<Direction> directions = tile.getDirections();
+        for( Direction direction : directions) {
+            if (Direction.DOWN.equals(direction)) continue;
+            switch (direction) {
+                case UP -> playerImage.setTranslateY(-30);
+                case LEFT -> playerImage.setTranslateX(-25);
+                case RIGHT -> playerImage.setTranslateX(25);
+            }
+            break;
+        }
     }
 
     private void markPlayerHomeBase(int row, int col, StackPane cellContainer) {
@@ -1087,14 +1079,14 @@ public class GameStateController extends BaseViewCleanup {
         }
     }
 
-    // todo rework
+
     private void initNextTreasure() {
-        nextTreasure
-                .textProperty()
-                .bind(
-                        Bindings.createStringBinding(
-                                gameViewModel::getNextTreasureNameAsString,
-                                gameViewModel.getNextTreasure()));
+        nextTreasureImage.imageProperty().bind(Bindings.createObjectBinding(
+                () -> gameViewModel.getNextTreasureImageProperty().get(),
+                        gameViewModel.getNextTreasureItemProperty()
+                ));
+
+
     }
 
     private Label tempLabelImplforTreasure(TreasureItem treasureItem) {
