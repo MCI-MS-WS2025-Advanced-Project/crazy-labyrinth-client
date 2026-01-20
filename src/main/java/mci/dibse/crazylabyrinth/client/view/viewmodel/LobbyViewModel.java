@@ -100,15 +100,15 @@ public class LobbyViewModel extends BaseViewModel
 
     public boolean isClientAdmin() {
         if (clientPlayer == null || lobbyStateItem == null) return false;
-        PlayerInfoItem clientPlayerInof =
+        Optional<PlayerInfoItem> clientPlayerInfo =
                 lobbyStateItem.getPlayerList().stream()
                         .filter(
                                 player -> {
                                     return player.getId().equals(clientPlayer.getId());
                                 })
-                        .findFirst()
-                        .orElseThrow();
-        return clientPlayerInof.getIsAdmin();
+                        .findFirst();
+        if(clientPlayerInfo.isPresent()) return clientPlayerInfo.get().getIsAdmin();
+        return false;
     }
 
     public boolean isDefaultBonusEnabled() {
