@@ -180,14 +180,18 @@ public class GameStateController extends BaseViewCleanup {
 
         initGameTimer();
 
+
+        // delay init of scaling & gamegrid until several pulse runs
         viewport.sceneProperty().addListener((obs, oldScene, newScene) -> {
             if (newScene != null) {
-                // First pulse: attach
+
                 Platform.runLater(() -> {
                     root.applyCss();
-                    root.layout(); // ensures layoutBounds valid now
-                    initUiScaling();   // sets up bindings only (no pref in lambdas)
-                    initGameGrid();    // builds grid once sizes are non-zero
+                    root.layout();
+                    Platform.runLater(() -> {
+                        initUiScaling();
+                        initGameGrid();
+                    });
                 });
             }
         });
@@ -671,7 +675,7 @@ public class GameStateController extends BaseViewCleanup {
 
                             imageView.fitWidthProperty().bind(cellContainer.widthProperty());
                             imageView.fitHeightProperty().bind(cellContainer.heightProperty());
-                            imageView.setPreserveRatio(false);
+                            imageView.setPreserveRatio(true);
 
                             cellContainer.getChildren().add(imageView);
 
