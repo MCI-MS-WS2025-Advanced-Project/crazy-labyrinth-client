@@ -462,7 +462,6 @@ public class GameStateController extends BaseViewCleanup {
     private void bindPlayerStatusLabel(Label statusLabel, PlayerStateItem playerState) {
         String maxAvailableTreasurePerPlayer =
                 String.valueOf(playerState.getRemainingTreasureCountAsInt());
-        int found = playerState.getTreasuresFound().size();
 
         statusLabel.textProperty().unbind();
         statusLabel.textProperty().bind(
@@ -470,7 +469,7 @@ public class GameStateController extends BaseViewCleanup {
                         () -> {
                             String playerStatusLabelString =
                                     "Schätze ("
-                                            + found
+                                            + playerState.getTreasuresFoundAsInt()
                                             + " / "
                                             + maxAvailableTreasurePerPlayer
                                             + ")";
