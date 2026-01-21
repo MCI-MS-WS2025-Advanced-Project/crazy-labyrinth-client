@@ -33,7 +33,6 @@ public abstract class BaseItem<G> implements ViewItem {
                 () -> {
                     G source = updateQueue.poll();
                     try {
-                        System.out.println("updating item from source: " + source);
                         updateItemFromSource(source);
                     } catch (Exception e) {
                         log.error("error updating item from source", e);

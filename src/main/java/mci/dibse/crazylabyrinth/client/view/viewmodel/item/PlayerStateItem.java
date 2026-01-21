@@ -86,6 +86,10 @@ public class PlayerStateItem extends BaseItem<PlayerState> {
         return Math.toIntExact(availableBonusTypes.stream().filter(type::equals).count());
     }
 
+    public int getTreasuresFoundAsInt() {
+        return treasuresFound.size();
+    }
+
     public boolean isPlayerAiControlled() {
         return playerInfo.get().getIsAiControlled();
     }
@@ -106,6 +110,7 @@ public class PlayerStateItem extends BaseItem<PlayerState> {
         this.currentPosition.get().updateFrom(source.getCurrentPosition());
         this.treasuresFound.addAll(notExistingTreasures);
         this.playerInfo.get().updateFrom(source.getPlayerInfo());
+
         this.remainingTreasureCount.set(source.getRemainingTreasureCount());
 
         List<AchievementType> achievements = Arrays.stream(source.getAchievements()).toList();
