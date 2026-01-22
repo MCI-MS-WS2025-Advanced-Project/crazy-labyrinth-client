@@ -17,6 +17,7 @@ import javafx.css.PseudoClass;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.Cursor;
 import javafx.scene.Group;
 import javafx.scene.control.Alert;
@@ -64,6 +65,8 @@ public class GameStateController extends BaseViewCleanup {
     @FXML public VBox extraTileWrapper;
     @FXML public ImageView extraTile;
     @FXML public ImageView extraTileTreasure;
+    @FXML public ImageView extraTileBonusImage;
+    @FXML public StackPane bonusBadge;
     @FXML public Button rotateRightButton;
 
     @FXML public VBox bonusBox;
@@ -79,6 +82,14 @@ public class GameStateController extends BaseViewCleanup {
     @FXML public HBox bonusPushFixedBox;
     @FXML public Label bonusPushFixedCount;
     @FXML public Button bonusPushFixedButton;
+    @FXML public StackPane swapBonusBadge;
+    @FXML public ImageView swapBonusImage;
+    @FXML public StackPane beamBonusBadge;
+    @FXML public ImageView beamBonusImage;
+    @FXML public StackPane pushTwiceBonusBadge;
+    @FXML public ImageView pushTwiceBonusImage;
+    @FXML public StackPane pushFixedBonusBadge;
+    @FXML public ImageView pushFixedBonusImage;
 
     @FXML public Label playerTurnLabel;
 
@@ -137,6 +148,7 @@ public class GameStateController extends BaseViewCleanup {
 
 
     private Map<BonusType, ChangeListener<Boolean>> bonusAvailableListeners = new HashMap<>();
+
 
     private IntegerProperty remainingGameTimer = new SimpleIntegerProperty();
     private Timeline gameTimeline;
@@ -283,6 +295,12 @@ public class GameStateController extends BaseViewCleanup {
                 .removeListener(bonusAvailableListeners.get(BonusType.PUSH_FIXED));
 
         gameCounterLabel.textProperty().unbind();
+
+        gameTimeline.stop();
+        gameTimeline = null;
+
+        turnTimeline.stop();
+        turnTimeline = null;
     }
 
     @EventListener
@@ -519,22 +537,6 @@ public class GameStateController extends BaseViewCleanup {
 
 
 
-
-        extraTileBonusLabel.visibleProperty().set(true);
-        extraTileBonusLabel
-                .textProperty()
-                .bind(
-                        Bindings.createStringBinding(
-                                () -> {
-                                    TileItem tile = gameViewModel.getSpareTileItem();
-                                    if (tile != null && tile.getBonusType() != null) {
-                                        return tile.getBonusType().getValue().toLowerCase();
-                                    } else {
-                                        return "";
-                                    }
-                                },
-                                gameViewModel.getGameBoardItem().getSpareTileProperty()));
-
         ChangeListener<TileItem> spareTileListener =
                 (obs, oldValue, newValue) -> {
                     if (oldValue != null) {
@@ -543,6 +545,7 @@ public class GameStateController extends BaseViewCleanup {
                     if (newValue != null) {
                         bindSpareTileImage(newValue);
                         bindSpareTileTreasureImage(newValue);
+                        bindSpareTileBonusImage(newValue);
                     }
                 };
 
@@ -551,6 +554,7 @@ public class GameStateController extends BaseViewCleanup {
             TileItem currentTile = gameViewModel.getSpareTileItem();
             bindSpareTileImage(currentTile);
             bindSpareTileTreasureImage(currentTile);
+            bindSpareTileBonusImage(currentTile);
         }
 
         rotateRightButton
@@ -583,6 +587,23 @@ public class GameStateController extends BaseViewCleanup {
                 });
     }
 
+    private void bindSpareTileBonusImage(TileItem currentTile) {
+        if (!currentTile.hasBonus()) {
+            bonusBadge.setVisible(false);
+            bonusBadge.setManaged(false);
+            extraTileBonusImage.setVisible(false);
+            extraTileBonusImage.setManaged(false);
+            return;
+        }
+        Image image = ImageResourceLoader.loadImage(currentTile.getBonusType());
+        extraTileBonusImage.setImage(image);
+
+        bonusBadge.setVisible(true);
+        bonusBadge.setManaged(true);
+        extraTileBonusImage.setVisible(true);
+        extraTileBonusImage.setManaged(true);
+    }
+
     private void bindSpareTileTreasureImage(TileItem currentTile) {
         extraTileTreasure.fitWidthProperty().unbind();
         extraTileTreasure.imageProperty().unbind();
@@ -592,7 +613,6 @@ public class GameStateController extends BaseViewCleanup {
             extraTileTreasure.setManaged(false);
             return;
         }
-
 
         extraTileTreasure.setPreserveRatio(true);
 
@@ -715,8 +735,9 @@ public class GameStateController extends BaseViewCleanup {
 
                             }
 
-                            if (tile.getBonus().get() != null) {
-                                Label bonusNode = tempLabelImplforBonus(tile.getBonus().get());
+                            if (tile.hasBonus()) {
+                                //Label bonusNode = tempLabelImplforBonus(tile.getBonus().get());
+                                StackPane bonusNode = getBonusNodeForTile(tile.getBonusType());
                                 cellContainer.getChildren().add(bonusNode);
                             }
 
@@ -740,7 +761,7 @@ public class GameStateController extends BaseViewCleanup {
 
 
                                 ImageView playerImage = new ImageView();
-                                Image image = ImageResourceLoader.loadPlayerImage(playerColor);
+                                Image image = ImageResourceLoader.loadImage(playerColor);
                                 playerImage.setPreserveRatio(true);
                                 playerImage.setImage(image);
                                 ImageViewStyler.applyPlayerStylingToImageView(playerImage, playerColor);
@@ -1112,27 +1133,29 @@ public class GameStateController extends BaseViewCleanup {
 
     }
 
-    private Label tempLabelImplforTreasure(TreasureItem treasureItem) {
-        String treasureId = String.valueOf(treasureItem.getId());
-        Label treasureNode = new Label(treasureId);
-        // Style it to look clear on top of the tile
-        treasureNode.setStyle(
-                "-fx-font-size: 24px; "
-                        + "-fx-font-weight: bold; "
-                        + "-fx-text-fill: white; "
-                        + "-fx-effect: dropshadow(three-pass-box, black, 10, 0, 0, 0);");
-        return treasureNode;
-    }
 
-    private Label tempLabelImplforBonus(BonusType bonusType) {
-        String bonusName = bonusType.name().toLowerCase();
-        Label bonusNode = new Label(bonusName);
-        bonusNode.setTranslateY(-20);
-        bonusNode.setStyle(
-                "-fx-font-size: 10px; "
-                        + "-fx-text-fill: black; "
-                        + "-fx-effect: dropshadow(three-pass-box, white, 10, 0, 0, 0);");
-        return bonusNode;
+    private StackPane getBonusNodeForTile(BonusType bonusType) {
+       Image bonus =  ImageResourceLoader.loadImage(bonusType);
+       ImageView bonusImage = new ImageView(bonus);
+        bonusImage.setFitWidth(18);
+        bonusImage.setFitHeight(18);
+        bonusImage.setPreserveRatio(false); // ensure 30x30, no letterbox
+        Circle clip = new Circle(9, 9, 9);
+
+        bonusImage.setClip(clip);
+
+        // visible border:
+        Circle border = new Circle(10, 10, 10);
+        border.setFill(Color.web("#fffbd5"));
+        border.setStroke(Color.BLACK);
+        border.setStrokeWidth(1);
+
+        StackPane bonusBadge = new StackPane(border, bonusImage);
+        bonusBadge.setPrefSize(20, 20);
+        bonusBadge.setMaxSize(Region.USE_PREF_SIZE, Region.USE_PREF_SIZE);
+        StackPane.setMargin(bonusBadge, new Insets(2, 2, 0, 0));
+        StackPane.setAlignment(bonusBadge, Pos.TOP_RIGHT);
+        return bonusBadge;
     }
 
     private void initGameCounter() {
@@ -1159,6 +1182,8 @@ public class GameStateController extends BaseViewCleanup {
         bonusPushFixedBox.setVisible(false);
         bonusPushFixedBox.setManaged(false);
         bindRowWidth(bonusPushFixedBox);
+
+        setupBonusImages();
 
         BooleanBinding anyVisible =
                 bonusSwapBox
@@ -1313,6 +1338,13 @@ public class GameStateController extends BaseViewCleanup {
                 };
         bonusPushFixedButton.disableProperty().addListener(bonusPushFixedButtonAvailableListener);
         bonusAvailableListeners.put(BonusType.PUSH_FIXED, bonusPushFixedButtonAvailableListener);
+    }
+
+    private void setupBonusImages() {
+        swapBonusImage.setImage(ImageResourceLoader.loadImage(BonusType.SWAP));
+        beamBonusImage.setImage(ImageResourceLoader.loadImage(BonusType.BEAM));
+        pushTwiceBonusImage.setImage(ImageResourceLoader.loadImage(BonusType.PUSH_TWICE));
+        pushFixedBonusImage.setImage(ImageResourceLoader.loadImage(BonusType.PUSH_FIXED));
     }
 
     private int getAvailableBonusCountForTypeAndClient(BonusType type) {

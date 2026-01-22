@@ -17,7 +17,7 @@ public class TreasureItem extends BaseItem<Treasure> {
     public TreasureItem(Treasure source) {
         id = source.getId();
         name = source.getName();
-        JavaFXUtils.runOnFxThread(() -> treasureImageProperty.set(ImageResourceLoader.loadTreasureImage(id)));
+        JavaFXUtils.runOnFxThread(() -> treasureImageProperty.set(ImageResourceLoader.loadImage(id)));
     }
 
     public Image getTreasureImage() {

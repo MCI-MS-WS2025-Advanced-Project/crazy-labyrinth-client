@@ -182,6 +182,17 @@
     -fx-font-weight: 600;
 }
 
+.bonus-label-image {
+    -fx-fit-height: 14;
+    -fx-fit-width: 14;
+}
+
+.bonus-badge-circle {
+    -fx-fill: #fffbd5;     /* beige */
+    -fx-stroke: black;
+    -fx-stroke-width: 1;
+}
+
 .count-pill {
     /*-fx-alignment: CENTER;*/
     -fx-padding: 2 8;

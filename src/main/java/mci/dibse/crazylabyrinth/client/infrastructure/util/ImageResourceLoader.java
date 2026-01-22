@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import labyrinth.contracts.models.BonusType;
 import labyrinth.contracts.models.Direction;
 import labyrinth.contracts.models.PlayerColor;
 import lombok.extern.slf4j.Slf4j;
@@ -16,9 +17,6 @@ public class ImageResourceLoader {
 
     private final static String POSTFIX = ".png";
 
-    private static final String UP_DOWN = "I";
-    private static final String UP_RIGHT = "L";
-    private static final String UP_DOWN_LEFT = "T";
 
     private static final String TILE_IMAGES_PATH = "/tiles/";
     private static final Map<String, Image> imageTileCache = new HashMap<>();
@@ -36,103 +34,6 @@ public class ImageResourceLoader {
     private static final String BONI_IMAGES_PATH = "/boni/";
     private static final Map<String, Image> imageBoniCache = new HashMap<>();
 
-    public static Image loadImageForDirection(List<Direction> direction) {
-        direction.sort(Comparator.comparingInt(Direction::ordinal));
-        return switch (direction.size()) {
-            case 2 -> {
-                if (direction.contains(Direction.UP) && direction.contains(Direction.DOWN)) {
-                    yield loadImage(UP_DOWN, IMAGE_TYPE.TILE);
-                } else if (direction.contains(Direction.LEFT)
-                        && direction.contains(Direction.RIGHT)) {
-                    yield loadImage(UP_DOWN, IMAGE_TYPE.TILE);
-                } else if ((direction.contains(Direction.UP)
-                        && direction.contains(Direction.RIGHT))) {
-                    yield loadImage(UP_RIGHT, IMAGE_TYPE.TILE);
-                } else if (direction.contains(Direction.DOWN)
-                        && direction.contains(Direction.LEFT)) {
-                    yield loadImage(UP_RIGHT, IMAGE_TYPE.TILE);
-                } else if (direction.contains(Direction.UP) && direction.contains(Direction.LEFT)) {
-                    yield loadImage(UP_RIGHT, IMAGE_TYPE.TILE);
-                } else if (direction.contains(Direction.DOWN)
-                        && direction.contains(Direction.RIGHT)) {
-                    yield loadImage(UP_RIGHT, IMAGE_TYPE.TILE);
-                } else {
-                    throw new IllegalStateException("Unexpected directions: " + direction);
-                }
-            }
-            case 3 -> {
-                if (direction.contains(Direction.UP)
-                        && direction.contains(Direction.DOWN)
-                        && direction.contains(Direction.LEFT)) {
-                    yield loadImage(UP_DOWN_LEFT, IMAGE_TYPE.TILE);
-                } else if (direction.contains(Direction.UP)
-                        && direction.contains(Direction.DOWN)
-                        && direction.contains(Direction.RIGHT)) {
-                    yield loadImage(UP_DOWN_LEFT, IMAGE_TYPE.TILE);
-                } else if (direction.contains(Direction.LEFT)
-                        && direction.contains(Direction.RIGHT)
-                        && direction.contains(Direction.UP)) {
-                    yield loadImage(UP_DOWN_LEFT, IMAGE_TYPE.TILE);
-                } else if (direction.contains(Direction.LEFT)
-                        && direction.contains(Direction.RIGHT)
-                        && direction.contains(Direction.DOWN)) {
-                    yield loadImage(UP_DOWN_LEFT, IMAGE_TYPE.TILE);
-                } else {
-                    throw new IllegalStateException("Unexpected directions: " + direction);
-                }
-            }
-            default -> throw new IllegalStateException("Unexpected value: " + direction.size());
-        };
-    }
-
-    public static Number getRotationAngleForDirection(List<Direction> direction) {
-        direction.sort(Comparator.comparingInt(Direction::ordinal));
-        return switch (direction.size()) {
-            case 2 -> {
-                if (direction.contains(Direction.UP) && direction.contains(Direction.DOWN)) {
-                    yield 0;
-                } else if (direction.contains(Direction.LEFT)
-                        && direction.contains(Direction.RIGHT)) {
-                    yield 90;
-                } else if ((direction.contains(Direction.UP)
-                        && direction.contains(Direction.RIGHT))) {
-                    yield 0;
-                } else if (direction.contains(Direction.DOWN)
-                        && direction.contains(Direction.LEFT)) {
-                    yield 180;
-                } else if (direction.contains(Direction.UP) && direction.contains(Direction.LEFT)) {
-                    yield -90;
-                } else if (direction.contains(Direction.DOWN)
-                        && direction.contains(Direction.RIGHT)) {
-                    yield 90;
-                } else {
-                    throw new IllegalStateException("Unexpected directions: " + direction);
-                }
-            }
-            case 3 -> {
-                if (direction.contains(Direction.UP)
-                        && direction.contains(Direction.DOWN)
-                        && direction.contains(Direction.LEFT)) {
-                    yield 0;
-                } else if (direction.contains(Direction.UP)
-                        && direction.contains(Direction.DOWN)
-                        && direction.contains(Direction.RIGHT)) {
-                    yield 180;
-                } else if (direction.contains(Direction.LEFT)
-                        && direction.contains(Direction.RIGHT)
-                        && direction.contains(Direction.UP)) {
-                    yield 90;
-                } else if (direction.contains(Direction.LEFT)
-                        && direction.contains(Direction.RIGHT)
-                        && direction.contains(Direction.DOWN)) {
-                    yield -90;
-                } else {
-                    throw new IllegalStateException("Unexpected directions: " + direction);
-                }
-            }
-            default -> throw new IllegalStateException("Unexpected value: " + direction.size());
-        };
-    }
 
 
     public static ImageView createImageViewAndRotate(Image image, double rotationAngle) {
@@ -143,23 +44,26 @@ public class ImageResourceLoader {
         return imageView;
     }
 
-    public static void clearCache() {
-        imageTileCache.clear();
-        log.debug("Image cache cleared");
+
+
+    public static Image loadImage(PlayerColor color) {
+        String name = FileNameMapper.loadPlayerName(color);
+       return loadImage(name, IMAGE_TYPE.PLAYER);
     }
 
-    public static Image loadPlayerImage(PlayerColor color) {
-        return switch (color) {
-            case RED -> loadImage("player_red", IMAGE_TYPE.PLAYER);
-            case BLUE -> loadImage("player_blue", IMAGE_TYPE.PLAYER);
-            case GREEN -> loadImage("player_green", IMAGE_TYPE.PLAYER);
-            case YELLOW -> loadImage("player_yellow", IMAGE_TYPE.PLAYER);
-        };
-    }
-
-    public static Image loadTreasureImage(int id) {
+    public static Image loadImage(int id) {
         String name = FileNameMapper.getTreasureName(id);
         return loadImage(name, IMAGE_TYPE.TREASURE);
+    }
+
+    public static Image loadImage(List<Direction> direction) {
+        String name = FileNameMapper.loadImageNameForDirection(direction);
+        return loadImage(name, IMAGE_TYPE.TILE);
+    }
+
+    public static Image loadImage(BonusType bonusType) {
+        String name = FileNameMapper.getBoniName(bonusType);
+        return loadImage(name, IMAGE_TYPE.BONI);
     }
 
 
@@ -182,10 +86,6 @@ public class ImageResourceLoader {
             case PLAYER -> {
                 cache = imagePlayerCache;
                 resourcePath = PLAYERS_IMAGES_PATH;
-            }
-            case HOME -> {
-                cache = imageHomeCache;
-                resourcePath = HOME_IMAGES_PATH;
             }
             case BONI -> {
                 cache = imageBoniCache;
@@ -212,9 +112,8 @@ public class ImageResourceLoader {
                         return null;
                     }
                 });
-
-        return image;
-        //return copyImage(image);
+       // return image;
+        return copyImage(image);
     }
 
     /**
@@ -237,6 +136,6 @@ public class ImageResourceLoader {
 
 
     private enum IMAGE_TYPE {
-        TILE, TREASURE, PLAYER, BONI, HOME
+        TILE, TREASURE, PLAYER, BONI
     }
 }
