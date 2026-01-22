@@ -33,6 +33,7 @@ import javafx.scene.shape.StrokeType;
 import javafx.util.Duration;
 import labyrinth.contracts.models.*;
 import lombok.extern.slf4j.Slf4j;
+import mci.dibse.crazylabyrinth.client.NavigationController;
 import mci.dibse.crazylabyrinth.client.domain.context.PushTileCommandRecord;
 import mci.dibse.crazylabyrinth.client.infrastructure.util.*;
 import mci.dibse.crazylabyrinth.client.service.GameServerSocketService;
@@ -50,6 +51,10 @@ import org.springframework.stereotype.Component;
 @Slf4j
 public class GameStateController extends BaseViewCleanup {
 
+
+    private final NavigationController navigationController;
+    @FXML public StackPane bottomBar;
+    @FXML public StackPane topBar;
     @FXML public BorderPane gameContainer;
     @FXML public GridPane boardGrid;
     @FXML public HBox topArrowBox;
@@ -125,6 +130,9 @@ public class GameStateController extends BaseViewCleanup {
     @FXML public StackPane viewport;
     @FXML public Group contentGroup;
     @FXML public GridPane mainLayoutGrid;
+    @FXML public ColumnConstraints leftGameGridColomn;
+    @FXML public ColumnConstraints middleGameGridColomn;
+    @FXML public ColumnConstraints rightGameGridColomn;
 
 
     private static final int GAP_BETWEEN_TILES = 2;
@@ -147,6 +155,7 @@ public class GameStateController extends BaseViewCleanup {
     private final Map<String, Label> idToPlayerStatusLabel = new HashMap<>();
 
 
+
     private Map<BonusType, ChangeListener<Boolean>> bonusAvailableListeners = new HashMap<>();
 
 
@@ -163,11 +172,12 @@ public class GameStateController extends BaseViewCleanup {
     private final AnimationService animationService;
 
     @Autowired
-    public GameStateController(NavigationStateViewModel vm, GameViewModel gameViewModel, ScreenResolutionProperties screenResolutionProperties) {
+    public GameStateController(NavigationStateViewModel vm, GameViewModel gameViewModel, ScreenResolutionProperties screenResolutionProperties, NavigationController navigationController) {
         super(vm);
         this.gameViewModel = gameViewModel;
         this.screenResolutionProperties = screenResolutionProperties;
         this.animationService = new AnimationService();
+        this.navigationController = navigationController;
     }
 
 
@@ -204,14 +214,17 @@ public class GameStateController extends BaseViewCleanup {
 
         initGameTimer();
 
-
+        initViewToRatio();
         // delay init of scaling & gamegrid until several pulse runs
         viewport.sceneProperty().addListener((obs, oldScene, newScene) -> {
             if (newScene != null) {
-
                 Platform.runLater(() -> {
                     root.applyCss();
+                    root.setMaxSize(screenResolutionProperties.getWidth(), screenResolutionProperties.getScreenHeight());
+                    root.setPrefSize(screenResolutionProperties.getWidth(), screenResolutionProperties.getScreenHeight());
                     root.layout();
+                    viewport.layout();
+                    centerStackPane.layout();
                     Platform.runLater(() -> {
                         initUiScaling();
                         initGameGrid();
@@ -220,6 +233,8 @@ public class GameStateController extends BaseViewCleanup {
             }
         });
     }
+
+
 
     private void initUiScaling() {
             ScreenResolutionProperties.ResolutionProperties props = new ScreenResolutionProperties.ResolutionProperties(root,
@@ -645,12 +660,35 @@ public class GameStateController extends BaseViewCleanup {
         extraTile.rotateProperty().bindBidirectional(currentTile.getRotation());
     }
 
+
+    private void initViewToRatio() {
+        Ratio screenRation = screenResolutionProperties.getAspectRatio();
+        switch (screenRation) {
+            case FOUR_THREE -> {
+                leftGameGridColomn.setPercentWidth(18);
+                middleGameGridColomn.setPercentWidth(64);
+                rightGameGridColomn.setPercentWidth(18);
+                rightSidebar.getStyleClass().add("sidebar-right");
+                leftSidebar.getStyleClass().add("left-sidebar");
+            }
+            case SIXTEEN_NINE -> {
+                leftGameGridColomn.setPercentWidth(23);
+                middleGameGridColomn.setPercentWidth(54);
+                rightGameGridColomn.setPercentWidth(23);
+                rightSidebar.getStyleClass().add("sidebar-right-wide");
+                leftSidebar.getStyleClass().add("sidebar-left-wide");
+            }
+        }
+    }
+
     private void initGameGrid() {
         GameBoardItem gameBoardItem = gameViewModel.getGameBoardItem();
         int rows = gameBoardItem.getRows();
         int cols = gameBoardItem.getCols();
         Runnable apply =
                 () -> {
+
+
                     boardGrid.getChildren().clear();
                     boardGrid.getColumnConstraints().clear();
                     boardGrid.getRowConstraints().clear();
@@ -664,16 +702,23 @@ public class GameStateController extends BaseViewCleanup {
 
                     idToPlayerPawn.clear();
 
+
                     if (gameContainer.getParent() instanceof Region parent) {
+
 
                         var squareSize =
                                 Bindings.min(parent.widthProperty(), parent.heightProperty());
 
 
-                        gameContainer.minWidthProperty().bind(squareSize);
-                        gameContainer.minHeightProperty().bind(squareSize);
-                        gameContainer.maxWidthProperty().bind(squareSize);
-                        gameContainer.maxHeightProperty().bind(squareSize);
+                        var squareSizeContainer =
+                                Bindings.min(parent.widthProperty(), parent.heightProperty());
+
+
+                         gameContainer.prefWidthProperty().bind(squareSizeContainer);
+                 //      gameContainer.minWidthProperty().set(squareSizeContainer.doubleValue());
+                 //       gameContainer.minHeightProperty().set(squareSizeContainer.doubleValue());
+                         gameContainer.maxWidthProperty().set(squareSizeContainer.doubleValue());
+                         gameContainer.maxHeightProperty().set(squareSizeContainer.doubleValue());
 
                     }
 
@@ -799,6 +844,7 @@ public class GameStateController extends BaseViewCleanup {
                                                     .otherwise(Cursor.DEFAULT));
                         }
                     }
+
                 };
         Platform.runLater(apply);
         //JavaFXUtils.runOnFxThread(apply);

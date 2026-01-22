@@ -15,9 +15,12 @@ import javafx.scene.control.*;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.shape.Rectangle;
+import javafx.stage.Stage;
+import mci.dibse.crazylabyrinth.client.NavigationController;
 import mci.dibse.crazylabyrinth.client.domain.model.record.GameInfoRecord;
 import mci.dibse.crazylabyrinth.client.infrastructure.util.JavaFXUtils;
 import mci.dibse.crazylabyrinth.client.infrastructure.util.ScreenResolutionProperties;
+import mci.dibse.crazylabyrinth.client.service.PlayerConnectedAckListener;
 import mci.dibse.crazylabyrinth.client.view.viewmodel.GameServerDashboardViewModel;
 import mci.dibse.crazylabyrinth.client.view.viewmodel.item.GameServerItem;
 import mci.dibse.crazylabyrinth.client.view.viewmodel.navigation.NavigationStateViewModel;
@@ -33,6 +36,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class GameServerDashboardController extends BaseViewCleanup {
 
+    private final NavigationController navigationController;
     @FXML public Label statusLabel;
     @FXML public Button refreshButton;
     @FXML public CheckBox showOnlyJoinable;
@@ -71,10 +75,11 @@ public class GameServerDashboardController extends BaseViewCleanup {
 
     @Autowired
     public GameServerDashboardController(
-            GameServerDashboardViewModel vm, NavigationStateViewModel navState, ScreenResolutionProperties screenResolutionProperties) {
+            GameServerDashboardViewModel vm, NavigationStateViewModel navState, ScreenResolutionProperties screenResolutionProperties, NavigationController navigationController) {
         super(navState);
         this.viewModel = vm;
         this.screenResolutionProperties = screenResolutionProperties;
+        this.navigationController = navigationController;
     }
 
     @FXML
@@ -87,11 +92,10 @@ public class GameServerDashboardController extends BaseViewCleanup {
         viewModel.refreshServerList();
         viewport.sceneProperty().addListener((obs, oldScene, newScene) -> {
             if (newScene != null) {
-                // First pulse: attach
                 Platform.runLater(() -> {
                     root.applyCss();
-                    root.layout(); // ensures layoutBounds valid now
-                    initUiScaling();   // sets up bindings only (no pref in lambdas)
+                    root.layout();
+                    initUiScaling();
                 });
             }
         });

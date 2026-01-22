@@ -32,7 +32,6 @@ import org.springframework.stereotype.Component;
 @Slf4j
 public class NavigationController {
 
-
     private boolean startUp = true;
 
     private static final String MAIN_VIEW = "gameServerDashboard.fxml";
@@ -52,13 +51,12 @@ public class NavigationController {
         this.navState = navState;
         this.viewLoader = viewLoader;
         this.screenResolutionProperties = screenResolutionProperties;
+
     }
 
     @PostConstruct
     public void init() {
         navState.getCurrentScreenProperty().addListener(navListener);
-
-
     }
 
     private final ChangeListener<NavigationStateViewModel.ScreenId> navListener =
@@ -69,15 +67,17 @@ public class NavigationController {
             };
 
     public void showMainScreen() {
+        log.debug("Showing main screen...");
+        screenResolutionProperties.setPrimaryStage(primaryStage);
+        setStageMinMaxSizes();
         showScreen(NavigationStateViewModel.ScreenId.MAIN);
-        setStageMinMaxSizes(null);
     }
 
     private void showScreen(NavigationStateViewModel.ScreenId newScreen) {
+        log.debug("Showing main screen... {}", newScreen.name());
         String viewFile = mapScreenIdToFile(newScreen);
         try {
             Parent mainRoot = viewLoader.loadFXML(viewFile);
-         //   setStageMinMaxSizes(newScreen);
             setUpStageAndScene(newScreen, mainRoot);
         } catch (IOException | IllegalArgumentException e) {
             throw new RuntimeException(e);
@@ -88,11 +88,9 @@ public class NavigationController {
         boolean ismaximized = primaryStage.isMaximized();
         boolean isFullScreen = primaryStage.isFullScreen();
 
+
         double prevWidth = primaryStage.getWidth();
         double prevHeight = primaryStage.getHeight();
-
-        primaryStage.setWidth(prevWidth);
-        primaryStage.setHeight(prevHeight);
 
         Scene scene = new Scene(mainRoot);
         setupFullScreen(scene);
@@ -101,6 +99,10 @@ public class NavigationController {
         primaryStage.setTitle("The Amazing Labyrinth");
         primaryStage.setFullScreen(isFullScreen);
         primaryStage.setMaximized(ismaximized);
+
+
+        primaryStage.setWidth(prevWidth);
+        primaryStage.setHeight(prevHeight);
         primaryStage.show();
     }
 
@@ -113,15 +115,15 @@ public class NavigationController {
         };
     }
 
-    private void setStageMinMaxSizes(NavigationStateViewModel.ScreenId newScreen) {
+    private void setStageMinMaxSizes() {
         primaryStage.setMinWidth(screenResolutionProperties.getMinViewWidth());
         primaryStage.setMinHeight(screenResolutionProperties.getMinViewHeight());
 
         if(!startUp) return;
         startUp = false;
+        log.debug("Setting stage w/h sizes to: {}x{}", screenResolutionProperties.getWidth(), screenResolutionProperties.getHeight());
         primaryStage.setWidth(screenResolutionProperties.getWidth());
         primaryStage.setHeight(screenResolutionProperties.getHeight());
-
     }
 
     private void setupFullScreen(Scene scene) {
