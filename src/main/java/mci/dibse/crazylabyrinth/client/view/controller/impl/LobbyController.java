@@ -9,6 +9,7 @@ import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
 import javafx.beans.property.*;
 import javafx.beans.value.ChangeListener;
+import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.collections.ObservableList;
@@ -30,7 +31,10 @@ import labyrinth.contracts.models.*;
 import lombok.extern.slf4j.Slf4j;
 import labyrinth.contracts.models.RankingEntry;
 import mci.dibse.crazylabyrinth.client.domain.context.ApplicationEvents;
+import mci.dibse.crazylabyrinth.client.domain.model.enums.Theme;
 import mci.dibse.crazylabyrinth.client.domain.model.record.StartGameRecord;
+import mci.dibse.crazylabyrinth.client.infrastructure.util.FileNameMapper;
+import mci.dibse.crazylabyrinth.client.infrastructure.util.ImageResourceLoader;
 import mci.dibse.crazylabyrinth.client.infrastructure.util.JavaFXUtils;
 import mci.dibse.crazylabyrinth.client.infrastructure.util.ScreenResolutionProperties;
 import mci.dibse.crazylabyrinth.client.service.AchievementService;
@@ -82,10 +86,13 @@ public class LobbyController extends BaseViewCleanup {
     @FXML public BorderPane root;
 
     // Admin Stuff
+
+
     @FXML public CheckBox bonusEnabledCheck;
     @FXML public ComboBox<String> boardSizeCombo;
     @FXML public Spinner<Integer> treasureCardsSpinner;
     @FXML private Button startGameButton;
+    @FXML public ComboBox<Theme> boardTheme;
 
     @FXML public Label countdown;
     @FXML public HBox countDownBox;
@@ -189,6 +196,8 @@ public class LobbyController extends BaseViewCleanup {
 
         setupResultsTable();
 
+        setupThemeComboBox();
+
         viewport.sceneProperty().addListener((obs, oldScene, newScene) -> {
             if (newScene != null) {
                 // First pulse: attach
@@ -200,6 +209,8 @@ public class LobbyController extends BaseViewCleanup {
             }
         });
     }
+
+
 
     private void initUiScaling() {
         ScreenResolutionProperties.ResolutionProperties props = new ScreenResolutionProperties.ResolutionProperties(root,
@@ -290,9 +301,10 @@ public class LobbyController extends BaseViewCleanup {
         pause.setOnFinished(e -> isStartButtonLocked.set(false));
         pause.play();
         cancelCountdown();
-
+        setThemeForGameBoard();
         startGame();
     }
+
 
     @EventListener
     public void handleDisconnectEvent(ApplicationEvents event) {
@@ -462,7 +474,32 @@ public class LobbyController extends BaseViewCleanup {
                         });
     }
 
-    private void startGame() {
+    private void setupThemeComboBox() {
+        boardTheme.setItems(FXCollections.observableArrayList(Theme.values()));
+        boardTheme.getSelectionModel().select(Theme.RUNEHAVEN_LABYRINTH);
+        boardTheme.setCellFactory(cb -> new ListCell<Theme>() {
+            @Override
+            protected void updateItem(Theme item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(null);
+                } else {
+                    setText(item.getDisplayName());
+                }
+            }
+        });
+        boardTheme.setButtonCell(new ListCell<Theme>() {
+            @Override
+            protected void updateItem(Theme item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(empty || item == null ? null : item.getDisplayName());
+            }
+        });
+
+    }
+
+
+        private void startGame() {
         StartGameRecord gameStartRecord = gatherStartGameData();
         lobbyViewModel.startGame(gameStartRecord);
     }
@@ -551,6 +588,12 @@ public class LobbyController extends BaseViewCleanup {
                 })
                 .collect(Collectors.joining(", "));
     }
+
+    private void setThemeForGameBoard() {
+        Theme selectedTheme = boardTheme.getSelectionModel().getSelectedItem();
+        FileNameMapper.setTheme(selectedTheme);
+    }
+
 
     /*
     private Node createAchievementGraphicForPlayer(RankingEntry entry) {

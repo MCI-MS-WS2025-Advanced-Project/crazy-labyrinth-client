@@ -93,6 +93,11 @@
                     </HBox>
                 </VBox>
 
+                <VBox spacing="8">
+                    <Label text="Spielfeld Theme" styleClass="setting-label"/>
+                    <ComboBox fx:id="boardTheme" promptText="Spielfeld wählen" maxWidth="180" style=""/>
+                </VBox>
+
                 <Separator/>
                 <VBox alignment="CENTER">
                     <Button fx:id="startGameButton" onAction="#onStartButtonClick"
