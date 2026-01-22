@@ -74,11 +74,10 @@
                 <rowConstraints>
                     <RowConstraints vgrow="SOMETIMES" />
                 </rowConstraints>
-
                 <!-- LEFT SIDEBAR -->
                 <VBox fx:id="leftSidebar" spacing="12"  GridPane.columnIndex="0">
                     <!-- ... content from your old <left> section ... -->
-                    <VBox spacing="12" alignment="TOP_CENTER" styleClass="card">
+                    <VBox spacing="12" alignment="TOP_CENTER" styleClass="card" style="-fx-padding: 10 25 10 25;" >
                         <Label text="Nächster Schatz"  styleClass="section-header"/>
                         <StackPane fx:id="nextTreasurePane" styleClass="card,compact-card">
                             <!--Label fx:id="nextTreasure" styleClass="value-label"/ -->

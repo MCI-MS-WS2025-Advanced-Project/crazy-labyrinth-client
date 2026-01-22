@@ -33,10 +33,7 @@ import labyrinth.contracts.models.RankingEntry;
 import mci.dibse.crazylabyrinth.client.domain.context.ApplicationEvents;
 import mci.dibse.crazylabyrinth.client.domain.model.enums.Theme;
 import mci.dibse.crazylabyrinth.client.domain.model.record.StartGameRecord;
-import mci.dibse.crazylabyrinth.client.infrastructure.util.FileNameMapper;
-import mci.dibse.crazylabyrinth.client.infrastructure.util.ImageResourceLoader;
-import mci.dibse.crazylabyrinth.client.infrastructure.util.JavaFXUtils;
-import mci.dibse.crazylabyrinth.client.infrastructure.util.ScreenResolutionProperties;
+import mci.dibse.crazylabyrinth.client.infrastructure.util.*;
 import mci.dibse.crazylabyrinth.client.service.AchievementService;
 import mci.dibse.crazylabyrinth.client.view.viewmodel.GameViewModel;
 import mci.dibse.crazylabyrinth.client.view.viewmodel.LobbyViewModel;
@@ -79,6 +76,8 @@ public class LobbyController extends BaseViewCleanup {
     @FXML public TableColumn<RankingEntry, String> resultScoreColumn;
     @FXML public TableColumn<RankingEntry, RankingEntry> achievements;
     @FXML private ListView<String> playerList;
+    @FXML public VBox leftBar;
+    @FXML public VBox rightBar;
 
     @FXML public StackPane viewport;
     @FXML public Rectangle rootClip;
@@ -138,6 +137,7 @@ public class LobbyController extends BaseViewCleanup {
     @FXML
     public void initialize() {
 
+        initViewToRatio();
 
         playerTable.setItems(lobbyViewModel.getPlayersListProperty());
 
@@ -211,6 +211,19 @@ public class LobbyController extends BaseViewCleanup {
         });
     }
 
+    private void initViewToRatio() {
+        Ratio ratio = screenResolutionProperties.getAspectRatio();
+        switch (ratio) {
+            case FOUR_THREE -> {
+                leftBar.setPrefWidth(225);
+                 rightBar.setPrefWidth(200);
+            }
+            case SIXTEEN_NINE -> {
+                leftBar.setPrefWidth(250);
+                rightBar.setPrefWidth(250);
+            }
+        }
+    }
 
 
     private void initUiScaling() {
