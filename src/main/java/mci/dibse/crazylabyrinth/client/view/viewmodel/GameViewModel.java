@@ -21,6 +21,7 @@ import mci.dibse.crazylabyrinth.client.domain.context.ApplicationEvents;
 import mci.dibse.crazylabyrinth.client.domain.context.PushTileCommandRecord;
 import mci.dibse.crazylabyrinth.client.domain.model.ClientPlayer;
 import mci.dibse.crazylabyrinth.client.infrastructure.exceptions.GeneralUiException;
+import mci.dibse.crazylabyrinth.client.infrastructure.util.FileNameMapper;
 import mci.dibse.crazylabyrinth.client.infrastructure.util.JavaFXUtils;
 import mci.dibse.crazylabyrinth.client.service.*;
 import mci.dibse.crazylabyrinth.client.view.viewmodel.item.*;
@@ -408,9 +409,10 @@ public class GameViewModel extends BaseViewModel implements PlayerConnectedAckLi
 
     private void checkIfLastTreasureIsFound(PlayerState p) {
         if (p.getRemainingTreasureCount() > 0) return;
-        System.out.println("last treasure found");
+        log.info("last treasure found setting up back to base treasure");
+        int id = FileNameMapper.getHomeTreasureIdForPlayerColor(p.getPlayerInfo().getColor());
         Treasure t = new Treasure();
-        t.setId(0);
+        t.setId(id);
         t.setName("Zurück zum Start");
         TreasureItem backToHome = new TreasureItem(t);
         nextTreasureItemProperty.set(backToHome);

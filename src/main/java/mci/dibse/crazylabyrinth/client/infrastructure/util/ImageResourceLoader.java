@@ -30,6 +30,12 @@ public class ImageResourceLoader {
     private static final String PLAYERS_IMAGES_PATH = "/players/";
     private static final Map<String, Image> imagePlayerCache = new HashMap<>();
 
+    private static final String HOME_IMAGES_PATH = "/homes/";
+    private static final Map<String, Image> imageHomeCache = new HashMap<>();
+
+    private static final String BONI_IMAGES_PATH = "/boni/";
+    private static final Map<String, Image> imageBoniCache = new HashMap<>();
+
     public static Image loadImageForDirection(List<Direction> direction) {
         direction.sort(Comparator.comparingInt(Direction::ordinal));
         return switch (direction.size()) {
@@ -152,7 +158,7 @@ public class ImageResourceLoader {
     }
 
     public static Image loadTreasureImage(int id) {
-        String name = TreasureMapper.getTreasureName(id);
+        String name = FileNameMapper.getTreasureName(id);
         return loadImage(name, IMAGE_TYPE.TREASURE);
     }
 
@@ -176,6 +182,14 @@ public class ImageResourceLoader {
             case PLAYER -> {
                 cache = imagePlayerCache;
                 resourcePath = PLAYERS_IMAGES_PATH;
+            }
+            case HOME -> {
+                cache = imageHomeCache;
+                resourcePath = HOME_IMAGES_PATH;
+            }
+            case BONI -> {
+                cache = imageBoniCache;
+                resourcePath = BONI_IMAGES_PATH;
             }
             default -> throw new IllegalStateException("Unexpected value: " + type);
         }
@@ -223,6 +237,6 @@ public class ImageResourceLoader {
 
 
     private enum IMAGE_TYPE {
-        TILE, TREASURE, PLAYER
+        TILE, TREASURE, PLAYER, BONI, HOME
     }
 }

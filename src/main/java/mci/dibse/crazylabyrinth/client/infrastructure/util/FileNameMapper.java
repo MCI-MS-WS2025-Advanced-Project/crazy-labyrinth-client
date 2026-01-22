@@ -1,13 +1,14 @@
 package mci.dibse.crazylabyrinth.client.infrastructure.util;
 
+import labyrinth.contracts.models.PlayerColor;
+
 import java.util.HashMap;
 import java.util.Map;
 
-public class TreasureMapper {
+public class FileNameMapper {
 
 
     private static final Map<Integer, String> TREASURE_NAMES = new HashMap<>();
-
 
 
     private final static String TREASURE_0 = "BackToHome";
@@ -37,6 +38,12 @@ public class TreasureMapper {
     private final static String TREASURE_24 = "Schatz1";
 
 
+
+    private final static String HOME_RED = "Haus_red";
+    private final static String HOME_BLUE = "Haus_blue";
+    private final static String HOME_GREEN = "Haus_gruen";
+    private final static String HOME_YELLOW = "Haus_gelb";
+
     static {
         TREASURE_NAMES.put(0, TREASURE_0);
         TREASURE_NAMES.put(1, TREASURE_1);
@@ -63,6 +70,13 @@ public class TreasureMapper {
         TREASURE_NAMES.put(22, TREASURE_22);
         TREASURE_NAMES.put(23, TREASURE_23);
         TREASURE_NAMES.put(24, TREASURE_24);
+
+
+
+        TREASURE_NAMES.put(100, HOME_RED);
+        TREASURE_NAMES.put(200, HOME_BLUE);
+        TREASURE_NAMES.put(300, HOME_GREEN);
+        TREASURE_NAMES.put(400, HOME_YELLOW);
     }
 
     public static String getTreasureName(int id) {
@@ -70,6 +84,16 @@ public class TreasureMapper {
             throw new IllegalArgumentException("Unknown treasure ID: " + id);
         }
         return TREASURE_NAMES.get(id);
+    }
+
+
+    public static int getHomeTreasureIdForPlayerColor(PlayerColor color) {
+        return switch (color) {
+            case RED -> 100;
+            case BLUE -> 200;
+            case GREEN -> 300;
+            case YELLOW -> 400;
+        };
     }
 
 
