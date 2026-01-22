@@ -222,7 +222,6 @@ public class LobbyController extends BaseViewCleanup {
 
     private void setupResultsTable() {
         log.info("setupResultsTable");
-        // Clip/cleanup
 
 
         ChangeListener<Boolean> resultsListener = (obs, oldVal, newVal) -> {

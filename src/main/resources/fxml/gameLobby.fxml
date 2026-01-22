@@ -14,7 +14,7 @@
            fx:controller="mci.dibse.crazylabyrinth.client.view.controller.impl.LobbyController"
            fx:id="viewport"
            stylesheets="@/styles/shared.css"
-           style="-fx-background-color: black;"
+           style="-fx-background-color: linear-gradient(to bottom, #f7f9fc, #eef2f7);"
            styleClass="viewport">
 
 
