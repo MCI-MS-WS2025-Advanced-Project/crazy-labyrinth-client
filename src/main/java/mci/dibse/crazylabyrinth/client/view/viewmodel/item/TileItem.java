@@ -23,7 +23,7 @@ public class TileItem extends BaseItem<Tile> {
     @Getter
     private final SimpleObjectProperty<TreasureItem> treasure = new SimpleObjectProperty<>();
 
-    @Getter private final SimpleObjectProperty<BonusType> bonus = new SimpleObjectProperty<>();
+    @Getter private final SimpleObjectProperty<BonusType> bonusProperty = new SimpleObjectProperty<>();
     @Getter private SimpleBooleanProperty isFixed = new SimpleBooleanProperty();
 
     public TreasureItem getTreasureItem() {
@@ -31,8 +31,13 @@ public class TileItem extends BaseItem<Tile> {
     }
 
     public BonusType getBonusType() {
-        return bonus.get();
+        return bonusProperty.get();
     }
+
+    public boolean hasBonus() {
+        return bonusProperty.get() != null;
+    }
+
 
     public boolean hasTreasure() {
         return treasure.get() != null;
@@ -49,8 +54,8 @@ public class TileItem extends BaseItem<Tile> {
 
                     //  imageView = ImageResourceLoader.mapDirectionsToTile(directions);
 
-                    tileImage.set(ImageResourceLoader.loadImageForDirection(directionList));
-                    rotation.set(ImageResourceLoader.getRotationAngleForDirection(directionList));
+                    tileImage.set(ImageResourceLoader.loadImage(directionList));
+                    rotation.set(getRotationAngleForDirection(directionList));
 
                     if (source.getTreasure() != null) {
                         this.treasure.set(new TreasureItem(source.getTreasure()));
@@ -59,9 +64,9 @@ public class TileItem extends BaseItem<Tile> {
                     }
 
                     if (source.getBonus() != null) {
-                        this.bonus.set(source.getBonus());
+                        this.bonusProperty.set(source.getBonus());
                     } else {
-                        this.bonus.set(null);
+                        this.bonusProperty.set(null);
                     }
 
                     this.isFixed.set(source.getIsFixed());
@@ -78,15 +83,15 @@ public class TileItem extends BaseItem<Tile> {
     protected void updateItemFromSource(Tile source) {
         this.isFixed.set(source.getIsFixed());
         List<Direction> directionList = new ArrayList<>(Arrays.asList(source.getEntrances()));
-        this.rotation.set(ImageResourceLoader.getRotationAngleForDirection(directionList));
+        this.rotation.set(getRotationAngleForDirection(directionList));
 
         if (this.treasure.get() != null) {
             this.treasure.get().updateFrom(source.getTreasure());
         }
         if (source.getBonus() != null) {
-            this.bonus.set(source.getBonus());
+            this.bonusProperty.set(source.getBonus());
         } else {
-            this.bonus.set(null);
+            this.bonusProperty.set(null);
         }
     }
 
@@ -213,6 +218,56 @@ public class TileItem extends BaseItem<Tile> {
     }
 
     private void updateImageFromRotation() {
-        tileImage.set(ImageResourceLoader.loadImageForDirection(directions));
+        tileImage.set(ImageResourceLoader.loadImage(directions));
+    }
+
+
+    private static Number getRotationAngleForDirection(List<Direction> direction) {
+        direction.sort(Comparator.comparingInt(Direction::ordinal));
+        return switch (direction.size()) {
+            case 2 -> {
+                if (direction.contains(Direction.UP) && direction.contains(Direction.DOWN)) {
+                    yield 0;
+                } else if (direction.contains(Direction.LEFT)
+                        && direction.contains(Direction.RIGHT)) {
+                    yield 90;
+                } else if ((direction.contains(Direction.UP)
+                        && direction.contains(Direction.RIGHT))) {
+                    yield 0;
+                } else if (direction.contains(Direction.DOWN)
+                        && direction.contains(Direction.LEFT)) {
+                    yield 180;
+                } else if (direction.contains(Direction.UP) && direction.contains(Direction.LEFT)) {
+                    yield -90;
+                } else if (direction.contains(Direction.DOWN)
+                        && direction.contains(Direction.RIGHT)) {
+                    yield 90;
+                } else {
+                    throw new IllegalStateException("Unexpected directions: " + direction);
+                }
+            }
+            case 3 -> {
+                if (direction.contains(Direction.UP)
+                        && direction.contains(Direction.DOWN)
+                        && direction.contains(Direction.LEFT)) {
+                    yield 0;
+                } else if (direction.contains(Direction.UP)
+                        && direction.contains(Direction.DOWN)
+                        && direction.contains(Direction.RIGHT)) {
+                    yield 180;
+                } else if (direction.contains(Direction.LEFT)
+                        && direction.contains(Direction.RIGHT)
+                        && direction.contains(Direction.UP)) {
+                    yield 90;
+                } else if (direction.contains(Direction.LEFT)
+                        && direction.contains(Direction.RIGHT)
+                        && direction.contains(Direction.DOWN)) {
+                    yield -90;
+                } else {
+                    throw new IllegalStateException("Unexpected directions: " + direction);
+                }
+            }
+            default -> throw new IllegalStateException("Unexpected value: " + direction.size());
+        };
     }
 }
