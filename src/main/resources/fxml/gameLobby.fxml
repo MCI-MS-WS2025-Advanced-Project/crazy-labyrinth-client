@@ -38,72 +38,82 @@
         </top>
 
         <left>
-            <!-- Admin Settings -->
-            <VBox fx:id="adminSettings"
-                  spacing="12"
-                  style="-fx-padding: 14"
-                  styleClass="card"
-                  prefWidth="225">
+            <VBox spacing="12"
+            style="-fx-padding: 14"
+            styleClass="card"
+            prefWidth="225">
 
-                <Label text="Spieleinstellungen" styleClass="section-header"/>
-
-                <!-- Bonus Feature Toggle -->
-                <VBox spacing="8">
-                    <Label text="Bonus Feature" styleClass="setting-label"/>
-                    <CheckBox fx:id="bonusEnabledCheck" text="Bonus aktivieren"/>
-                    <HBox fx:id="bonusSetting" spacing="8" alignment="CENTER_LEFT">
-                        <Label text="Anzahl Boni" styleClass="setting-label"/>
-                        <Spinner fx:id="bonusCountSpinner" min="0" max="20" initialValue="0"
-                                 maxWidth="75" editable="true"/>
-                    </HBox>
+                <VBox
+                      spacing="8"
+                      style="-fx-padding: 14"
+                      styleClass="card"
+                      prefWidth="225">
+                    <Label text="Spielfeld Theme" styleClass="section-header"/>
+                    <ComboBox fx:id="boardTheme" promptText="Spielfeld wählen" maxWidth="180" />
                 </VBox>
-
-                <!-- Board Size Selection -->
-                <VBox spacing="8">
-                    <Label text="Spielfeldgröße" styleClass="setting-label"/>
-                    <ComboBox fx:id="boardSizeCombo" promptText="Größe wählen" maxWidth="150">
-                        <items>
-                            <FXCollections fx:factory="observableArrayList">
-                                <String fx:value="Klein (5x5)"/>
-                                <String fx:value="Normal (7x7)"/>
-                                <String fx:value="Groß (9x9)"/>
-                            </FXCollections>
-                        </items>
-                    </ComboBox>
-                </VBox>
-
-                <!-- Treasure Cards Count -->
-                <VBox spacing="8">
-                    <Label text="Schatzkarten" styleClass="setting-label"/>
-                    <HBox spacing="8" alignment="CENTER_LEFT">
-                        <Spinner fx:id="treasureCardsSpinner" min="1" max="6" initialValue="6"
-                                 maxWidth="75" editable="true"/>
-                        <Label text="pro Spieler"/>
-                    </HBox>
-                </VBox>
-
-                <!-- Game Timer -->
-                <VBox spacing="8">
-                    <Label text="Timer" styleClass="setting-label"/>
-                    <CheckBox fx:id="timerEnabledCheck" text="Timer anpassen"/>
-                    <HBox fx:id="timerSettings" spacing="8" alignment="CENTER_LEFT">
-                        <Label text="Spieldauer (Min)" style="-fx-font-size: 12" styleClass="setting-label"/>
-                        <Spinner fx:id="gameTimerSpinner"
-                                 maxWidth="75" editable="true"/>
-                    </HBox>
-                </VBox>
-
-                <VBox spacing="8">
-                    <Label text="Spielfeld Theme" styleClass="setting-label"/>
-                    <ComboBox fx:id="boardTheme" promptText="Spielfeld wählen" maxWidth="180" style=""/>
-                </VBox>
-
                 <Separator/>
-                <VBox alignment="CENTER">
-                    <Button fx:id="startGameButton" onAction="#onStartButtonClick"
-                            text="Start Game"  styleClass="primary-button" maxWidth="150"/>
-                </VBox>
+                <!-- Admin Settings -->
+                <VBox fx:id="adminSettings"
+                      spacing="12"
+                      style="-fx-padding: 14"
+                      styleClass="card"
+                      prefWidth="225">
 
+                    <Label text="Spieleinstellungen" styleClass="section-header"/>
+
+                    <!-- Bonus Feature Toggle -->
+                    <VBox spacing="8">
+                        <Label text="Bonus Feature" styleClass="setting-label"/>
+                        <CheckBox fx:id="bonusEnabledCheck" text="Bonus aktivieren"/>
+                        <HBox fx:id="bonusSetting" spacing="8" alignment="CENTER_LEFT">
+                            <Label text="Anzahl Boni" styleClass="setting-label"/>
+                            <Spinner fx:id="bonusCountSpinner" min="0" max="20" initialValue="0"
+                                     maxWidth="75" editable="true"/>
+                        </HBox>
+                    </VBox>
+
+                    <!-- Board Size Selection -->
+                    <VBox spacing="8">
+                        <Label text="Spielfeldgröße" styleClass="setting-label"/>
+                        <ComboBox fx:id="boardSizeCombo" promptText="Größe wählen" maxWidth="150">
+                            <items>
+                                <FXCollections fx:factory="observableArrayList">
+                                    <String fx:value="Klein (5x5)"/>
+                                    <String fx:value="Normal (7x7)"/>
+                                    <String fx:value="Groß (9x9)"/>
+                                </FXCollections>
+                            </items>
+                        </ComboBox>
+                    </VBox>
+
+                    <!-- Treasure Cards Count -->
+                    <VBox spacing="8">
+                        <Label text="Schatzkarten" styleClass="setting-label"/>
+                        <HBox spacing="8" alignment="CENTER_LEFT">
+                            <Spinner fx:id="treasureCardsSpinner" min="1" max="6" initialValue="6"
+                                     maxWidth="75" editable="true"/>
+                            <Label text="pro Spieler"/>
+                        </HBox>
+                    </VBox>
+
+                    <!-- Game Timer -->
+                    <VBox spacing="8">
+                        <Label text="Timer" styleClass="setting-label"/>
+                        <CheckBox fx:id="timerEnabledCheck" text="Timer anpassen"/>
+                        <HBox fx:id="timerSettings" spacing="8" alignment="CENTER_LEFT">
+                            <Label text="Spieldauer (Min)" style="-fx-font-size: 12" styleClass="setting-label"/>
+                            <Spinner fx:id="gameTimerSpinner"
+                                     maxWidth="75" editable="true"/>
+                        </HBox>
+                    </VBox>
+
+                    <Separator/>
+                    <VBox alignment="CENTER">
+                        <Button fx:id="startGameButton" onAction="#onStartButtonClick"
+                                text="Start Game"  styleClass="primary-button" maxWidth="150"/>
+                    </VBox>
+
+                </VBox>
             </VBox>
         </left>
 
