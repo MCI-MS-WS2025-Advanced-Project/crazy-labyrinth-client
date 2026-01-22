@@ -26,7 +26,10 @@
     -fx-font-weight: bold;
     -fx-text-fill: #374151;
 }
-.setting-label { -fx-text-fill: #4b5563; }
+.setting-label {
+    -fx-text-fill: #4b5563;
+    -fx-font-weight: bold;
+}
 .value-label { -fx-text-fill: #111827; -fx-font-weight: 600; }
 .countdown-label { -fx-text-fill: #0f766e; -fx-font-weight: 700; }
 

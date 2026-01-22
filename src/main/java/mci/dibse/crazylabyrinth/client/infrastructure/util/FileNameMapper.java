@@ -4,6 +4,7 @@ import javafx.scene.image.Image;
 import labyrinth.contracts.models.BonusType;
 import labyrinth.contracts.models.Direction;
 import labyrinth.contracts.models.PlayerColor;
+import mci.dibse.crazylabyrinth.client.domain.model.enums.Theme;
 
 import java.util.Comparator;
 import java.util.HashMap;
@@ -19,9 +20,9 @@ public class FileNameMapper {
     private static final Map<PlayerColor, String> PLAYER_NAMES = new HashMap<>();
 
 
-    private static final String UP_DOWN = "I";
-    private static final String UP_RIGHT = "L";
-    private static final String UP_DOWN_LEFT = "T";
+    private static  String UP_DOWN = "I0";
+    private static  String UP_RIGHT = "L0";
+    private static  String UP_DOWN_LEFT = "T0";
 
 
     private final static String TREASURE_0 = "BackToHome";
@@ -110,6 +111,7 @@ public class FileNameMapper {
         PLAYER_NAMES.put(PlayerColor.YELLOW, PLAYER_YELLOW);
     }
 
+
     public static String getTreasureName(int id) {
         if (!TREASURE_NAMES.containsKey(id)) {
             throw new IllegalArgumentException("Unknown treasure ID: " + id);
@@ -191,6 +193,17 @@ public class FileNameMapper {
             }
             default -> throw new IllegalStateException("Unexpected value: " + direction.size());
         };
+    }
+
+    public static void setTheme(Theme theme) {
+         setTileFileNamesForTheme(theme.getId());
+    }
+
+
+    private static void setTileFileNamesForTheme(int id) {
+        UP_DOWN = "I" + id;
+        UP_RIGHT = "L" +  id;
+        UP_DOWN_LEFT = "T" + id;
     }
 
 }
