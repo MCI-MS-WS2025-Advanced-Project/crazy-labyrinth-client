@@ -124,6 +124,7 @@ public class LobbyController extends BaseViewCleanup {
     private Runnable cleanUpTaskResultsTable;
 
     private ScreenResolutionProperties screenResolutionProperties;
+    ChangeListener<Theme> themeChangeListener;
 
     @Autowired
     public LobbyController(NavigationStateViewModel navState, LobbyViewModel lobbyViewModel, ScreenResolutionProperties screenResolutionProperties, GameViewModel gameViewModel, AchievementService achievementService) {
@@ -301,7 +302,6 @@ public class LobbyController extends BaseViewCleanup {
         pause.setOnFinished(e -> isStartButtonLocked.set(false));
         pause.play();
         cancelCountdown();
-        setThemeForGameBoard();
         startGame();
     }
 
@@ -368,6 +368,8 @@ public class LobbyController extends BaseViewCleanup {
 
                     resultsBox.setVisible(false);
                     resultsBox.setManaged(false);
+
+                    boardTheme.getSelectionModel().selectedItemProperty().removeListener(themeChangeListener);
                 });
         cleanUpTaskPlayerTable.run();
         if (cleanUpTaskResultsTable != null)  cleanUpTaskResultsTable.run();
@@ -496,6 +498,12 @@ public class LobbyController extends BaseViewCleanup {
             }
         });
 
+        themeChangeListener = (obs, oldVal, newVal) -> {
+            setThemeForGameBoard(newVal);
+        };
+        boardTheme.getSelectionModel().selectedItemProperty().addListener(themeChangeListener);
+
+
     }
 
 
@@ -589,9 +597,8 @@ public class LobbyController extends BaseViewCleanup {
                 .collect(Collectors.joining(", "));
     }
 
-    private void setThemeForGameBoard() {
-        Theme selectedTheme = boardTheme.getSelectionModel().getSelectedItem();
-        FileNameMapper.setTheme(selectedTheme);
+    private void setThemeForGameBoard(Theme theme) {
+        FileNameMapper.setTheme(theme);
     }
 
 
