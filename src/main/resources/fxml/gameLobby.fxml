@@ -41,13 +41,15 @@
             <VBox spacing="12"
             style="-fx-padding: 14"
             styleClass="card"
-            prefWidth="225">
+            prefWidth="225"
+            fx:id="leftBar">
 
                 <VBox
                       spacing="8"
                       style="-fx-padding: 14"
                       styleClass="card"
-                      prefWidth="225">
+                      prefWidth="225"
+                      alignment="CENTER">
                     <Label text="Spielfeld Theme" styleClass="section-header"/>
                     <ComboBox fx:id="boardTheme" promptText="Spielfeld wählen" maxWidth="180" />
                 </VBox>
@@ -56,8 +58,7 @@
                 <VBox fx:id="adminSettings"
                       spacing="12"
                       style="-fx-padding: 14"
-                      styleClass="card"
-                      prefWidth="225">
+                      styleClass="card">
 
                     <Label text="Spieleinstellungen" styleClass="section-header"/>
 
@@ -118,7 +119,7 @@
         </left>
 
     <center>
-        <VBox spacing="20">
+        <VBox spacing="20" >
             <VBox spacing="8" style="-fx-padding: 8" styleClass="card">
                 <HBox alignment="CENTER">
                     <Label text="Lobby" styleClass="section-header,embossed,shadowed">
@@ -157,28 +158,32 @@
     </center>
 
         <right>
-            <VBox spacing="12" style="-fx-padding: 14" styleClass="card" prefWidth="200">
-                <Label text="Game Statistics" styleClass="section-header"/>
 
-                <HBox spacing="6" alignment="CENTER_LEFT">
-                    <Label text="Max Players:" styleClass="setting-label"/>
-                    <Label fx:id="maxPlayers" styleClass="value-label"/>
-                </HBox>
 
-                <HBox spacing="6" alignment="CENTER_LEFT">
-                    <Label text="Connected:" styleClass="setting-label"/>
-                    <Label fx:id="connectedPlayers" styleClass="value-label"/>
-                </HBox>
 
-                <HBox fx:id="countDownBox" spacing="6" alignment="CENTER_LEFT">
-                    <Label text="Starting in:" styleClass="setting-label"/>
-                    <Label fx:id="countdown" styleClass="countdown-label"/>
-                </HBox>
+            <VBox spacing="12" style="-fx-padding: 14" styleClass="card" prefWidth="200" fx:id="rightBar">
+
+                <VBox spacing="12" styleClass="card" alignment="CENTER" style="-fx-padding: 10">
+                    <Label text="Game Statistics" styleClass="section-header"/>
+                    <HBox spacing="6" alignment="CENTER_LEFT" style="-fx-padding: 0 0 0 10">
+                        <Label text="Max Players:" styleClass="setting-label"/>
+                        <Label fx:id="maxPlayers" styleClass="value-label"/>
+                    </HBox>
+
+                    <HBox spacing="6" alignment="CENTER_LEFT" style="-fx-padding: 0 0 0 10">
+                        <Label text="Connected:" styleClass="setting-label"/>
+                        <Label fx:id="connectedPlayers" styleClass="value-label"/>
+                    </HBox>
+
+                    <HBox fx:id="countDownBox" spacing="6" alignment="CENTER_LEFT">
+                        <Label text="Starting in:" styleClass="setting-label"/>
+                        <Label fx:id="countdown" styleClass="countdown-label"/>
+                    </HBox>
+                </VBox>
 
                 <Separator/>
-
-                <Button fx:id="leaveLobby" onAction="#onleaveLobbyButtonClick"
-                        text="Lobby verlassen" styleClass="secondary-button" maxWidth="Infinity"/>
+                    <Button fx:id="leaveLobby" onAction="#onleaveLobbyButtonClick"
+                            text="Lobby verlassen" styleClass="secondary-button"/>
             </VBox>
         </right>
     </BorderPane>

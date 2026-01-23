@@ -635,7 +635,8 @@ public class GameStateController extends BaseViewCleanup {
                 Bindings.createObjectBinding(
                         () -> currentTile.getTreasureItem().getTreasureImage(),
                         gameViewModel.getSpareTileProperty()));
-        extraTileTreasure.getStyleClass().add("treasure-image");
+       // extraTileTreasure.getStyleClass().add("treasure-image");
+            ImageViewStyler.applyTreasureStylingToImageView(extraTileTreasure);
 
         extraTileTreasure.setRotate(currentTile.getRotation().get().doubleValue());
 
@@ -774,7 +775,7 @@ public class GameStateController extends BaseViewCleanup {
                                 treasureImage.fitWidthProperty().bind(cellContainer.widthProperty().multiply(scale));
                                 treasureImage.fitHeightProperty().bind(cellContainer.heightProperty().multiply(scale));
                                 treasureImage.setRotate(tile.getRotation().get().doubleValue());
-
+                                ImageViewStyler.applyTreasureStylingToImageView(treasureImage);
                                 cellContainer.getChildren().add(treasureImage);
 
 
@@ -1175,8 +1176,7 @@ public class GameStateController extends BaseViewCleanup {
                 () -> gameViewModel.getNextTreasureImageProperty().get(),
                         gameViewModel.getNextTreasureItemProperty()
                 ));
-
-
+        ImageViewStyler.applyTreasureStylingToImageView(nextTreasureImage);
     }
 
 
