@@ -163,17 +163,44 @@ public class JavaFXUtils {
         // Width: match the flow's content width
         clip.widthProperty().bind(flow.layoutBoundsProperty().map(Bounds::getWidth));
 
+        javafx.beans.Observable[] dependencies;
+        if (table.getItems() != null) {
+            dependencies = new javafx.beans.Observable[]{
+                    flow.layoutBoundsProperty(),
+                    table.fixedCellSizeProperty(),
+                    Bindings.size(table.getItems())
+            };
+        } else {
+            dependencies = new javafx.beans.Observable[]{
+                    flow.layoutBoundsProperty(),
+                    table.fixedCellSizeProperty()
+            };
+        }
+
+
         // Height: floor to an integer number of rows so the last partial row is fully hidden
         clip.heightProperty().bind(Bindings.createDoubleBinding(
                 () -> {
                     Bounds b = flow.getLayoutBounds();
                     double cellSize = table.getFixedCellSize();
-                    if (cellSize <= 0) return Math.max(0.0, b.getHeight());
-                    double h = Math.floor(b.getHeight() / cellSize) * cellSize;
-                    return Math.max(0.0, h);
+                    double flowHeight = b.getHeight();
+
+                    if (cellSize <= 0) return Math.max(0.0, flowHeight);
+
+                    double snappedHeight = Math.floor(flowHeight / cellSize) * cellSize;
+
+                    if (table.getItems() != null) {
+                        double contentHeight = table.getItems().size() * cellSize;
+                        // If content extends beyond the snapped height, the partial row contains data.
+                        if (contentHeight > snappedHeight) {
+                            return Math.max(0.0, flowHeight);
+                        }
+                    }
+
+                    return Math.max(0.0, snappedHeight);
                 },
-                flow.layoutBoundsProperty(),
-                table.fixedCellSizeProperty()
+                dependencies
         ));
+
     }
 }

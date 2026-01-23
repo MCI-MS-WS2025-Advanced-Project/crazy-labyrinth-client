@@ -20,9 +20,10 @@ public class FileNameMapper {
     private static final Map<PlayerColor, String> PLAYER_NAMES = new HashMap<>();
 
 
-    private static  String UP_DOWN = "I0";
-    private static  String UP_RIGHT = "L0";
-    private static  String UP_DOWN_LEFT = "T0";
+    private static String UP_DOWN = "I0";
+    private static String UP_RIGHT = "L0";
+    private static String UP_DOWN_LEFT = "T0";
+    private static Theme currentTheme = Theme.RUNEHAVEN_LABYRINTH;
 
 
     private final static String TREASURE_0 = "BackToHome";
@@ -231,7 +232,17 @@ public class FileNameMapper {
      * @param theme theme to apply
      */
     public static void setTheme(Theme theme) {
-         setTileFileNamesForTheme(theme.getId());
+        currentTheme = theme;
+        setTileFileNamesForTheme(theme.getId());
+    }
+
+    /**
+     * Return the currently selected theme.
+     *
+     * @return current theme
+     */
+    public static Theme getTheme() {
+        return currentTheme;
     }
 
 
@@ -247,4 +258,3 @@ public class FileNameMapper {
     }
 
 }
-

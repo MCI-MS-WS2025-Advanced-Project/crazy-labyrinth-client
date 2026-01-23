@@ -35,6 +35,7 @@ import labyrinth.contracts.models.*;
 import lombok.extern.slf4j.Slf4j;
 import mci.dibse.crazylabyrinth.client.NavigationController;
 import mci.dibse.crazylabyrinth.client.domain.context.PushTileCommandRecord;
+import mci.dibse.crazylabyrinth.client.domain.model.enums.Theme;
 import mci.dibse.crazylabyrinth.client.infrastructure.util.*;
 import mci.dibse.crazylabyrinth.client.service.GameServerSocketService;
 import mci.dibse.crazylabyrinth.client.infrastructure.util.JavaFXUtils;
@@ -51,6 +52,11 @@ import org.springframework.stereotype.Component;
 @Slf4j
 public class GameStateController extends BaseViewCleanup {
 
+    private static final List<String> THEME_STYLE_CLASSES = List.of(
+            "theme-runehaven",
+            "theme-glowing-caves",
+            "theme-stone-catacombs",
+            "theme-emberforge");
 
     private final NavigationController navigationController;
     @FXML public StackPane bottomBar;
@@ -62,6 +68,7 @@ public class GameStateController extends BaseViewCleanup {
     @FXML public VBox leftArrowBox;
     @FXML public HBox bottomArrowBox;
 
+    @FXML public VBox nextTreasurePaneWrapper;
     @FXML public ImageView nextTreasureImage;
 
     @FXML public StackPane extraTileContainer;
@@ -155,7 +162,6 @@ public class GameStateController extends BaseViewCleanup {
     private final Map<String, Label> idToPlayerStatusLabel = new HashMap<>();
 
 
-
     private Map<BonusType, ChangeListener<Boolean>> bonusAvailableListeners = new HashMap<>();
 
 
@@ -186,6 +192,7 @@ public class GameStateController extends BaseViewCleanup {
      */
     @FXML
     public void initialize() {
+        applyThemeStyleClass();
 
         initPlayerTurnLabel();
 
@@ -209,13 +216,13 @@ public class GameStateController extends BaseViewCleanup {
 
         initPushTileButtons();
 
-        initNextTreasure();
-
         initBoni();
 
         setupErrorHandling();
 
         initGameTimer();
+
+        initNextTreasure();
 
         initViewToRatio();
         // delay init of scaling & gamegrid until several pulse runs
@@ -235,6 +242,20 @@ public class GameStateController extends BaseViewCleanup {
                 });
             }
         });
+    }
+
+    private void applyThemeStyleClass() {
+        Theme theme = FileNameMapper.getTheme();
+        String themeClass = switch (theme) {
+            case RUNEHAVEN_LABYRINTH -> "theme-runehaven";
+            case GLOWING_CAVES -> "theme-glowing-caves";
+            case STONE_CATACOMBS -> "theme-stone-catacombs";
+            case EMBERFORGE_MAZE -> "theme-emberforge";
+        };
+        viewport.getStyleClass().removeAll(THEME_STYLE_CLASSES);
+        if (!viewport.getStyleClass().contains(themeClass)) {
+            viewport.getStyleClass().add(themeClass);
+        }
     }
 
 
@@ -715,8 +736,8 @@ public class GameStateController extends BaseViewCleanup {
                 Bindings.createObjectBinding(
                         () -> currentTile.getTreasureItem().getTreasureImage(),
                         gameViewModel.getSpareTileProperty()));
-       // extraTileTreasure.getStyleClass().add("treasure-image");
-            ImageViewStyler.applyTreasureStylingToImageView(extraTileTreasure);
+
+          //  ImageViewStyler.applyTreasureStylingToImageView(extraTileTreasure);
 
         extraTileTreasure.setRotate(currentTile.getRotation().get().doubleValue());
 
@@ -754,6 +775,7 @@ public class GameStateController extends BaseViewCleanup {
         Ratio screenRation = screenResolutionProperties.getAspectRatio();
         switch (screenRation) {
             case FOUR_THREE -> {
+                System.out.println("FOUR_THREE");
                 leftGameGridColomn.setPercentWidth(18);
                 middleGameGridColomn.setPercentWidth(64);
                 rightGameGridColomn.setPercentWidth(18);
@@ -766,6 +788,7 @@ public class GameStateController extends BaseViewCleanup {
                 rightGameGridColomn.setPercentWidth(23);
                 rightSidebar.getStyleClass().add("sidebar-right-wide");
                 leftSidebar.getStyleClass().add("sidebar-left-wide");
+                nextTreasurePaneWrapper.getStyleClass().add("nextTreasurePaneWrapper-wide");
             }
         }
     }
@@ -861,7 +884,7 @@ public class GameStateController extends BaseViewCleanup {
                                 TreasureItem treasureItem = tile.getTreasureItem();
                                 ImageView treasureImage = new ImageView(treasureItem.getTreasureImage());
                                 treasureImage.setPreserveRatio(true);
-                                double scale = 0.4;
+                                double scale = 0.5;
 
                                 treasureImage.fitWidthProperty().bind(cellContainer.widthProperty().multiply(scale));
                                 treasureImage.fitHeightProperty().bind(cellContainer.heightProperty().multiply(scale));
@@ -1425,7 +1448,7 @@ public class GameStateController extends BaseViewCleanup {
                 () -> gameViewModel.getNextTreasureImageProperty().get(),
                         gameViewModel.getNextTreasureItemProperty()
                 ));
-        ImageViewStyler.applyTreasureStylingToImageView(nextTreasureImage);
+       // ImageViewStyler.applyTreasureStylingToImageView(nextTreasureImage);
     }
 
 
@@ -1595,13 +1618,13 @@ public class GameStateController extends BaseViewCleanup {
                                 },
                                 gameViewModel.getClientPlayerState().getAvailableBonusTypes()));
 
-        bonusPushTwiceButton.disableProperty().bind(isNotMyTurnAndTimeoutAndMovePhase());
+         bonusPushTwiceButton.disableProperty().bind(isNotMyTurnAndTimeoutAndPushPhase());
 
         ChangeListener<Boolean> bonusPushTwiceButtonAvailableListener =
                 (ov, oldVal, newVal) -> {
                     bonusPushTwiceButton.pseudoClassStateChanged(
                             AVAILABLE_BONUS_BUTTON_PSEUDO_CLASS,
-                            isNotMyTurnAndTimeoutAndMovePhase().not().get());
+                            isNotMyTurnAndTimeoutAndPushPhase().not().get());
                 };
         bonusPushTwiceButton.disableProperty().addListener(bonusPushTwiceButtonAvailableListener);
         bonusAvailableListeners.put(BonusType.PUSH_TWICE, bonusPushTwiceButtonAvailableListener);
