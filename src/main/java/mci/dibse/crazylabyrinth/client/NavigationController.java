@@ -54,6 +54,9 @@ public class NavigationController {
 
     }
 
+    /**
+     * Register the navigation listener after bean construction.
+     */
     @PostConstruct
     public void init() {
         navState.getCurrentScreenProperty().addListener(navListener);
@@ -66,6 +69,9 @@ public class NavigationController {
                 }
             };
 
+    /**
+     * Show the main screen and initialize stage sizing.
+     */
     public void showMainScreen() {
         log.debug("Showing main screen...");
         screenResolutionProperties.setPrimaryStage(primaryStage);
@@ -73,6 +79,11 @@ public class NavigationController {
         showScreen(NavigationStateViewModel.ScreenId.MAIN);
     }
 
+    /**
+     * Load and show a screen by its screen id.
+     *
+     * @param newScreen target screen id
+     */
     private void showScreen(NavigationStateViewModel.ScreenId newScreen) {
         log.debug("Showing main screen... {}", newScreen.name());
         String viewFile = mapScreenIdToFile(newScreen);
@@ -84,6 +95,12 @@ public class NavigationController {
         }
     }
 
+    /**
+     * Configure the stage with a new scene while preserving window state.
+     *
+     * @param newScreen target screen id
+     * @param mainRoot loaded root node
+     */
     private void setUpStageAndScene(NavigationStateViewModel.ScreenId newScreen, Parent mainRoot) {
         boolean ismaximized = primaryStage.isMaximized();
         boolean isFullScreen = primaryStage.isFullScreen();
@@ -106,6 +123,12 @@ public class NavigationController {
         primaryStage.show();
     }
 
+    /**
+     * Map a screen id to an FXML file name.
+     *
+     * @param newScreen screen id
+     * @return FXML file name
+     */
     private String mapScreenIdToFile(NavigationStateViewModel.ScreenId newScreen) {
         return switch (newScreen) {
             case MAIN -> MAIN_VIEW;
@@ -115,6 +138,9 @@ public class NavigationController {
         };
     }
 
+    /**
+     * Set minimum and initial stage sizes.
+     */
     private void setStageMinMaxSizes() {
         primaryStage.setMinWidth(screenResolutionProperties.getMinViewWidth());
         primaryStage.setMinHeight(screenResolutionProperties.getMinViewHeight());
@@ -126,6 +152,11 @@ public class NavigationController {
         primaryStage.setHeight(screenResolutionProperties.getHeight());
     }
 
+    /**
+     * Configure fullscreen behavior for the scene.
+     *
+     * @param scene scene to configure
+     */
     private void setupFullScreen(Scene scene) {
         scene.addEventFilter(KeyEvent.KEY_PRESSED, event -> {
             if (event.getCode() == KeyCode.ESCAPE && primaryStage.isFullScreen()) {

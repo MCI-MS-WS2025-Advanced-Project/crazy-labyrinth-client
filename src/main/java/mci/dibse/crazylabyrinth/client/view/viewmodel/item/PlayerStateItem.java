@@ -53,47 +53,103 @@ public class PlayerStateItem extends BaseItem<PlayerState> {
         JavaFXUtils.runOnFxThread(apply);
     }
 
+    /**
+     * Update the nested player info item.
+     *
+     * @param playerInfo player info payload
+     */
     public void updatePlayerInfoFrom(PlayerInfo playerInfo) {
         log.debug("updatePlayerInfoFrom {}", playerInfo);
         this.playerInfo.get().updateFrom(playerInfo);
     }
 
+    /**
+     * Return the player id.
+     *
+     * @return player id
+     */
     public String getPlayerIdAsString() {
         return playerInfo.get().getId();
     }
 
+    /**
+     * Return the player name.
+     *
+     * @return player name
+     */
     public String getPlayerNameAsString() {
         return playerInfo.get().getName();
     }
 
+    /**
+     * Return the player color.
+     *
+     * @return player color
+     */
     public PlayerColor getPlayerColor() {
         return playerInfo.get().getColor();
     }
 
+    /**
+     * Return the current row position of the player.
+     *
+     * @return current row
+     */
     public int getPlayerCurrentRowAsInt() {
         return currentPosition.get().getRowAsInt();
     }
 
+    /**
+     * Return the current column position of the player.
+     *
+     * @return current column
+     */
     public int getPlayerCurrentColumnAsInt() {
         return currentPosition.get().getColumnAsInt();
     }
 
+    /**
+     * Return the remaining treasure count.
+     *
+     * @return remaining treasure count
+     */
     public int getRemainingTreasureCountAsInt() {
         return remainingTreasureCount.intValue();
     }
 
+    /**
+     * Count available bonuses of the given type.
+     *
+     * @param type bonus type to count
+     * @return available count
+     */
     public int getAvailableBonusCountForType(BonusType type) {
         return Math.toIntExact(availableBonusTypes.stream().filter(type::equals).count());
     }
 
+    /**
+     * Return the number of treasures found.
+     *
+     * @return number of treasures found
+     */
     public int getTreasuresFoundAsInt() {
         return treasuresFound.size();
     }
 
+    /**
+     * Check whether the player is AI controlled.
+     *
+     * @return true if AI controlled
+     */
     public boolean isPlayerAiControlled() {
         return playerInfo.get().getIsAiControlled();
     }
 
+    /**
+     * Update player state from the latest payload.
+     *
+     * @param source player state payload
+     */
     @Override
     protected void updateItemFromSource(PlayerState source) {
         List<Treasure> treasures = Arrays.stream(source.getTreasuresFound()).toList();
@@ -125,6 +181,9 @@ public class PlayerStateItem extends BaseItem<PlayerState> {
         this.availableBonusTypes.set(FXCollections.observableArrayList(bonuses));
     }
 
+    /**
+     * Dispose nested items and clear collections.
+     */
     @Override
     protected void disposeItem() {
         playerInfo.get().dispose();

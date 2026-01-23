@@ -48,6 +48,9 @@ public class LobbyStateItem extends BaseItem<LobbyStateEventPayload> {
 
     }
 
+    /**
+     * Dispose listener bindings and clear properties.
+     */
     @Override
     protected void disposeItem() {
         byId.removeListener(mapChangeListener);
@@ -61,11 +64,21 @@ public class LobbyStateItem extends BaseItem<LobbyStateEventPayload> {
         serverName.set(null);
     }
 
+    /**
+     * Update lobby info from the game info record.
+     *
+     * @param info game info record
+     */
     public void updateFromGameInfo(GameInfoRecord info) {
         this.serverName.set(info.serverName());
         this.maxPlayers.set(info.maxPlayers());
     }
 
+    /**
+     * Update player list and counts from the lobby payload.
+     *
+     * @param source lobby state payload
+     */
     protected void updateItemFromSource(LobbyStateEventPayload source) {
         List<PlayerInfo> playerInfos = Arrays.asList(source.getPlayers());
         byId.keySet()
@@ -86,10 +99,21 @@ public class LobbyStateItem extends BaseItem<LobbyStateEventPayload> {
                 }).forEach(item -> byId.putIfAbsent(item.getId(), item));
     }
 
+    /**
+     * Create a player item from player info.
+     *
+     * @param playerInfo player info payload
+     * @return new player item
+     */
     private PlayerInfoItem playerItemFromPlayerInfo(PlayerInfo playerInfo) {
         return new PlayerInfoItem(playerInfo);
     }
 
+    /**
+     * Build a listener to keep the player list in sync with the map.
+     *
+     * @return configured map change listener
+     */
     private MapChangeListener<String, PlayerInfoItem> initMapChangeListener() {
         return (MapChangeListener<String, PlayerInfoItem>)
                 change -> {

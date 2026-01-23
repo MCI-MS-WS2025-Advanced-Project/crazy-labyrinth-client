@@ -23,6 +23,9 @@ public class MainApplication {
         Application.launch(JavaFXClientApplication.class, args);
     }
 
+    /**
+     * Set the default locale for the application.
+     */
     private static void setDefaultLocale() {
         Locale.setDefault(Locale.GERMAN);
     }

@@ -44,6 +44,9 @@ public class PlayerMoveAnimation implements GameAnimation {
         this.boardGrid = boardGrid;
     }
 
+    /**
+     * Animate the player pawn along the computed path.
+     */
     @Override
     public void animate() {
         if (from.equals(to)) {
@@ -101,22 +104,43 @@ public class PlayerMoveAnimation implements GameAnimation {
         transition.play();
     }
 
+    /**
+     * Callback for animation completion; no cleanup currently required.
+     */
     @Override
     public void onCompleted() {
         // Cleanup if needed
     }
 
+    /**
+     * Report whether the animation is currently running.
+     *
+     * @return true when the animation is in progress
+     */
     @Override
     public boolean isRunning() {
         return isRunning;
     }
 
+    /**
+     * Calculate animation duration based on path length.
+     *
+     * @param path computed path
+     * @return duration for the animation
+     */
     private static Duration calculateDuration(List<CoordinatesItem> path) {
         int pathSteps = path.size() - 1;
         double speedMultiplier = Math.max(0.5, 1.0 - (pathSteps - 1) * 0.1);
         return Duration.millis(PLAYER_ANIMATION_DURATION * pathSteps * speedMultiplier);
     }
 
+    /**
+     * Find the stack pane for a given board position.
+     *
+     * @param position board coordinates
+     * @param boardGrid grid containing cells
+     * @return cell node for the requested position
+     */
     private StackPane findCellAtPosition(CoordinatesItem position, GridPane boardGrid) {
         CellFinder cellFinder = new CellFinder();
         return cellFinder.findCellAtGridPosition(position.getRowAsInt(), position.getColumnAsInt(), boardGrid);

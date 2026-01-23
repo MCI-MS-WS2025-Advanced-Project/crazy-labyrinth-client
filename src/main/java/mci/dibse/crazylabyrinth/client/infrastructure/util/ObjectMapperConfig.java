@@ -8,6 +8,11 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 public class ObjectMapperConfig {
 
+    /**
+     * Create an ObjectMapper with Java time support and ISO date output.
+     *
+     * @return configured ObjectMapper
+     */
     public static ObjectMapper createCustomObjectMapper() {
         ObjectMapper mapper = new ObjectMapper();
         mapper.registerModule(new JavaTimeModule());
@@ -15,6 +20,11 @@ public class ObjectMapperConfig {
         return mapper;
     }
 
+    /**
+     * Create an ObjectMapper configured for event payload deserialization.
+     *
+     * @return configured ObjectMapper
+     */
     public static ObjectMapper createEventObjectMapper() {
         ObjectMapper mapper = createCustomObjectMapper();
 

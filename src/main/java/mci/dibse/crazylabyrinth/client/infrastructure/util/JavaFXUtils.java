@@ -24,6 +24,11 @@ public class JavaFXUtils {
     private static final DateTimeFormatter LAST_SEEN_FORMATTER =
             DateTimeFormatter.ofPattern("HH:mm:ss").withZone(ZoneId.systemDefault());
 
+    /**
+     * Run a task on the JavaFX application thread.
+     *
+     * @param action action to execute
+     */
     public static void runOnFxThread(Runnable action) {
         if (Platform.isFxApplicationThread()) {
             action.run();
@@ -32,6 +37,14 @@ public class JavaFXUtils {
         }
     }
 
+    /**
+     * Show an error modal and invoke a callback on close.
+     *
+     * @param title alert title
+     * @param header alert header
+     * @param content alert content
+     * @param onClose callback after close
+     */
     public static void showAlertErrorModal(
             String title, String header, String content, Runnable onClose) {
         runOnFxThread(
@@ -48,6 +61,14 @@ public class JavaFXUtils {
                 });
     }
 
+    /**
+     * Show a confirmation modal and invoke a callback on OK.
+     *
+     * @param title alert title
+     * @param header alert header
+     * @param content alert content
+     * @param onConfirm callback when confirmed
+     */
     public static void showConfirmationModal(
             String title, String header, String content, Runnable onConfirm) {
         runOnFxThread(
@@ -66,6 +87,14 @@ public class JavaFXUtils {
     }
 
 
+    /**
+     * Install a clip on a table view to hide partially visible rows.
+     *
+     * @param table table view to clip
+     * @param fixedCellSize optional fixed cell size to set
+     * @return cleanup runnable to remove the clip
+     * @param <T> table item type
+     */
     public static <T> Runnable setupTableClip(TableView<T> table, Double fixedCellSize) {
        if (fixedCellSize != null) table.setFixedCellSize(fixedCellSize);
 
@@ -104,6 +133,11 @@ public class JavaFXUtils {
         };
     }
 
+    /**
+     * Install or update the clip rectangle for a table view.
+     *
+     * @param table table view to update
+     */
     private static void installOrUpdateClip(TableView<?> table) {
         Node flow = table.lookup(".virtual-flow");
         if (flow == null) {

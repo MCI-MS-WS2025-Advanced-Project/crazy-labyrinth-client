@@ -26,12 +26,18 @@ public class JavaFXClientApplication extends Application {
 
     private ConfigurableApplicationContext applicationContext;
 
+    /**
+     * Initialize Spring context before JavaFX application starts.
+     */
     @Override
     public void init() {
         log.debug("Initializing JavaFX application...");
         applicationContext = initSpringBasedOnProperties(JavaFXClientApplication.this);
     }
 
+    /**
+     * Stop JavaFX and close the Spring context.
+     */
     @Override
     public void stop() {
         log.debug("Stopping JavaFX application...");
@@ -39,6 +45,11 @@ public class JavaFXClientApplication extends Application {
         Platform.exit();
     }
 
+    /**
+     * Start the JavaFX stage and show the main screen.
+     *
+     * @param stage primary stage
+     */
     @Override
     public void start(Stage stage) {
         log.debug("Starting JavaFX application...");

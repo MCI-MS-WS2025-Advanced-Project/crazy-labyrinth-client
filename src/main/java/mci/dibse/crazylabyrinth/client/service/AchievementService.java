@@ -22,11 +22,21 @@ public class AchievementService {
     private List<AchievementUnlockedEventPayload> achievementEvents = new ArrayList<>();
 
 
+    /**
+     * Store an achievement event and log it for debugging.
+     *
+     * @param event achievement event payload
+     */
     public void handleAchievementEvent(AchievementUnlockedEventPayload event) {
         log.debug("Achievement Event received: {}", event);
         achievementEvents.add(event);
     }
 
+    /**
+     * Clear the achievement list when a new game starts.
+     *
+     * @param event game state payload
+     */
     @EventListener
     public void listenForGameStartEvent(GameStateEventPayload event) {
         if(EventType.GAME_STARTED.equals(event.getType())) {
@@ -36,6 +46,12 @@ public class AchievementService {
     }
 
 
+    /**
+     * Filter achievement events for a specific player.
+     *
+     * @param id player identifier
+     * @return list of achievement events for the player
+     */
     public List<AchievementUnlockedEventPayload> getAchievementEventsForPLayerId(String id) {
        return achievementEvents.stream().filter(e -> e.getPlayerId().equals(id)).toList();
     }

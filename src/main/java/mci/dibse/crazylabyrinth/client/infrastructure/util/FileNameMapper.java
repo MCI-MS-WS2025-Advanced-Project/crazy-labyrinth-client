@@ -112,6 +112,12 @@ public class FileNameMapper {
     }
 
 
+    /**
+     * Return the filename for a treasure id.
+     *
+     * @param id treasure id
+     * @return treasure filename
+     */
     public static String getTreasureName(int id) {
         if (!TREASURE_NAMES.containsKey(id)) {
             throw new IllegalArgumentException("Unknown treasure ID: " + id);
@@ -120,6 +126,12 @@ public class FileNameMapper {
     }
 
 
+    /**
+     * Return the home treasure id for a given player color.
+     *
+     * @param color player color
+     * @return home treasure id
+     */
     public static int getHomeTreasureIdForPlayerColor(PlayerColor color) {
         return switch (color) {
             case RED -> 100;
@@ -130,6 +142,12 @@ public class FileNameMapper {
     }
 
 
+    /**
+     * Return the filename for a bonus type.
+     *
+     * @param type bonus type
+     * @return bonus filename
+     */
     public static String getBoniName(BonusType type) {
         if (!BONI_NAMES.containsKey(type)) {
             throw new IllegalArgumentException("Unknown bonus type: " + type);
@@ -137,6 +155,12 @@ public class FileNameMapper {
         return BONI_NAMES.get(type);
     }
 
+    /**
+     * Return the filename for a player pawn.
+     *
+     * @param color player color
+     * @return player filename
+     */
     public static String loadPlayerName(PlayerColor color) {
         if (!PLAYER_NAMES.containsKey(color)) {
             throw new IllegalArgumentException("Unknown player color: " + color);
@@ -146,6 +170,12 @@ public class FileNameMapper {
 
 
 
+    /**
+     * Return the tile image name for a set of directions.
+     *
+     * @param direction list of directions
+     * @return tile image name
+     */
     public static String loadImageNameForDirection(List<Direction> direction) {
         direction.sort(Comparator.comparingInt(Direction::ordinal));
         return switch (direction.size()) {
@@ -195,11 +225,21 @@ public class FileNameMapper {
         };
     }
 
+    /**
+     * Set the current theme for tile filenames.
+     *
+     * @param theme theme to apply
+     */
     public static void setTheme(Theme theme) {
          setTileFileNamesForTheme(theme.getId());
     }
 
 
+    /**
+     * Update tile filename suffixes based on theme id.
+     *
+     * @param id theme id
+     */
     private static void setTileFileNamesForTheme(int id) {
         UP_DOWN = "I" + id;
         UP_RIGHT = "L" +  id;
@@ -207,5 +247,4 @@ public class FileNameMapper {
     }
 
 }
-
 
