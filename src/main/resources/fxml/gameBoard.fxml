@@ -77,7 +77,7 @@
                 <!-- LEFT SIDEBAR -->
                 <VBox fx:id="leftSidebar" spacing="12"  GridPane.columnIndex="0">
                     <!-- ... content from your old <left> section ... -->
-                    <VBox spacing="12" alignment="TOP_CENTER" styleClass="card" style="-fx-padding: 10 25 10 25;" >
+                    <VBox spacing="12" fx:id="nextTreasurePaneWrapper" alignment="TOP_CENTER" styleClass="card" >
                         <Label text="Nächster Schatz"  styleClass="section-header"/>
                         <StackPane fx:id="nextTreasurePane" styleClass="card,compact-card">
                             <!--Label fx:id="nextTreasure" styleClass="value-label"/ -->
@@ -168,7 +168,7 @@
 
                 <!-- CENTER GAME AREA -->
                 <StackPane fx:id="centerStackPane"  GridPane.columnIndex="1">
-                    <BorderPane fx:id="gameContainer"  styleClass="game-container">
+                    <BorderPane fx:id="gameContainer"  styleClass="game-container" >
                         <center>
                             <StackPane fx:id="centerWrapper">
                                 <GridPane fx:id="boardGrid" alignment="CENTER" styleClass="board"/>
