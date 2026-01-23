@@ -49,6 +49,9 @@ public class ScreenResolutionProperties {
 
 
 
+    /**
+     * Initialize the screen resolution settings from properties.
+     */
     @PostConstruct
     public void init() {
         log.info("Initializing game view resolution from properties: {}", gameBoardResolution);
@@ -82,11 +85,21 @@ public class ScreenResolutionProperties {
         }
     }
 
+    /**
+     * Return the current aspect ratio based on configured width and height.
+     *
+     * @return aspect ratio
+     */
     public Ratio getAspectRatio() {
         return aspectRatio(width, height);
     }
 
 
+    /**
+     * Initialize UI scaling for the provided root and viewport.
+     *
+     * @param props resolution properties container
+     */
     public void initUiScaling(ResolutionProperties props) {
 
 
@@ -187,6 +200,13 @@ public class ScreenResolutionProperties {
         JavaFXUtils.runOnFxThread(apply);
     }
 
+    /**
+     * Calculate scale ratios based on available width and height.
+     *
+     * @param availableW available width binding
+     * @param availableH available height binding
+     * @return scale ratio container
+     */
     private ScaleRatio getScaleRatio(DoubleBinding availableW, DoubleBinding availableH) {
         double offset = heightWithRegardsToWindowDecoration();
 
@@ -196,17 +216,36 @@ public class ScreenResolutionProperties {
         return new ScaleRatio(scaleX, scaleY, Math.min(scaleX, scaleY));
     }
 
+    /**
+     * Compute the height offset caused by window decorations.
+     *
+     * @return decoration height offset
+     */
     private Double heightWithRegardsToWindowDecoration() {
         return primaryStage.getHeight() - primaryStage.getScene().getHeight();
     }
 
 
 
+    /**
+     * Compute the greatest common divisor.
+     *
+     * @param a first value
+     * @param b second value
+     * @return greatest common divisor
+     */
     private static int gcd(int a, int b) {
         while (b != 0) { int t = b; b = a % b; a = t; }
         return Math.abs(a);
     }
 
+    /**
+     * Determine the aspect ratio from width and height.
+     *
+     * @param w width
+     * @param h height
+     * @return aspect ratio
+     */
     private static Ratio aspectRatio(int w, int h) {
         int g = gcd(w, h);
         int first = w / g;

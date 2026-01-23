@@ -10,6 +10,14 @@ import labyrinth.contracts.models.*;
 
 public class EventDeserializer extends JsonDeserializer<Object> {
 
+    /**
+     * Deserialize an event payload based on its "type" field.
+     *
+     * @param parser JSON parser
+     * @param context deserialization context
+     * @return typed event payload
+     * @throws IOException when parsing fails
+     */
     @Override
     public Object deserialize(JsonParser parser, DeserializationContext context)
             throws IOException {

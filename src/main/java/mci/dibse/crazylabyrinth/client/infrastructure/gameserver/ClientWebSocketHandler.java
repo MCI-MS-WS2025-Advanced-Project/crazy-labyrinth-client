@@ -48,6 +48,12 @@ public class ClientWebSocketHandler extends TextWebSocketHandler {
         this.eventListener = eventListener;
     }
 
+    /**
+     * Handle incoming text messages from the WebSocket.
+     *
+     * @param session WebSocket session
+     * @param message received message
+     */
     @Override
     protected void handleTextMessage(WebSocketSession session, TextMessage message) {
         log.debug("Received message from session {}: {}", session.getId(), message.getPayload());
@@ -82,6 +88,12 @@ public class ClientWebSocketHandler extends TextWebSocketHandler {
         }
     }
 
+    /**
+     * Register a session and complete the connection callback.
+     *
+     * @param session new WebSocket session
+     * @throws Exception when handler errors occur
+     */
     @Override
     public void afterConnectionEstablished(@NonNull WebSocketSession session) throws Exception {
         super.afterConnectionEstablished(session);
@@ -95,6 +107,13 @@ public class ClientWebSocketHandler extends TextWebSocketHandler {
         log.debug("WebSocket connection established with session: {}", session.getId());
     }
 
+    /**
+     * Handle session closure and publish disconnect events when needed.
+     *
+     * @param session closed session
+     * @param status close status
+     * @throws Exception when handler errors occur
+     */
     @Override
     public void afterConnectionClosed(
             @NonNull WebSocketSession session, @NonNull CloseStatus status) throws Exception {
@@ -116,6 +135,13 @@ public class ClientWebSocketHandler extends TextWebSocketHandler {
         canReceiveMessages = false;
     }
 
+    /**
+     * Handle transport errors and publish connection lost events.
+     *
+     * @param session WebSocket session
+     * @param exception transport exception
+     * @throws Exception when handler errors occur
+     */
     @Override
     public void handleTransportError(WebSocketSession session, Throwable exception)
             throws Exception {
@@ -129,6 +155,9 @@ public class ClientWebSocketHandler extends TextWebSocketHandler {
         canReceiveMessages = false;
     }
 
+    /**
+     * Close all open sessions and clear the session map.
+     */
     public void closeSession() {
         sessions.values()
                 .forEach(
@@ -147,6 +176,11 @@ public class ClientWebSocketHandler extends TextWebSocketHandler {
         sessions.clear();
     }
 
+    /**
+     * Handle a disconnect command by closing sessions.
+     *
+     * @param event disconnect command
+     */
     @EventListener
     public void handleDisconnectEvent(CommandType event) {
         if(CommandType.DISCONNECT.equals(event)) {
@@ -156,12 +190,22 @@ public class ClientWebSocketHandler extends TextWebSocketHandler {
         };
     }
 
+    /**
+     * Check if any active sessions remain.
+     *
+     * @return true when at least one session is open
+     */
     public boolean hasActiveSessions() {
         // Remove any closed sessions
         sessions.entrySet().removeIf(entry -> !entry.getValue().isOpen());
         return !sessions.isEmpty();
     }
 
+    /**
+     * Enable or disable receiving messages.
+     *
+     * @param canReceive true to receive messages
+     */
     public void setBlockForReceivingMessages(boolean canReceive) {
         this.canReceiveMessages = canReceive;
     }

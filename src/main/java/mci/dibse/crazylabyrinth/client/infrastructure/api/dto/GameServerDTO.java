@@ -74,6 +74,11 @@ public class GameServerDTO {
         this.lastSeen = lastSeen;
     }
 
+    /**
+     * Return a string representation of the game server DTO.
+     *
+     * @return string representation
+     */
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder("GameServer{");

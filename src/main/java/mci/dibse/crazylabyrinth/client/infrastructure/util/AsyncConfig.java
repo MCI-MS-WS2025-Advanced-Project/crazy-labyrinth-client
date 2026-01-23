@@ -11,6 +11,11 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 @EnableAsync
 public class AsyncConfig {
 
+    /**
+     * Create the executor used for WebSocket handling.
+     *
+     * @return configured executor
+     */
     @Bean("webSocketExecutor")
     public Executor webSocketExecutor() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();

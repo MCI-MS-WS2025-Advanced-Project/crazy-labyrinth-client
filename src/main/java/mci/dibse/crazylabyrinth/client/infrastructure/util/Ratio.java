@@ -7,6 +7,11 @@ public enum Ratio {
 
         private int id;
 
+        /**
+         * Return the ratio identifier.
+         *
+         * @return ratio id
+         */
         public int getId() {
             return id;
         }

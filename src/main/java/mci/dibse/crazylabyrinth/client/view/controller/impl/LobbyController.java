@@ -134,6 +134,9 @@ public class LobbyController extends BaseViewCleanup {
         this.achievementService = achievementService;
     }
 
+    /**
+     * Initialize bindings, table configuration, and listeners.
+     */
     @FXML
     public void initialize() {
 
@@ -211,6 +214,9 @@ public class LobbyController extends BaseViewCleanup {
         });
     }
 
+    /**
+     * Adjust side bar widths based on screen ratio.
+     */
     private void initViewToRatio() {
         Ratio ratio = screenResolutionProperties.getAspectRatio();
         switch (ratio) {
@@ -226,6 +232,9 @@ public class LobbyController extends BaseViewCleanup {
     }
 
 
+    /**
+     * Initialize UI scaling based on screen resolution.
+     */
     private void initUiScaling() {
         ScreenResolutionProperties.ResolutionProperties props = new ScreenResolutionProperties.ResolutionProperties(root,
                 viewport);
@@ -233,6 +242,9 @@ public class LobbyController extends BaseViewCleanup {
 
     }
 
+    /**
+     * Configure the results table when results become available.
+     */
     private void setupResultsTable() {
         log.info("setupResultsTable");
 
@@ -303,10 +315,18 @@ public class LobbyController extends BaseViewCleanup {
 
     }
 
+    /**
+     * Handle the leave lobby button click.
+     *
+     * @param actionEvent button event
+     */
     public void onleaveLobbyButtonClick(ActionEvent actionEvent) {
         lobbyViewModel.leaveLobby();
     }
 
+    /**
+     * Handle the start game button click and trigger countdown lock.
+     */
     @FXML
     public void onStartButtonClick() {
         isStartButtonLocked.set(true);
@@ -318,6 +338,11 @@ public class LobbyController extends BaseViewCleanup {
     }
 
 
+    /**
+     * Cancel countdown when a disconnect event occurs in the lobby.
+     *
+     * @param event application event
+     */
     @EventListener
     public void handleDisconnectEvent(ApplicationEvents event) {
         if (NavigationStateViewModel.ScreenId.LOBBY.equals(navigationStateViewModel.getCurrentScreenId())) {
@@ -328,6 +353,13 @@ public class LobbyController extends BaseViewCleanup {
         }
     }
 
+    /**
+     * Decide whether cleanup should run when leaving the lobby.
+     *
+     * @param oldValue previous screen
+     * @param newValue new screen
+     * @return true when cleanup should run
+     */
     @Override
     protected boolean customCleanupCheckpoint(
             NavigationStateViewModel.ScreenId oldValue,
@@ -337,6 +369,9 @@ public class LobbyController extends BaseViewCleanup {
                 && !NavigationStateViewModel.ScreenId.LOBBY.equals(newValue);
     }
 
+    /**
+     * Clear bindings, listeners, and table state on view exit.
+     */
     @Override
     public void cleanup() {
         /*
@@ -387,6 +422,9 @@ public class LobbyController extends BaseViewCleanup {
         if (cleanUpTaskResultsTable != null)  cleanUpTaskResultsTable.run();
     }
 
+    /**
+     * Initialize countdown timer bindings and listeners.
+     */
     private void setupCountDownTimer() {
         initCountdownTimeline();
 
@@ -412,6 +450,9 @@ public class LobbyController extends BaseViewCleanup {
         }
     }
 
+    /**
+     * Initialize the countdown timeline used for auto-start.
+     */
     private void initCountdownTimeline() {
         countdownTimeline =
                 new Timeline(
@@ -428,6 +469,9 @@ public class LobbyController extends BaseViewCleanup {
                 Animation.INDEFINITE); // we control stopping via remainingTimer
     }
 
+    /**
+     * Register listeners that manage the countdown based on player count.
+     */
     private void initListener() {
         ListChangeListener<PlayerInfoItem> countDownTimerListener =
                 (change) -> {
@@ -443,6 +487,9 @@ public class LobbyController extends BaseViewCleanup {
         lobbyViewModel.addListenerToPlayersListProperty(countDownTimerListener);
     }
 
+    /**
+     * Stop the countdown and reset timer to the default value.
+     */
     private void cancelCountdown() {
         if (countdownTimeline != null) {
             countdownTimeline.stop();
@@ -450,6 +497,9 @@ public class LobbyController extends BaseViewCleanup {
         remainingTimer.set(DEFAULT_START_GAME_TIMER);
     }
 
+    /**
+     * Start the countdown when not already running.
+     */
     private void startCountdownIfNeeded() {
         if (countdownTimeline == null) {
             initCountdownTimeline();
@@ -460,6 +510,9 @@ public class LobbyController extends BaseViewCleanup {
         }
     }
 
+    /**
+     * Configure the player table columns and cell factories.
+     */
     private void setUpTableColumns() {
         playerNameColumn.setCellValueFactory(cellData -> cellData.getValue().nameProperty());
         colorColumn.setCellValueFactory(cellData -> cellData.getValue().colorProperty());
@@ -488,6 +541,9 @@ public class LobbyController extends BaseViewCleanup {
                         });
     }
 
+    /**
+     * Configure the theme combo box.
+     */
     private void setupThemeComboBox() {
         boardTheme.setItems(FXCollections.observableArrayList(Theme.values()));
         boardTheme.getSelectionModel().select(Theme.RUNEHAVEN_LABYRINTH);
@@ -519,11 +575,19 @@ public class LobbyController extends BaseViewCleanup {
     }
 
 
+    /**
+     * Trigger a start game command with current settings.
+     */
         private void startGame() {
         StartGameRecord gameStartRecord = gatherStartGameData();
         lobbyViewModel.startGame(gameStartRecord);
     }
 
+    /**
+     * Collect settings for starting a game.
+     *
+     * @return start game record
+     */
     private StartGameRecord gatherStartGameData() {
         int treasureCardCount = treasureCardsSpinner.getValue();
         treasureCardCount = treasureCardCount * Integer.parseInt(connectedPlayers.getText());
@@ -538,6 +602,12 @@ public class LobbyController extends BaseViewCleanup {
     }
 
     // Helper method to convert PlayerColor to JavaFX Color
+    /**
+     * Convert player colors to JavaFX colors.
+     *
+     * @param playerColor player color enum
+     * @return JavaFX color
+     */
     private Color convertPlayerColorToFxColor(PlayerColor playerColor) {
         switch (playerColor) {
             case RED:
@@ -554,6 +624,12 @@ public class LobbyController extends BaseViewCleanup {
         }
     }
 
+    /**
+     * Map a board size to the display label.
+     *
+     * @param boardSize board size value
+     * @return display label
+     */
     private String mapBoardSizeToLabel(int boardSize) {
         return switch (boardSize) {
             case 5 -> SMALL_GAME_BOARD_SIZE;
@@ -563,6 +639,12 @@ public class LobbyController extends BaseViewCleanup {
         };
     }
 
+    /**
+     * Map a board size label to the numeric size.
+     *
+     * @param label size label
+     * @return board size
+     */
     private int mapLabelToBoardSize(String label) {
         return switch (label) {
             case SMALL_GAME_BOARD_SIZE -> 5;
@@ -572,14 +654,29 @@ public class LobbyController extends BaseViewCleanup {
         };
     }
 
+    /**
+     * Convert minutes to seconds.
+     *
+     * @param minutes minutes value
+     * @return seconds value
+     */
     private int minutesToSeconds(int minutes) {
         return minutes * 60;
     }
 
+    /**
+     * Convert seconds to minutes.
+     *
+     * @param seconds seconds value
+     * @return minutes value
+     */
     private int secondsToMinutes(int seconds) {
         return seconds / 60;
     }
 
+    /**
+     * Bind error handling to show alert modals.
+     */
     private void setupErrorHandling() {
         ChangeListener<Boolean> errorListener =
                 (obs, oldVal, newVal) -> {
@@ -593,6 +690,12 @@ public class LobbyController extends BaseViewCleanup {
     }
 
 
+    /**
+     * Build an achievements summary string for a ranking entry.
+     *
+     * @param entry ranking entry
+     * @return achievements summary string
+     */
     private String getAchievementResultsStringForPlayer(RankingEntry entry) {
         String id = entry.getPlayerId();
         List<AchievementUnlockedEventPayload> achievements = achievementService.getAchievementEventsForPLayerId(id);
@@ -609,6 +712,11 @@ public class LobbyController extends BaseViewCleanup {
                 .collect(Collectors.joining(", "));
     }
 
+    /**
+     * Update the theme used for game board assets.
+     *
+     * @param theme selected theme
+     */
     private void setThemeForGameBoard(Theme theme) {
         FileNameMapper.setTheme(theme);
     }

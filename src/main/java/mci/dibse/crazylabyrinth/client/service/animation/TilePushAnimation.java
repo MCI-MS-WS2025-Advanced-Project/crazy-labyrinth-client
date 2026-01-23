@@ -35,6 +35,9 @@ public class TilePushAnimation implements GameAnimation {
         this.boardGrid = boardGrid;
     }
 
+    /**
+     * Animate the tile push for the configured row/column and direction.
+     */
     @Override
     public void animate() {
         isRunning = true;
@@ -83,16 +86,33 @@ public class TilePushAnimation implements GameAnimation {
         parallelTransition.play();
     }
 
+    /**
+     * Callback for animation completion; no cleanup currently required.
+     */
     @Override
     public void onCompleted() {
         // Cleanup if needed
     }
 
+    /**
+     * Report whether the animation is currently running.
+     *
+     * @return true when the animation is in progress
+     */
     @Override
     public boolean isRunning() {
         return isRunning;
     }
 
+    /**
+     * Animate pushing a column up or down.
+     *
+     * @param columnIndex column index to move
+     * @param downward true to push down, false to push up
+     * @param boardGrid grid containing tiles
+     * @param transitions list to collect transitions
+     * @param cellsToAnimate list to collect animated cells
+     */
     private void animateColumnPush(
             int columnIndex,
             boolean downward,
@@ -132,6 +152,15 @@ public class TilePushAnimation implements GameAnimation {
         }
     }
 
+    /**
+     * Animate pushing a row left or right.
+     *
+     * @param rowIndex row index to move
+     * @param rightward true to push right, false to push left
+     * @param boardGrid grid containing tiles
+     * @param transitions list to collect transitions
+     * @param cellsToAnimate list to collect animated cells
+     */
     private void animateRowPush(
             int rowIndex,
             boolean rightward,
@@ -171,6 +200,14 @@ public class TilePushAnimation implements GameAnimation {
         }
     }
 
+    /**
+     * Build a transition that moves a tile to the target cell.
+     *
+     * @param animatedNode node to animate
+     * @param targetCell destination cell
+     * @param sourceCell source cell for delta calculation
+     * @return configured translate transition
+     */
     private TranslateTransition createTileTransition(
             StackPane animatedNode, StackPane targetCell, StackPane sourceCell) {
         double deltaX =

@@ -36,6 +36,13 @@ public class ImageResourceLoader {
 
 
 
+    /**
+     * Create an ImageView and apply rotation if needed.
+     *
+     * @param image image to display
+     * @param rotationAngle rotation angle in degrees
+     * @return configured ImageView
+     */
     public static ImageView createImageViewAndRotate(Image image, double rotationAngle) {
         ImageView imageView = new ImageView(image);
         if (rotationAngle != 0) {
@@ -46,21 +53,45 @@ public class ImageResourceLoader {
 
 
 
+    /**
+     * Load a player image by color.
+     *
+     * @param color player color
+     * @return player image
+     */
     public static Image loadImage(PlayerColor color) {
         String name = FileNameMapper.loadPlayerName(color);
        return loadImage(name, IMAGE_TYPE.PLAYER);
     }
 
+    /**
+     * Load a treasure image by id.
+     *
+     * @param id treasure id
+     * @return treasure image
+     */
     public static Image loadImage(int id) {
         String name = FileNameMapper.getTreasureName(id);
         return loadImage(name, IMAGE_TYPE.TREASURE);
     }
 
+    /**
+     * Load a tile image by entrances.
+     *
+     * @param direction list of directions
+     * @return tile image
+     */
     public static Image loadImage(List<Direction> direction) {
         String name = FileNameMapper.loadImageNameForDirection(direction);
         return loadImage(name, IMAGE_TYPE.TILE);
     }
 
+    /**
+     * Load a bonus image by type.
+     *
+     * @param bonusType bonus type
+     * @return bonus image
+     */
     public static Image loadImage(BonusType bonusType) {
         String name = FileNameMapper.getBoniName(bonusType);
         return loadImage(name, IMAGE_TYPE.BONI);
@@ -69,6 +100,13 @@ public class ImageResourceLoader {
 
     /**
      * Load image from resources with caching
+     */
+    /**
+     * Load an image from resources with caching and defensive copying.
+     *
+     * @param imageFileName file base name
+     * @param type image type
+     * @return loaded image or null
      */
     private static Image loadImage(String imageFileName, IMAGE_TYPE type) {
         imageFileName += POSTFIX;
@@ -119,6 +157,12 @@ public class ImageResourceLoader {
     /**
      * Creates a deep copy of the image pixels into a new WritableImage.
      * Note: The original image must be fully loaded for getPixelReader() to work.
+     */
+    /**
+     * Copy an image into a writable image for safe reuse.
+     *
+     * @param original original image
+     * @return copied image or null
      */
     public static Image copyImage(Image original) {
         if (original == null) {

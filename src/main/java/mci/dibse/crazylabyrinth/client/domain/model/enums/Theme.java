@@ -13,7 +13,18 @@ public enum Theme {
         this.id = id;
     }
 
+    /**
+     * Return the display name for the theme.
+     *
+     * @return display name
+     */
     public String getDisplayName() { return displayName; }
+
+    /**
+     * Return the theme identifier.
+     *
+     * @return theme id
+     */
     public int getId() { return id; }
 
 }

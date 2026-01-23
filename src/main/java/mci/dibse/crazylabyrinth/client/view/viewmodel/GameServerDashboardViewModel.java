@@ -72,6 +72,9 @@ public class GameServerDashboardViewModel extends BaseViewModel
     }
 
     // todo test
+    /**
+     * Dispose items and clear server state.
+     */
     @Override
     public void cleanup() {
         Runnable cleanup =
@@ -83,6 +86,13 @@ public class GameServerDashboardViewModel extends BaseViewModel
         runOnFxThread(cleanup);
     }
 
+    /**
+     * Decide whether to run cleanup when leaving the main screen.
+     *
+     * @param oldValue previous screen
+     * @param newValue new screen
+     * @return true when cleanup should run
+     */
     @Override
     protected boolean customCleanupCheckpoint(
             NavigationStateViewModel.ScreenId oldValue,
@@ -92,15 +102,28 @@ public class GameServerDashboardViewModel extends BaseViewModel
                 && !NavigationStateViewModel.ScreenId.MAIN.equals(newValue);
     }
 
+    /**
+     * Expose the "only joinable" filter property.
+     *
+     * @return boolean property controlling joinable filtering
+     */
     public BooleanProperty onlyJoinableProperty() {
         return onlyJoinable;
     }
 
+    /**
+     * Apply server updates from the management service.
+     *
+     * @param servers updated server list
+     */
     @Override
     public void onServersUpdated(Collection<GameServer> servers) {
         applyServer(servers);
     }
 
+    /**
+     * Refresh the server list and update error state on failures.
+     */
     public void refreshServerList() {
         setRefreshing(true);
         try {
@@ -117,10 +140,16 @@ public class GameServerDashboardViewModel extends BaseViewModel
         }
     }
 
+    /**
+     * Configure filtering based on joinable status.
+     */
     private void setupFilteringAndSorting() {
         filtered.setPredicate(this::matchesJoinable);
     }
 
+    /**
+     * Register listeners for data changes and filter updates.
+     */
     private void registerListeners() {
         this.service.addListener(this);
         // Keep items list in sync with map changes
@@ -133,6 +162,12 @@ public class GameServerDashboardViewModel extends BaseViewModel
         serverMap.addListener(serverMapListener);
     }
 
+    /**
+     * Extract observables that should trigger UI updates for a server item.
+     *
+     * @param item server item
+     * @return array of observable properties
+     */
     private Observable[] extractObservables(GameServerItem item) {
         return new Observable[] {
             item.nameProperty(),
@@ -142,12 +177,22 @@ public class GameServerDashboardViewModel extends BaseViewModel
         };
     }
 
+    /**
+     * Apply a map change to the observable list.
+     *
+     * @param ch map change event
+     */
     private void updateListFromChange(
             MapChangeListener.Change<? extends UUID, ? extends GameServerItem> ch) {
         if (ch.wasRemoved()) items.remove(ch.getValueRemoved());
         if (ch.wasAdded()) items.add(ch.getValueAdded());
     }
 
+    /**
+     * Apply updates to the server list on the FX thread.
+     *
+     * @param servers incoming server list
+     */
     private void applyServer(Collection<GameServer> servers) {
         runOnFxThread(
                 () -> {
@@ -156,6 +201,11 @@ public class GameServerDashboardViewModel extends BaseViewModel
                 });
     }
 
+    /**
+     * Update existing server items or insert new ones.
+     *
+     * @param servers incoming server list
+     */
     private void upsertServers(Collection<GameServer> servers) {
         for (GameServer server : servers) {
             GameServerItem item = serverMap.get(server.getId());
@@ -167,6 +217,11 @@ public class GameServerDashboardViewModel extends BaseViewModel
         }
     }
 
+    /**
+     * Remove servers that are no longer present in the update.
+     *
+     * @param servers incoming server list
+     */
     private void removeStaleServers(Collection<GameServer> servers) {
         Set<UUID> incomingIds =
                 servers.stream()
@@ -176,6 +231,12 @@ public class GameServerDashboardViewModel extends BaseViewModel
         serverMap.keySet().removeIf(id -> !incomingIds.contains(id));
     }
 
+    /**
+     * Determine whether a server matches the joinable filter.
+     *
+     * @param item server item to test
+     * @return true when the server should be shown
+     */
     private boolean matchesJoinable(GameServerItem item) {
         if (!onlyJoinable.get()) return true;
         if (item == null) return false;
@@ -186,10 +247,18 @@ public class GameServerDashboardViewModel extends BaseViewModel
         return isLobby && hasCapacity;
     }
 
+    /**
+     * Clear the server map on the FX thread.
+     */
     private void clearServerMap() {
         runOnFxThread(serverMap::clear);
     }
 
+    /**
+     * Send a connect command for the selected server.
+     *
+     * @param gameInfo connection data for the target server
+     */
     public void joinSelectedServer(GameInfoRecord gameInfo) {
         try {
             clientCommandService.sendConnectCommand(gameInfo);
@@ -198,6 +267,11 @@ public class GameServerDashboardViewModel extends BaseViewModel
         }
     }
 
+    /**
+     * Determine whether errors should be shown on the main screen.
+     *
+     * @return true when the main screen is active
+     */
     @Override
     protected boolean isErrorRelevant() {
         return NavigationStateViewModel.ScreenId.MAIN.equals(

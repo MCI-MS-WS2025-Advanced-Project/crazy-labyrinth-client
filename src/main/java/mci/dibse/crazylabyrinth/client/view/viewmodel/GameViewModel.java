@@ -86,11 +86,19 @@ public class GameViewModel extends BaseViewModel implements PlayerConnectedAckLi
         lobbyService.addPlayerListener(this);
     }
 
+    /**
+     * Unregister listeners before bean destruction.
+     */
     @PreDestroy
     public void preDestroy() {
         lobbyService.removePlayerListener(this);
     }
 
+    /**
+     * Return the state item for the current turn's player.
+     *
+     * @return player state for the current turn
+     */
     public PlayerStateItem getCurrentPlayerState() {
         return playerStatesSorted.stream()
                 .filter(
@@ -101,75 +109,166 @@ public class GameViewModel extends BaseViewModel implements PlayerConnectedAckLi
                 .orElseThrow();
     }
 
+    /**
+     * Return the current turn player id.
+     *
+     * @return current player id as string
+     */
     public String getCurrentPlayerIdAsString() {
         return this.currentTurnInfoItem.getCurrentPlayerIdAsString();
     }
 
+    /**
+     * Return a localized label for the current turn state.
+     *
+     * @return label for the current turn state
+     */
     public String getCurrentTurnStateLabelAsString() {
         return mapTurnStateToLabel(currentTurnInfoItem.getTurnStateProperty().get());
     }
 
+    /**
+     * Check whether the client player has timed out.
+     *
+     * @return true when the client player timed out
+     */
     public boolean isClientPlayerTimeout() {
         return turnTimeoutProperty.get();
     }
 
+    /**
+     * Return the property that holds the current player id.
+     *
+     * @return current player id property
+     */
     public SimpleStringProperty getCurrentPlayerIdProperty() {
         return currentTurnInfoItem.getCurrentPlayerIdProperty();
     }
 
+    /**
+     * Return the current spare tile item.
+     *
+     * @return spare tile item
+     */
     public TileItem getSpareTileItem() {
         return gameBoardItem.getSpareTile();
     }
 
+    /**
+     * Return the spare tile property.
+     *
+     * @return spare tile property
+     */
     public ObjectProperty<TileItem> getSpareTileProperty() {
         return gameBoardItem.getSpareTileProperty();
     }
 
+    /**
+     * Return the current turn state.
+     *
+     * @return current turn state
+     */
     public TurnState getCurrentTurnState() {
         return currentTurnInfoItem.getTurnStateProperty().get();
     }
 
+    /**
+     * Return the current turn state property.
+     *
+     * @return current turn state property
+     */
     public SimpleObjectProperty<TurnState> getCurrentTurnStateProperty() {
         return currentTurnInfoItem.getTurnStateProperty();
     }
 
+    /**
+     * Return the name of the next treasure.
+     *
+     * @return next treasure name
+     */
     public String getNextTreasureNameAsString() {
         return nextTreasureItemProperty.get().getName();
     }
 
+    /**
+     * Check whether a pending rotation is active.
+     *
+     * @return true when a rotation is pending
+     */
     public boolean isPendingRotation() {
         return pendingRotationProperty.get();
     }
 
+    /**
+     * Check whether bonuses are enabled for the game.
+     *
+     * @return true when bonuses are enabled
+     */
     public boolean isBonusEnabled() {
         return isBonusEnabledProperty.get();
     }
 
+    /**
+     * Check whether the push fixed bonus is active.
+     *
+     * @return true when push fixed bonus is active
+     */
     public boolean isPushFixedTileBonusActive() {
         return isPushFixedTileBonusActiveProperty.get();
     }
 
+    /**
+     * Check whether the push twice bonus is active.
+     *
+     * @return true when push twice bonus is active
+     */
     public boolean isPushTwiceTileBonusActive() {
         return isPushTwiceTileBonusActiveProperty.get();
     }
 
+    /**
+     * Check whether the swap bonus is active.
+     *
+     * @return true when swap bonus is active
+     */
     public boolean isSwapBonusActive() {
         return isSwapBonusActiveProperty.get();
     }
 
+    /**
+     * Check whether the beam bonus is active.
+     *
+     * @return true when beam bonus is active
+     */
     public boolean isBeamTileBonusActive() {
         return isBeamTileBonusActiveProperty.get();
     }
 
+    /**
+     * Add a listener to the turn end time property.
+     *
+     * @param turnTimeChangeListener listener for turn end time changes
+     */
     public void addListenerToCurrentTurnEndTime(
             ChangeListener<OffsetDateTime> turnTimeChangeListener) {
         currentTurnInfoItem.addListenerToTurnEndTimeProperty(turnTimeChangeListener);
     }
 
+    /**
+     * Return the image property for the next treasure.
+     *
+     * @return next treasure image property
+     */
     public SimpleObjectProperty<Image> getNextTreasureImageProperty() {
         return nextTreasureItemProperty.get().getTreasureImageProperty();
     }
 
+    /**
+     * Check if any other bonus is active that would block the given bonus type.
+     *
+     * @param bonusType bonus type to check
+     * @return true when another bonus is currently active
+     */
     public boolean isAnyBonusActive(BonusType bonusType) {
         switch (bonusType) {
             case BonusType.SWAP -> {
@@ -191,6 +290,11 @@ public class GameViewModel extends BaseViewModel implements PlayerConnectedAckLi
         return false;
     }
 
+    /**
+     * Return the player state for the client player.
+     *
+     * @return client player state
+     */
     public PlayerStateItem getClientPlayerState() {
         return playerStatesSorted.stream()
                 .filter(i -> i.getPlayerIdAsString().equals(clientPlayer.getId()))
@@ -198,6 +302,9 @@ public class GameViewModel extends BaseViewModel implements PlayerConnectedAckLi
                 .orElseThrow();
     }
 
+    /**
+     * Release resources and remove listeners for this view model.
+     */
     @Override
     public void cleanup() {
         // todo?
@@ -214,12 +321,22 @@ public class GameViewModel extends BaseViewModel implements PlayerConnectedAckLi
         gameEndTime = null;
     }
 
+    /**
+     * Capture the connected client player details.
+     *
+     * @param clientPlayer connected player payload
+     */
     @Override
     public void onPlayerConnected(ClientPlayer clientPlayer) {
         this.clientPlayer = clientPlayer;
         turnTimeoutProperty.set(false);
     }
 
+    /**
+     * Handle game state events and update view state on the FX thread.
+     *
+     * @param gameState game state payload
+     */
     @EventListener
     public void handleGameStateEvent(GameStateEventPayload gameState) {
         Runnable task =
@@ -234,6 +351,11 @@ public class GameViewModel extends BaseViewModel implements PlayerConnectedAckLi
         JavaFXUtils.runOnFxThread(task);
     }
 
+    /**
+     * Update the next treasure card when the event arrives.
+     *
+     * @param nextTreasureCard next treasure payload
+     */
     @EventListener
     public void handleTreasureCardEvent(NextTreasureCardEventPayload nextTreasureCard) {
         Runnable task =
@@ -245,6 +367,11 @@ public class GameViewModel extends BaseViewModel implements PlayerConnectedAckLi
         JavaFXUtils.runOnFxThread(task);
     }
 
+    /**
+     * Mark the turn as timed out when the timeout event occurs.
+     *
+     * @param event application event
+     */
     @EventListener
     public void handleTurnTimeout(ApplicationEvents event) {
         if (!ApplicationEvents.TURN_TIMEOUT.equals(event)) return;
@@ -253,6 +380,11 @@ public class GameViewModel extends BaseViewModel implements PlayerConnectedAckLi
         JavaFXUtils.runOnFxThread(task);
     }
 
+    /**
+     * Apply player updates to the existing player state item.
+     *
+     * @param event player update payload
+     */
     @EventListener
     public void handlePlayerUpdate(PlayerUpdatedEventPayload event) {
         log.debug("handle player update");
@@ -264,17 +396,33 @@ public class GameViewModel extends BaseViewModel implements PlayerConnectedAckLi
                 .updatePlayerInfoFrom(event.getPlayer());
     }
 
+    /**
+     * Add a listener for spare tile changes.
+     *
+     * @param spareTileListener listener to add
+     */
     public void addListenerToSpareTileProperty(ChangeListener<TileItem> spareTileListener) {
         getSpareTileProperty().addListener(spareTileListener);
         this.spareTileListener = spareTileListener;
     }
 
+    /**
+     * Add a listener for turn state changes.
+     *
+     * @param turnStateChangeListener listener to add
+     */
     public void addListenerToCurrentTurnStateProperty(
             ChangeListener<TurnState> turnStateChangeListener) {
         getCurrentTurnStateProperty().addListener(turnStateChangeListener);
         this.turnStateChangeListener = turnStateChangeListener;
     }
 
+    /**
+     * Map a turn state to a localized label.
+     *
+     * @param turnState turn state enum
+     * @return label for the turn state
+     */
     public String mapTurnStateToLabel(TurnState turnState) {
         return switch (turnState) {
             case WAITING_FOR_MOVE -> WAITING_FOR_MOVE_LABEL;
@@ -282,6 +430,12 @@ public class GameViewModel extends BaseViewModel implements PlayerConnectedAckLi
         };
     }
 
+    /**
+     * Send a move pawn command and handle any UI errors.
+     *
+     * @param finalRow target row
+     * @param finalCol target column
+     */
     public void movePawnCommand(int finalRow, int finalCol) {
         try {
             clientCommandService.sendMovePawnCommand(finalRow, finalCol);
@@ -290,6 +444,11 @@ public class GameViewModel extends BaseViewModel implements PlayerConnectedAckLi
         }
     }
 
+    /**
+     * Send a push tile command and handle any UI errors.
+     *
+     * @param data push tile command data
+     */
     public void pushTileCommand(PushTileCommandRecord data) {
         try {
             clientCommandService.sendPushTileCommand(data);
@@ -298,8 +457,14 @@ public class GameViewModel extends BaseViewModel implements PlayerConnectedAckLi
         }
     }
 
+    /**
+     * Handle rotation left; currently no-op.
+     */
     public void onLeftRotationOfSpareTile() {}
 
+    /**
+     * Send a rotate tile command and handle any UI errors.
+     */
     public void onRightRotationOfSpareTile() {
         try {
             clientCommandService.sendRotateTileCommand();
@@ -308,6 +473,9 @@ public class GameViewModel extends BaseViewModel implements PlayerConnectedAckLi
         }
     }
 
+    /**
+     * Send a use push twice bonus command.
+     */
     public void sendUsePushTwiceCommand() {
         try {
             clientCommandService.sendUsePushTwiceComnmand();
@@ -316,6 +484,12 @@ public class GameViewModel extends BaseViewModel implements PlayerConnectedAckLi
         }
     }
 
+    /**
+     * Send a use beam bonus command.
+     *
+     * @param finalRow target row
+     * @param finalCol target column
+     */
     public void sendUseBeamCommand(int finalRow, int finalCol) {
         try {
             clientCommandService.sendUseBeamCommand(finalRow, finalCol);
@@ -324,6 +498,11 @@ public class GameViewModel extends BaseViewModel implements PlayerConnectedAckLi
         }
     }
 
+    /**
+     * Send a use swap bonus command.
+     *
+     * @param playerId target player id
+     */
     public void sendUseSwapCommand(String playerId) {
         try {
             clientCommandService.sendUseSwapCommand(playerId);
@@ -332,12 +511,22 @@ public class GameViewModel extends BaseViewModel implements PlayerConnectedAckLi
         }
     }
 
+    /**
+     * Return the remaining game time in seconds.
+     *
+     * @return remaining game time in seconds
+     */
     public Long getRemainingGameTimeInSeconds() {
         return Duration.between(
                         timerService.getCurrentServerTimeWithGameServerOffset(), gameEndTime)
                 .toSeconds();
     }
 
+    /**
+     * Return the remaining turn time in seconds.
+     *
+     * @return remaining turn time in seconds
+     */
     public Long getRemainingTurnTimeInSeconds() {
         return Duration.between(
                         timerService.getCurrentServerTimeWithGameServerOffset(),
@@ -345,10 +534,22 @@ public class GameViewModel extends BaseViewModel implements PlayerConnectedAckLi
                 .toSeconds();
     }
 
+    /**
+     * Check whether the current turn time is initialized.
+     *
+     * @return true when the turn time is available
+     */
     public boolean isCurrentTurnTimeSet() {
         return currentTurnInfoItem != null;
     }
 
+    /**
+     * Decide whether to run custom cleanup on navigation changes.
+     *
+     * @param oldValue previous screen
+     * @param newValue new screen
+     * @return true when cleanup should run
+     */
     @Override
     protected boolean customCleanupCheckpoint(
             NavigationStateViewModel.ScreenId oldValue,
@@ -358,6 +559,11 @@ public class GameViewModel extends BaseViewModel implements PlayerConnectedAckLi
                 && !NavigationStateViewModel.ScreenId.GAMEBOARD.equals(newValue);
     }
 
+    /**
+     * Determine whether errors are relevant for the game view.
+     *
+     * @return true when the game screen is active
+     */
     @Override
     protected boolean isErrorRelevant() {
         log.debug("is error relevant for game view model:");
@@ -365,6 +571,11 @@ public class GameViewModel extends BaseViewModel implements PlayerConnectedAckLi
                 navigationStateViewModel.getCurrentScreenProperty().get());
     }
 
+    /**
+     * Initialize game state for a newly started game.
+     *
+     * @param gameState game state payload
+     */
     private void gameStarted(GameStateEventPayload gameState) {
         GameBoard initialBoard = gameState.getBoard();
         isBonusEnabledProperty.set(isBonusEnabled(gameState));
@@ -385,6 +596,11 @@ public class GameViewModel extends BaseViewModel implements PlayerConnectedAckLi
         navigationStateViewModel.navigateTo(NavigationStateViewModel.ScreenId.GAMEBOARD);
     }
 
+    /**
+     * Apply incremental game state updates.
+     *
+     * @param gameState game state payload
+     */
     private void gameUpdated(GameStateEventPayload gameState) {
         this.gameBoardItem.updateFrom(gameState.getBoard());
         Arrays.stream(gameState.getPlayers())
@@ -407,6 +623,11 @@ public class GameViewModel extends BaseViewModel implements PlayerConnectedAckLi
         this.pendingRotationProperty.set(false);
     }
 
+    /**
+     * Replace the next treasure with "back to home" when the last treasure is found.
+     *
+     * @param p player state payload
+     */
     private void checkIfLastTreasureIsFound(PlayerState p) {
         if (p.getRemainingTreasureCount() > 0) return;
         log.info("last treasure found setting up back to base treasure");
@@ -418,6 +639,12 @@ public class GameViewModel extends BaseViewModel implements PlayerConnectedAckLi
         nextTreasureItemProperty.set(backToHome);
     }
 
+    /**
+     * Determine whether any bonus tiles are available for the game.
+     *
+     * @param gameState game state payload
+     * @return true when a bonus is present on the board
+     */
     private boolean isBonusEnabled(GameStateEventPayload gameState) {
         GameBoard initialBoard = gameState.getBoard();
         if (initialBoard.getSpareTile().getBonus() != null) return true;
@@ -426,6 +653,9 @@ public class GameViewModel extends BaseViewModel implements PlayerConnectedAckLi
                 .anyMatch(tile -> tile.getBonus() != null);
     }
 
+    /**
+     * Leave the current game by sending a disconnect command.
+     */
     public void leaveGame() {
         clientCommandService.sendDisconnectCommand();
     }

@@ -9,6 +9,16 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class DeserializationProblemLogger extends DeserializationProblemHandler {
 
+    /**
+     * Log unknown properties during deserialization and mark them as handled.
+     *
+     * @param ctx deserialization context
+     * @param p JSON parser
+     * @param deserializer active deserializer
+     * @param o target object
+     * @param propertyName unknown property name
+     * @return true to indicate the property was handled
+     */
     @Override
     public boolean handleUnknownProperty(
             DeserializationContext ctx,

@@ -29,16 +29,31 @@ public class NavigationStateViewModel {
     private final ObjectProperty<ScreenId> currentScreenProperty =
             new SimpleObjectProperty<>(ScreenId.MAIN);
 
+    /**
+     * Navigate back to the lobby when the server rejects reconnection.
+     *
+     * @param error action error payload from the server
+     */
     @EventListener
     public void handleReconnectionAbort(ActionErrorEventPayload error) {
         if (ErrorCode.PLAYER_NOT_FOUND.equals(error.getErrorCode())) navigateTo(ScreenId.LOBBY);
     }
 
 
+    /**
+     * Return the currently active screen.
+     *
+     * @return current screen id
+     */
     public ScreenId getCurrentScreenId() {
             return currentScreenProperty.get();
     }
 
+    /**
+     * Update the current screen and notify listeners on the FX thread.
+     *
+     * @param screen target screen
+     */
     public void navigateTo(ScreenId screen) {
         log.debug("Navigating to screen: {}", screen);
         JavaFXUtils.runOnFxThread(() -> currentScreenProperty.set(screen));

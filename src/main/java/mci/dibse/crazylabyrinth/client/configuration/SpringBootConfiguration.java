@@ -38,6 +38,12 @@ public class SpringBootConfiguration {
     private static final String MODE_DEFAULT = "minimal";
     private static final String MODE_PROPERTY_NAME = "app.spring.mode";
 
+    /**
+     * Initialize Spring based on application properties.
+     *
+     * @param app JavaFX application instance
+     * @return configured application context
+     */
     public static ConfigurableApplicationContext initSpringBasedOnProperties(
             JavaFXClientApplication app) {
         try {
@@ -47,6 +53,13 @@ public class SpringBootConfiguration {
         }
     }
 
+    /**
+     * Determine the Spring mode and initialize the appropriate context.
+     *
+     * @param app JavaFX application instance
+     * @return configured application context
+     * @throws IOException when property loading fails
+     */
     private static ConfigurableApplicationContext checkSpringModeInProperties(
             JavaFXClientApplication app) throws IOException {
 
@@ -63,6 +76,11 @@ public class SpringBootConfiguration {
         }
     }
 
+    /**
+     * Load the Spring mode property from system properties or application properties.
+     *
+     * @return configured Spring mode
+     */
     private static String loadApplicationProperty() {
         String v = System.getProperty(MODE_PROPERTY_NAME);
         if (v != null) return v;
@@ -78,6 +96,13 @@ public class SpringBootConfiguration {
         return props.getProperty(MODE_PROPERTY_NAME, MODE_DEFAULT);
     }
 
+    /**
+     * Initialize a minimal Spring container for the JavaFX client.
+     *
+     * @param app JavaFX application instance
+     * @return configured application context
+     * @throws IOException when property loading fails
+     */
     private static ConfigurableApplicationContext minimalSpringContainerSetup(
             JavaFXClientApplication app) throws IOException {
         log.debug("Minimal Spring Container setup");
@@ -94,6 +119,12 @@ public class SpringBootConfiguration {
         return ctx;
     }
 
+    /**
+     * Initialize a full Spring Boot application context.
+     *
+     * @param app JavaFX application instance
+     * @return configured application context
+     */
     private static ConfigurableApplicationContext fullSpringBootSetup(JavaFXClientApplication app) {
         log.debug("Full Spring Boot setup");
         return new SpringApplicationBuilder()
@@ -102,6 +133,12 @@ public class SpringBootConfiguration {
                 .run(app.getParameters().getRaw().toArray(new String[0]));
     }
 
+    /**
+     * Add property sources for the minimal Spring setup.
+     *
+     * @param ctx application context
+     * @throws IOException when properties fail to load
+     */
     private static void setupEnvironmentForMinimalSetup(ConfigurableApplicationContext ctx)
             throws IOException {
         var env = ctx.getEnvironment();
@@ -110,6 +147,11 @@ public class SpringBootConfiguration {
         sources.addLast(new ResourcePropertySource("classpath:" + APPLICATION_DEV_PROPERTIES));
     }
 
+    /**
+     * Configure placeholder configurer for property resolution.
+     *
+     * @return property sources placeholder configurer
+     */
     private static PropertySourcesPlaceholderConfigurer setupResourcesForMinimalSetup() {
         var cfg = new PropertySourcesPlaceholderConfigurer();
         cfg.setLocations(
