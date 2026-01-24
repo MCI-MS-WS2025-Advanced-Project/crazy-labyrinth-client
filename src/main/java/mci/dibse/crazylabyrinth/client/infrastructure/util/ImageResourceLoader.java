@@ -1,7 +1,6 @@
 package mci.dibse.crazylabyrinth.client.infrastructure.util;
 
 import java.io.InputStream;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -15,12 +14,10 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class ImageResourceLoader {
 
-    private final static String POSTFIX = ".png";
-
+    private static final String POSTFIX = ".png";
 
     private static final String TILE_IMAGES_PATH = "/tiles/";
     private static final Map<String, Image> imageTileCache = new HashMap<>();
-
 
     private static final String TREASURE_IMAGES_PATH = "/treasures/";
     private static final Map<String, Image> imageTreasureCache = new HashMap<>();
@@ -33,8 +30,6 @@ public class ImageResourceLoader {
 
     private static final String BONI_IMAGES_PATH = "/boni/";
     private static final Map<String, Image> imageBoniCache = new HashMap<>();
-
-
 
     /**
      * Create an ImageView and apply rotation if needed.
@@ -51,8 +46,6 @@ public class ImageResourceLoader {
         return imageView;
     }
 
-
-
     /**
      * Load a player image by color.
      *
@@ -61,7 +54,7 @@ public class ImageResourceLoader {
      */
     public static Image loadImage(PlayerColor color) {
         String name = FileNameMapper.loadPlayerName(color);
-       return loadImage(name, IMAGE_TYPE.PLAYER);
+        return loadImage(name, IMAGE_TYPE.PLAYER);
     }
 
     /**
@@ -96,7 +89,6 @@ public class ImageResourceLoader {
         String name = FileNameMapper.getBoniName(bonusType);
         return loadImage(name, IMAGE_TYPE.BONI);
     }
-
 
     /**
      * Load image from resources with caching
@@ -133,24 +125,25 @@ public class ImageResourceLoader {
         }
 
         String finalImageFileName = imageFileName;
-        Image image = cache.computeIfAbsent(
-                imageFileName,
-                path -> {
-                    path = resourcePath + finalImageFileName;
-                    try (InputStream inputStream =
-                                 ImageResourceLoader.class.getResourceAsStream(path)) {
-                        if (inputStream == null) {
-                            log.error("Resource not found: {}", path);
-                            return null;
-                        }
-                        log.debug("Loading image: {}", path);
-                        return new Image(inputStream);
-                    } catch (Exception e) {
-                        log.error("Failed to load image: {}", path, e);
-                        return null;
-                    }
-                });
-       // return image;
+        Image image =
+                cache.computeIfAbsent(
+                        imageFileName,
+                        path -> {
+                            path = resourcePath + finalImageFileName;
+                            try (InputStream inputStream =
+                                    ImageResourceLoader.class.getResourceAsStream(path)) {
+                                if (inputStream == null) {
+                                    log.error("Resource not found: {}", path);
+                                    return null;
+                                }
+                                log.debug("Loading image: {}", path);
+                                return new Image(inputStream);
+                            } catch (Exception e) {
+                                log.error("Failed to load image: {}", path, e);
+                                return null;
+                            }
+                        });
+        // return image;
         return copyImage(image);
     }
 
@@ -178,8 +171,10 @@ public class ImageResourceLoader {
         return new javafx.scene.image.WritableImage(pixelReader, width, height);
     }
 
-
     private enum IMAGE_TYPE {
-        TILE, TREASURE, PLAYER, BONI
+        TILE,
+        TREASURE,
+        PLAYER,
+        BONI
     }
 }

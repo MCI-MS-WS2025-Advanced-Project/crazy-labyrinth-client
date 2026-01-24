@@ -29,12 +29,12 @@ public class GameServerItem extends BaseItem<GameServer> implements ViewItem {
     public GameServerItem(GameServer source) {
         super();
         this.id = source.getId();
-        Runnable apply = () -> {
-            setJoinableProperty();
-            updateFrom(source);
-        };
+        Runnable apply =
+                () -> {
+                    setJoinableProperty();
+                    updateFrom(source);
+                };
         JavaFXUtils.runOnFxThread(apply);
-
     }
 
     /**

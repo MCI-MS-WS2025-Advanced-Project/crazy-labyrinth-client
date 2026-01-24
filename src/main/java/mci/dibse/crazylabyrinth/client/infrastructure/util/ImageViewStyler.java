@@ -32,7 +32,6 @@ public class ImageViewStyler {
         glowShadow.setOffsetX(0);
         glowShadow.setOffsetY(0);
         glowShadow.setInput(lighting);
-
     }
 
     /**
@@ -41,7 +40,8 @@ public class ImageViewStyler {
      * @param playerImage image view to style
      * @param color player color for accent tint
      */
-    public static void applyPlayerStylingToImageView(javafx.scene.image.ImageView playerImage, PlayerColor color) {
+    public static void applyPlayerStylingToImageView(
+            javafx.scene.image.ImageView playerImage, PlayerColor color) {
 
         Color accentColor = PlayerPawnUtils.mapPlayerColorToFxColor(color);
 
@@ -66,26 +66,32 @@ public class ImageViewStyler {
 
         // Colored halo to draw attention (uses provided accent color)
         /*
-        DropShadow halo = new DropShadow();
-        halo.setRadius(6.0);
-        halo.setSpread(0.28);
-        halo.setColor(accentColor.deriveColor(0, 1, 1, 0.65));
-        halo.setOffsetX(0);
-        halo.setOffsetY(0);
-        halo.setInput(outline);
-*/
+                DropShadow halo = new DropShadow();
+                halo.setRadius(6.0);
+                halo.setSpread(0.28);
+                halo.setColor(accentColor.deriveColor(0, 1, 1, 0.65));
+                halo.setOffsetX(0);
+                halo.setOffsetY(0);
+                halo.setInput(outline);
+        */
         // Optional inner shadow for depth
         InnerShadow inner = new InnerShadow();
         inner.setRadius(2.0);
         inner.setChoke(0.35);
         inner.setColor(Color.rgb(0, 0, 0, 0.6));
-       // inner.setInput(halo);
+        // inner.setInput(halo);
         // Optional subtle tint using a blend (kept very low to preserve original colors)
-        // If the ImageView is resized, you may want to update this ColorInput's width/height accordingly.
-        double w = playerImage.getFitWidth() > 0 ? playerImage.getFitWidth() : playerImage.getImage().getWidth();
-        double h = playerImage.getFitHeight() > 0 ? playerImage.getFitHeight() : playerImage.getImage().getHeight();
+        // If the ImageView is resized, you may want to update this ColorInput's width/height
+        // accordingly.
+        double w =
+                playerImage.getFitWidth() > 0
+                        ? playerImage.getFitWidth()
+                        : playerImage.getImage().getWidth();
+        double h =
+                playerImage.getFitHeight() > 0
+                        ? playerImage.getFitHeight()
+                        : playerImage.getImage().getHeight();
         ColorInput tintLayer = new ColorInput(0, 0, w, h, accentColor.deriveColor(0, 1, 1, 0.12));
-
 
         /*
         Blend tintBlend = new Blend();
@@ -95,12 +101,17 @@ public class ImageViewStyler {
          */
 
         Blend tintOverSprite = new Blend(BlendMode.SRC_ATOP);
-        tintOverSprite.setTopInput(tintLayer);   // the color
-        tintOverSprite.setBottomInput(inner);    // the sprite + halo/outline chain
+        tintOverSprite.setTopInput(tintLayer); // the color
+        tintOverSprite.setBottomInput(inner); // the sprite + halo/outline chain
         playerImage.setEffect(tintOverSprite);
 
-        // Keep tint layer in sync if the ImageView changes size (optional, useful when using fitWidth/fitHeight)
-        playerImage.fitWidthProperty().addListener((obs, oldV, newV) -> tintLayer.setWidth(newV.doubleValue()));
-        playerImage.fitHeightProperty().addListener((obs, oldV, newV) -> tintLayer.setHeight(newV.doubleValue()));
+        // Keep tint layer in sync if the ImageView changes size (optional, useful when using
+        // fitWidth/fitHeight)
+        playerImage
+                .fitWidthProperty()
+                .addListener((obs, oldV, newV) -> tintLayer.setWidth(newV.doubleValue()));
+        playerImage
+                .fitHeightProperty()
+                .addListener((obs, oldV, newV) -> tintLayer.setHeight(newV.doubleValue()));
     }
 }

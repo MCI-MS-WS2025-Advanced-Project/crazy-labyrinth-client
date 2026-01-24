@@ -50,7 +50,8 @@ public class GameViewModel extends BaseViewModel implements PlayerConnectedAckLi
     @Getter private CurrentTurnInfoItem currentTurnInfoItem;
 
     @Getter
-    private final SimpleObjectProperty<TreasureItem> nextTreasureItemProperty = new SimpleObjectProperty<>();
+    private final SimpleObjectProperty<TreasureItem> nextTreasureItemProperty =
+            new SimpleObjectProperty<>();
 
     @Getter final SimpleBooleanProperty pendingRotationProperty = new SimpleBooleanProperty();
     @Getter final SimpleBooleanProperty turnTimeoutProperty = new SimpleBooleanProperty();
@@ -345,8 +346,8 @@ public class GameViewModel extends BaseViewModel implements PlayerConnectedAckLi
                         gameStarted(gameState);
                         return;
                     }
-                    if(NavigationStateViewModel.ScreenId.GAMEBOARD.equals(navigationStateViewModel.getCurrentScreenId())) gameUpdated(gameState);
-
+                    if (NavigationStateViewModel.ScreenId.GAMEBOARD.equals(
+                            navigationStateViewModel.getCurrentScreenId())) gameUpdated(gameState);
                 };
         JavaFXUtils.runOnFxThread(task);
     }
@@ -607,7 +608,8 @@ public class GameViewModel extends BaseViewModel implements PlayerConnectedAckLi
                 .forEach(
                         p -> {
                             String incomingId = p.getPlayerInfo().getId();
-                            if (incomingId.equals(clientPlayer.getId())) checkIfLastTreasureIsFound(p);
+                            if (incomingId.equals(clientPlayer.getId()))
+                                checkIfLastTreasureIsFound(p);
                             playerStatesSorted.stream()
                                     .filter(
                                             playerItem ->

@@ -1,15 +1,13 @@
 package mci.dibse.crazylabyrinth.client.infrastructure.util;
 
-import javafx.scene.image.Image;
-import labyrinth.contracts.models.BonusType;
-import labyrinth.contracts.models.Direction;
-import labyrinth.contracts.models.PlayerColor;
-import mci.dibse.crazylabyrinth.client.domain.model.enums.Theme;
-
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import labyrinth.contracts.models.BonusType;
+import labyrinth.contracts.models.Direction;
+import labyrinth.contracts.models.PlayerColor;
+import mci.dibse.crazylabyrinth.client.domain.model.enums.Theme;
 
 public class FileNameMapper {
 
@@ -19,50 +17,45 @@ public class FileNameMapper {
 
     private static final Map<PlayerColor, String> PLAYER_NAMES = new HashMap<>();
 
+    private static String UP_DOWN = "I0";
+    private static String UP_RIGHT = "L0";
+    private static String UP_DOWN_LEFT = "T0";
 
-    private static  String UP_DOWN = "I0";
-    private static  String UP_RIGHT = "L0";
-    private static  String UP_DOWN_LEFT = "T0";
+    private static final String TREASURE_0 = "BackToHome";
+    private static final String TREASURE_1 = "Schatz2";
+    private static final String TREASURE_2 = "Iron";
+    private static final String TREASURE_3 = "Gold";
+    private static final String TREASURE_4 = "Apple_red";
+    private static final String TREASURE_5 = "Bombe";
+    private static final String TREASURE_6 = "Fackel";
+    private static final String TREASURE_7 = "GoldMuenze";
+    private static final String TREASURE_8 = "Kelch";
+    private static final String TREASURE_9 = "Kette";
+    private static final String TREASURE_10 = "Kompass";
+    private static final String TREASURE_11 = "Krone";
+    private static final String TREASURE_12 = "Kugel";
+    private static final String TREASURE_13 = "Pilz";
+    private static final String TREASURE_14 = "Ring";
+    private static final String TREASURE_15 = "Schatzkarte";
+    private static final String TREASURE_16 = "Schluessel";
+    private static final String TREASURE_17 = "Schwert";
+    private static final String TREASURE_18 = "Seil";
+    private static final String TREASURE_19 = "Spitzhacke";
+    private static final String TREASURE_20 = "Trank_blau";
+    private static final String TREASURE_21 = "Zaubersprueche";
+    private static final String TREASURE_22 = "Knochen";
+    private static final String TREASURE_23 = "ZeitUhr";
+    private static final String TREASURE_24 = "Schatz1";
 
+    private static final String HOME_RED = "Haus_red";
+    private static final String HOME_BLUE = "Haus_blue";
+    private static final String HOME_GREEN = "Haus_gruen";
+    private static final String HOME_YELLOW = "Haus_gelb";
 
-    private final static String TREASURE_0 = "BackToHome";
-    private final static String TREASURE_1 = "Schatz2";
-    private final static String TREASURE_2 = "Iron";
-    private final static String TREASURE_3 = "Gold";
-    private final static String TREASURE_4 = "Apple_red";
-    private final static String TREASURE_5 = "Bombe";
-    private final static String TREASURE_6 = "Fackel";
-    private final static String TREASURE_7 = "GoldMuenze";
-    private final static String TREASURE_8 = "Kelch";
-    private final static String TREASURE_9 = "Kette";
-    private final static String TREASURE_10 = "Kompass";
-    private final static String TREASURE_11 = "Krone";
-    private final static String TREASURE_12 = "Kugel";
-    private final static String TREASURE_13 = "Pilz";
-    private final static String TREASURE_14 = "Ring";
-    private final static String TREASURE_15 = "Schatzkarte";
-    private final static String TREASURE_16 = "Schluessel";
-    private final static String TREASURE_17 = "Schwert";
-    private final static String TREASURE_18 = "Seil";
-    private final static String TREASURE_19 = "Spitzhacke";
-    private final static String TREASURE_20 = "Trank_blau";
-    private final static String TREASURE_21 = "Zaubersprueche";
-    private final static String TREASURE_22 = "Knochen";
-    private final static String TREASURE_23 = "ZeitUhr";
-    private final static String TREASURE_24 = "Schatz1";
-
-
-
-    private final static String HOME_RED = "Haus_red";
-    private final static String HOME_BLUE = "Haus_blue";
-    private final static String HOME_GREEN = "Haus_gruen";
-    private final static String HOME_YELLOW = "Haus_gelb";
-
-
-    private final static String PLAYER_RED = "player_red";
-    private final static String PLAYER_BLUE = "player_blue";
-    private final static String PLAYER_GREEN = "player_green";
-    private final static String PLAYER_YELLOW = "player_yellow";
+    private static final String PLAYER_RED = "player_red";
+    private static final String PLAYER_BLUE = "player_blue";
+    private static final String PLAYER_GREEN = "player_green";
+    private static final String PLAYER_YELLOW = "player_yellow";
 
     static {
         TREASURE_NAMES.put(0, TREASURE_0);
@@ -91,26 +84,21 @@ public class FileNameMapper {
         TREASURE_NAMES.put(23, TREASURE_23);
         TREASURE_NAMES.put(24, TREASURE_24);
 
-
-
         TREASURE_NAMES.put(100, HOME_RED);
         TREASURE_NAMES.put(200, HOME_BLUE);
         TREASURE_NAMES.put(300, HOME_GREEN);
         TREASURE_NAMES.put(400, HOME_YELLOW);
-
 
         BONI_NAMES.put(BonusType.PUSH_FIXED, "Faust");
         BONI_NAMES.put(BonusType.PUSH_TWICE, "2x");
         BONI_NAMES.put(BonusType.BEAM, "Beam");
         BONI_NAMES.put(BonusType.SWAP, "Tauschen");
 
-
         PLAYER_NAMES.put(PlayerColor.RED, PLAYER_RED);
         PLAYER_NAMES.put(PlayerColor.BLUE, PLAYER_BLUE);
         PLAYER_NAMES.put(PlayerColor.GREEN, PLAYER_GREEN);
         PLAYER_NAMES.put(PlayerColor.YELLOW, PLAYER_YELLOW);
     }
-
 
     /**
      * Return the filename for a treasure id.
@@ -124,7 +112,6 @@ public class FileNameMapper {
         }
         return TREASURE_NAMES.get(id);
     }
-
 
     /**
      * Return the home treasure id for a given player color.
@@ -140,7 +127,6 @@ public class FileNameMapper {
             case YELLOW -> 400;
         };
     }
-
 
     /**
      * Return the filename for a bonus type.
@@ -167,8 +153,6 @@ public class FileNameMapper {
         }
         return PLAYER_NAMES.get(color);
     }
-
-
 
     /**
      * Return the tile image name for a set of directions.
@@ -231,9 +215,8 @@ public class FileNameMapper {
      * @param theme theme to apply
      */
     public static void setTheme(Theme theme) {
-         setTileFileNamesForTheme(theme.getId());
+        setTileFileNamesForTheme(theme.getId());
     }
-
 
     /**
      * Update tile filename suffixes based on theme id.
@@ -242,9 +225,7 @@ public class FileNameMapper {
      */
     private static void setTileFileNamesForTheme(int id) {
         UP_DOWN = "I" + id;
-        UP_RIGHT = "L" +  id;
+        UP_RIGHT = "L" + id;
         UP_DOWN_LEFT = "T" + id;
     }
-
 }
-

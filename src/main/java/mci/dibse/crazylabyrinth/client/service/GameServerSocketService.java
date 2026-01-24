@@ -36,7 +36,8 @@ public class GameServerSocketService implements PlayerConnectedAckListener {
     public GameServerSocketService(
             GameServerSocketClient client,
             ApplicationEventPublisher eventPublisher,
-            LobbyService lobbyService, NavigationStateViewModel navState) {
+            LobbyService lobbyService,
+            NavigationStateViewModel navState) {
         this.client = client;
         this.eventPublisher = eventPublisher;
         this.lobbyService = lobbyService;
@@ -160,7 +161,6 @@ public class GameServerSocketService implements PlayerConnectedAckListener {
             this.identifierToken = null;
             this.serverUrl = null;
             this.clientUserName = null;
-
         }
     }
 

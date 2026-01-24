@@ -1,14 +1,14 @@
 package mci.dibse.crazylabyrinth.client.test.unit;
 
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.mock;
+
 import mci.dibse.crazylabyrinth.client.service.ClientCommandService;
 import mci.dibse.crazylabyrinth.client.service.GameServerSocketService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.ApplicationEventPublisher;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.mock;
 
 class PlayerNameValidationTest {
 
@@ -57,7 +57,9 @@ class PlayerNameValidationTest {
     void testNameLength_UT_NAME_03() {
         // WHEN & THEN: Testing boundary values for name length
         assertFalse(isValidName("Ab"), "Too short (2 characters) should be invalid");
-        assertFalse(isValidName("ThisNameIsWayTooLongAndExceedsTwentyCharacters"), "Too long should be invalid");
+        assertFalse(
+                isValidName("ThisNameIsWayTooLongAndExceedsTwentyCharacters"),
+                "Too long should be invalid");
         assertTrue(isValidName("Player"), "Valid length (6 characters) should be accepted");
 
         System.out.println("UT-NAME-03 Result: Length constraints (3-20) correctly enforced.");
