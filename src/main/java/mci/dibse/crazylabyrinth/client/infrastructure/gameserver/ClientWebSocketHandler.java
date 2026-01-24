@@ -7,13 +7,11 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
-
 import labyrinth.contracts.models.CommandType;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import mci.dibse.crazylabyrinth.client.domain.context.ApplicationEvents;
 import mci.dibse.crazylabyrinth.client.service.ServerEventService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -57,7 +55,7 @@ public class ClientWebSocketHandler extends TextWebSocketHandler {
     @Override
     protected void handleTextMessage(WebSocketSession session, TextMessage message) {
         log.debug("Received message from session {}: {}", session.getId(), message.getPayload());
-        if(!hasActiveSessions() || !canReceiveMessages) {
+        if (!hasActiveSessions() || !canReceiveMessages) {
             log.warn("No active sessions. Ignoring message");
             return;
         }
@@ -82,8 +80,7 @@ public class ClientWebSocketHandler extends TextWebSocketHandler {
             serverEventService.handleEvent(message.getPayload());
         } catch (Exception e) {
             log.error(
-                    "Something went terribly wrong. Should have never happened. Very"
-                            + " sorry",
+                    "Something went terribly wrong. Should have never happened. Very" + " sorry",
                     e);
         }
     }
@@ -183,11 +180,12 @@ public class ClientWebSocketHandler extends TextWebSocketHandler {
      */
     @EventListener
     public void handleDisconnectEvent(CommandType event) {
-        if(CommandType.DISCONNECT.equals(event)) {
+        if (CommandType.DISCONNECT.equals(event)) {
             canReceiveMessages = false;
             log.debug("Handle disconnect event");
             closeSession();
-        };
+        }
+        ;
     }
 
     /**

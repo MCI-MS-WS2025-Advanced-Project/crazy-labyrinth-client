@@ -62,14 +62,14 @@ public class NavigationController {
     @Setter @Getter private Stage primaryStage;
     private ScreenResolutionProperties screenResolutionProperties;
 
-
-
     @Autowired
-    public NavigationController(NavigationStateViewModel navState, ViewLoader viewLoader, ScreenResolutionProperties screenResolutionProperties) {
+    public NavigationController(
+            NavigationStateViewModel navState,
+            ViewLoader viewLoader,
+            ScreenResolutionProperties screenResolutionProperties) {
         this.navState = navState;
         this.viewLoader = viewLoader;
         this.screenResolutionProperties = screenResolutionProperties;
-
     }
 
     /**
@@ -164,7 +164,6 @@ public class NavigationController {
         boolean ismaximized = primaryStage.isMaximized();
         boolean isFullScreen = primaryStage.isFullScreen();
 
-
         double prevWidth = primaryStage.getWidth();
         double prevHeight = primaryStage.getHeight();
 
@@ -176,7 +175,6 @@ public class NavigationController {
         primaryStage.setTitle("The Amazing Labyrinth");
         primaryStage.setFullScreen(isFullScreen);
         primaryStage.setMaximized(ismaximized);
-
 
         primaryStage.setWidth(prevWidth);
         primaryStage.setHeight(prevHeight);
@@ -205,9 +203,12 @@ public class NavigationController {
         primaryStage.setMinWidth(screenResolutionProperties.getMinViewWidth());
         primaryStage.setMinHeight(screenResolutionProperties.getMinViewHeight());
 
-        if(!startUp) return;
+        if (!startUp) return;
         startUp = false;
-        log.debug("Setting stage w/h sizes to: {}x{}", screenResolutionProperties.getWidth(), screenResolutionProperties.getHeight());
+        log.debug(
+                "Setting stage w/h sizes to: {}x{}",
+                screenResolutionProperties.getWidth(),
+                screenResolutionProperties.getHeight());
         primaryStage.setWidth(screenResolutionProperties.getWidth());
         primaryStage.setHeight(screenResolutionProperties.getHeight());
     }
@@ -218,14 +219,13 @@ public class NavigationController {
      * @param scene scene to configure
      */
     private void setupFullScreen(Scene scene) {
-        scene.addEventFilter(KeyEvent.KEY_PRESSED, event -> {
-            if (event.getCode() == KeyCode.ESCAPE && primaryStage.isFullScreen()) {
-                primaryStage.setFullScreen(false);
-                event.consume(); // Prevent further processing
-            }
-        });
+        scene.addEventFilter(
+                KeyEvent.KEY_PRESSED,
+                event -> {
+                    if (event.getCode() == KeyCode.ESCAPE && primaryStage.isFullScreen()) {
+                        primaryStage.setFullScreen(false);
+                        event.consume(); // Prevent further processing
+                    }
+                });
     }
-
-
-
 }

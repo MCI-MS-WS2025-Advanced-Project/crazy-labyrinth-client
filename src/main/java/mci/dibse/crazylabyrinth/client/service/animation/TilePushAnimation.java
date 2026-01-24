@@ -1,24 +1,22 @@
 package mci.dibse.crazylabyrinth.client.service.animation;
 
+import java.util.ArrayList;
+import java.util.List;
 import javafx.animation.Interpolator;
 import javafx.animation.ParallelTransition;
 import javafx.animation.TranslateTransition;
-import javafx.scene.Node;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.StackPane;
 import javafx.util.Duration;
 import labyrinth.contracts.models.Direction;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.ArrayList;
-import java.util.List;
-
 /**
  * Animation for tile pushing in the game board.
  */
 @Slf4j
 public class TilePushAnimation implements GameAnimation {
-    
+
     private final AnimationService animationService;
     private final int rowOrColIndex;
     private final Direction pushDirection;
@@ -27,8 +25,11 @@ public class TilePushAnimation implements GameAnimation {
 
     private static final double TILE_PUSH_ANIMATION_DURATION = 600;
 
-    public TilePushAnimation(AnimationService animationService, int rowOrColIndex,
-                           Direction pushDirection, GridPane boardGrid) {
+    public TilePushAnimation(
+            AnimationService animationService,
+            int rowOrColIndex,
+            Direction pushDirection,
+            GridPane boardGrid) {
         this.animationService = animationService;
         this.rowOrColIndex = rowOrColIndex;
         this.pushDirection = pushDirection;

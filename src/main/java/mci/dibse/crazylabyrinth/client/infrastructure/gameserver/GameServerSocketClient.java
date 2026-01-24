@@ -63,7 +63,6 @@ public class GameServerSocketClient {
     */
     private WebSocketConnectionManager connectionManager;
 
-
     private volatile boolean shouldReconnect = false;
     private CompletableFuture<Void> connectionFuture;
 
@@ -272,8 +271,6 @@ public class GameServerSocketClient {
         reconnectAttempt.set(0);
     }
 
-
-
     /**
      * Find an open WebSocket session.
      *
@@ -348,7 +345,4 @@ public class GameServerSocketClient {
 
         return Duration.ofMillis(expMs);
     }
-
-
-
 }

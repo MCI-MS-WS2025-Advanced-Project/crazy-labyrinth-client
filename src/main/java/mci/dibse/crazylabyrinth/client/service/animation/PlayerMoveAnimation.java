@@ -1,8 +1,8 @@
 package mci.dibse.crazylabyrinth.client.service.animation;
 
+import java.util.List;
 import javafx.animation.Interpolator;
 import javafx.animation.PathTransition;
-import javafx.scene.Node;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.StackPane;
@@ -15,14 +15,12 @@ import mci.dibse.crazylabyrinth.client.service.PathFindingService;
 import mci.dibse.crazylabyrinth.client.view.viewmodel.item.CoordinatesItem;
 import mci.dibse.crazylabyrinth.client.view.viewmodel.item.GameBoardItem;
 
-import java.util.List;
-
 /**
  * Animation for player movement across the game board.
  */
 @Slf4j
 public class PlayerMoveAnimation implements GameAnimation {
-    
+
     private final AnimationService animationService;
     private final GameBoardItem board;
     private final ImageView playerPawn;
@@ -33,9 +31,13 @@ public class PlayerMoveAnimation implements GameAnimation {
 
     private static final double PLAYER_ANIMATION_DURATION = 500;
 
-    public PlayerMoveAnimation(AnimationService animationService, GameBoardItem board,
-                             ImageView playerPawn, CoordinatesItem from, CoordinatesItem to,
-                             GridPane boardGrid) {
+    public PlayerMoveAnimation(
+            AnimationService animationService,
+            GameBoardItem board,
+            ImageView playerPawn,
+            CoordinatesItem from,
+            CoordinatesItem to,
+            GridPane boardGrid) {
         this.animationService = animationService;
         this.board = board;
         this.playerPawn = playerPawn;
@@ -84,7 +86,8 @@ public class PlayerMoveAnimation implements GameAnimation {
                                             targetCell.getBoundsInParent().getCenterX() - startX;
                                     double relativeY =
                                             targetCell.getBoundsInParent().getCenterY() - startY;
-                                    return new LineTo(relativeX + widthOffset, relativeY + heightOffset);
+                                    return new LineTo(
+                                            relativeX + widthOffset, relativeY + heightOffset);
                                 })
                         .toList();
 
@@ -143,6 +146,7 @@ public class PlayerMoveAnimation implements GameAnimation {
      */
     private StackPane findCellAtPosition(CoordinatesItem position, GridPane boardGrid) {
         CellFinder cellFinder = new CellFinder();
-        return cellFinder.findCellAtGridPosition(position.getRowAsInt(), position.getColumnAsInt(), boardGrid);
+        return cellFinder.findCellAtGridPosition(
+                position.getRowAsInt(), position.getColumnAsInt(), boardGrid);
     }
 }

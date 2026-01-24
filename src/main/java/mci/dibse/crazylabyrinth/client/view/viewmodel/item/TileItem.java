@@ -23,7 +23,9 @@ public class TileItem extends BaseItem<Tile> {
     @Getter
     private final SimpleObjectProperty<TreasureItem> treasure = new SimpleObjectProperty<>();
 
-    @Getter private final SimpleObjectProperty<BonusType> bonusProperty = new SimpleObjectProperty<>();
+    @Getter
+    private final SimpleObjectProperty<BonusType> bonusProperty = new SimpleObjectProperty<>();
+
     @Getter private SimpleBooleanProperty isFixed = new SimpleBooleanProperty();
 
     /**
@@ -52,7 +54,6 @@ public class TileItem extends BaseItem<Tile> {
     public boolean hasBonus() {
         return bonusProperty.get() != null;
     }
-
 
     /**
      * Check whether the tile has a treasure.
@@ -259,7 +260,6 @@ public class TileItem extends BaseItem<Tile> {
     private void updateImageFromRotation() {
         tileImage.set(ImageResourceLoader.loadImage(directions));
     }
-
 
     /**
      * Compute the rotation angle for a set of entrances.

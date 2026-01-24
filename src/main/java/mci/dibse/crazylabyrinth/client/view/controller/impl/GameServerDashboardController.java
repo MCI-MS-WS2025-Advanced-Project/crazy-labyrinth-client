@@ -16,12 +16,10 @@ import javafx.scene.control.*;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.shape.Rectangle;
-import javafx.stage.Stage;
 import mci.dibse.crazylabyrinth.client.NavigationController;
 import mci.dibse.crazylabyrinth.client.domain.model.record.GameInfoRecord;
 import mci.dibse.crazylabyrinth.client.infrastructure.util.JavaFXUtils;
 import mci.dibse.crazylabyrinth.client.infrastructure.util.ScreenResolutionProperties;
-import mci.dibse.crazylabyrinth.client.service.PlayerConnectedAckListener;
 import mci.dibse.crazylabyrinth.client.view.viewmodel.GameServerDashboardViewModel;
 import mci.dibse.crazylabyrinth.client.view.viewmodel.item.GameServerItem;
 import mci.dibse.crazylabyrinth.client.view.viewmodel.navigation.NavigationStateViewModel;
@@ -52,24 +50,18 @@ public class GameServerDashboardController extends BaseViewCleanup {
     @FXML public TableColumn<GameServerItem, String> lastSeenCol;
     @FXML public TableColumn<GameServerItem, String> actionCol;
 
-
     @FXML public StackPane viewport;
     @FXML public Rectangle rootClip;
     @FXML public Group contentGroup;
     @FXML public BorderPane root;
 
-
-
-
     private static final String SERVER_ERROR_LOADING_STATUS = "Fehler beim Laden des Servers...";
-    private static final String SERVER_ERROR_TITLE          = "Fehler";
+    private static final String SERVER_ERROR_TITLE = "Fehler";
     private static final String NO_SERVERS_FOUND_STATUS =
             "Keine Server gefunden. Klicken Sie auf 'Aktualisieren', um das Verzeichnis"
                     + " abzufragen.";
     private static final String GENERAL_SERVER_ERROR_STATUS =
             "Etwas ist schiefgelaufen. Bitte versuchen Sie es später noch einmal.";
-
-
 
     private GameServerDashboardViewModel viewModel;
     private Runnable cleanUpTask;
@@ -104,15 +96,18 @@ public class GameServerDashboardController extends BaseViewCleanup {
         setupControls();
         setupErrorHandling();
         viewModel.refreshServerList();
-        viewport.sceneProperty().addListener((obs, oldScene, newScene) -> {
-            if (newScene != null) {
-                Platform.runLater(() -> {
-                    root.applyCss();
-                    root.layout();
-                    initUiScaling();
-                });
-            }
-        });
+        viewport.sceneProperty()
+                .addListener(
+                        (obs, oldScene, newScene) -> {
+                            if (newScene != null) {
+                                Platform.runLater(
+                                        () -> {
+                                            root.applyCss();
+                                            root.layout();
+                                            initUiScaling();
+                                        });
+                            }
+                        });
     }
 
     /**
@@ -128,8 +123,8 @@ public class GameServerDashboardController extends BaseViewCleanup {
      * Initialize UI scaling based on screen resolution.
      */
     private void initUiScaling() {
-        ScreenResolutionProperties.ResolutionProperties props = new ScreenResolutionProperties.ResolutionProperties(root,
-                viewport);
+        ScreenResolutionProperties.ResolutionProperties props =
+                new ScreenResolutionProperties.ResolutionProperties(root, viewport);
         screenResolutionProperties.initUiScaling(props);
     }
 
@@ -177,7 +172,6 @@ public class GameServerDashboardController extends BaseViewCleanup {
     public void onExitButtonClick(ActionEvent actionEvent) {
         JavaFXUtils.showConfirmationModal(
                 "Beenden", "Wollen Sie das Programm beenden?", "", Platform::exit);
-
     }
 
     public void onFullscreenToggleButtonClick(ActionEvent actionEvent) {
@@ -370,7 +364,6 @@ public class GameServerDashboardController extends BaseViewCleanup {
                                         "",
                                         viewModel.getErrorMessage().get(),
                                         () -> viewModel.clearError());
-
                             }
                         });
     }

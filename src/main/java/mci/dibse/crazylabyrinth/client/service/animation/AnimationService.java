@@ -1,11 +1,11 @@
 package mci.dibse.crazylabyrinth.client.service.animation;
 
+import javafx.scene.image.ImageView;
+import javafx.scene.layout.GridPane;
 import labyrinth.contracts.models.Direction;
 import lombok.extern.slf4j.Slf4j;
 import mci.dibse.crazylabyrinth.client.view.viewmodel.item.CoordinatesItem;
 import mci.dibse.crazylabyrinth.client.view.viewmodel.item.GameBoardItem;
-import javafx.scene.image.ImageView;
-import javafx.scene.layout.GridPane;
 
 /**
  * Coordinator service for managing game animations.
@@ -69,7 +69,7 @@ public class AnimationService {
         }
 
         log.debug("Starting new animation: {}", animation.getClass().getSimpleName());
-        
+
         animation.animate();
     }
 
@@ -82,11 +82,13 @@ public class AnimationService {
             if (currentAnimation == completedAnimation) {
                 log.debug("Animation completed: {}", completedAnimation.getClass().getSimpleName());
                 currentAnimation = null;
-                
+
                 if (pendingAnimation != null) {
                     GameAnimation nextAnimation = pendingAnimation;
                     pendingAnimation = null;
-                    log.debug("Starting pending animation: {}", nextAnimation.getClass().getSimpleName());
+                    log.debug(
+                            "Starting pending animation: {}",
+                            nextAnimation.getClass().getSimpleName());
                     scheduleAnimation(nextAnimation);
                 }
             }

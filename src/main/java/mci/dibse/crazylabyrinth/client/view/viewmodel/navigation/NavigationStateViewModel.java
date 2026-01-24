@@ -39,14 +39,13 @@ public class NavigationStateViewModel {
         if (ErrorCode.PLAYER_NOT_FOUND.equals(error.getErrorCode())) navigateTo(ScreenId.LOBBY);
     }
 
-
     /**
      * Return the currently active screen.
      *
      * @return current screen id
      */
     public ScreenId getCurrentScreenId() {
-            return currentScreenProperty.get();
+        return currentScreenProperty.get();
     }
 
     /**

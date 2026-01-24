@@ -1,6 +1,8 @@
 package mci.dibse.crazylabyrinth.client.infrastructure.util;
 
 import jakarta.annotation.PostConstruct;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.DoubleBinding;
 import javafx.geometry.Pos;
@@ -15,10 +17,6 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 
 @Component
 @Slf4j
@@ -46,9 +44,7 @@ public class ScreenResolutionProperties {
     @Getter private  int minViewWidth;
     @Getter private  int minViewHeight;
 
-    @Setter private  Stage primaryStage;
-
-
+    @Setter private Stage primaryStage;
 
     /**
      * Initialize the screen resolution settings from properties.
@@ -58,7 +54,9 @@ public class ScreenResolutionProperties {
         log.info("Initializing game view resolution from properties: {}", gameBoardResolution);
         log.info("Scale Ratio: {}", scaleRatio);
         if (gameBoardResolution == null || gameBoardResolution.isBlank()) {
-            log.error("property game.board.view.resolution is null or empty! Falling back to default 1024x768");
+            log.error(
+                    "property game.board.view.resolution is null or empty! Falling back to default"
+                            + " 1024x768");
             return;
         }
         log.info("Parsing game view resolution: {}", gameBoardResolution);
@@ -73,16 +71,20 @@ public class ScreenResolutionProperties {
                 log.info("Resolution set to {}x{}", width, height);
                 Ratio ratio = aspectRatio(width, height);
                 if (Ratio.FOUR_THREE == ratio) {
-                   minViewWidth = 1024;
-                   minViewHeight = 768;
-                } else if(Ratio.SIXTEEN_NINE == ratio) {
+                    minViewWidth = 1024;
+                    minViewHeight = 768;
+                } else if (Ratio.SIXTEEN_NINE == ratio) {
                     minViewWidth = 1280;
                     minViewHeight = 720;
                 }
             }
         } catch (Exception e) {
-            log.error("Failed to parse resolution '{}'. Falling back to {}x{}. Error: {}",
-                    gameBoardResolution, width, height, e.getMessage());
+            log.error(
+                    "Failed to parse resolution '{}'. Falling back to {}x{}. Error: {}",
+                    gameBoardResolution,
+                    width,
+                    height,
+                    e.getMessage());
         }
     }
 
@@ -95,14 +97,12 @@ public class ScreenResolutionProperties {
         return aspectRatio(width, height);
     }
 
-
     /**
      * Initialize UI scaling for the provided root and viewport.
      *
      * @param props resolution properties container
      */
     public void initUiScaling(ResolutionProperties props) {
-
 
         screenHeight = height;
         if (!primaryStage.isFullScreen()) {
@@ -112,10 +112,9 @@ public class ScreenResolutionProperties {
             isWindowDecorated = false;
         }
 
-
         double finalScreenHeight = screenHeight;
-        Runnable apply = () -> {
-
+        Runnable apply =
+                () -> {
 
             // Center the root inside the StackPane
             StackPane.setAlignment(props.root, Pos.CENTER);
@@ -131,32 +130,29 @@ public class ScreenResolutionProperties {
 
             props.root.setPrefHeight(rootHeight);
 
-            props.root.setMinSize(Region.USE_PREF_SIZE, Region.USE_PREF_SIZE);
-            props.root.setMaxSize(width, finalScreenHeight);
+                    props.root.setMinSize(Region.USE_PREF_SIZE, Region.USE_PREF_SIZE);
+                    props.root.setMaxSize(width, finalScreenHeight);
 
+                    // Available content area inside the viewport, excluding insets
+                    DoubleBinding availableW =
+                            Bindings.createDoubleBinding(
+                                    () -> {
+                                        return props.viewport.getWidth()
+                                                - props.viewport.getInsets().getLeft()
+                                                - props.viewport.getInsets().getRight();
+                                    },
+                                    props.viewport.widthProperty(),
+                                    props.viewport.insetsProperty());
 
-
-            // Available content area inside the viewport, excluding insets
-            DoubleBinding availableW = Bindings.createDoubleBinding(
-                    () -> {
-                        return props.viewport.getWidth()
-                                - props.viewport.getInsets().getLeft()
-                                - props.viewport.getInsets().getRight();
-
-                    },
-                    props.viewport.widthProperty(),
-                    props.viewport.insetsProperty()
-            );
-
-            DoubleBinding availableH = Bindings.createDoubleBinding(
-                    () -> {
-                        return props.viewport.getHeight()
-                                - props.viewport.getInsets().getTop()
-                                - props.viewport.getInsets().getBottom();
-                    },
-                    props.viewport.heightProperty(),
-                    props.viewport.insetsProperty()
-            );
+                    DoubleBinding availableH =
+                            Bindings.createDoubleBinding(
+                                    () -> {
+                                        return props.viewport.getHeight()
+                                                - props.viewport.getInsets().getTop()
+                                                - props.viewport.getInsets().getBottom();
+                                    },
+                                    props.viewport.heightProperty(),
+                                    props.viewport.insetsProperty());
 
             // Scale factor based on available area vs. design (root) size
             DoubleBinding scaleFactorX = Bindings.createDoubleBinding(() -> {
@@ -186,37 +182,39 @@ public class ScreenResolutionProperties {
                     primaryStage.maximizedProperty());
 
 
-            // Create scale and bind to factor + pivot at center
-            Scale scale = new Scale(1, 1);
-            props.root.getTransforms().setAll(scale);
-            scale.xProperty().bind(scaleFactorX);
-            scale.yProperty().bind(scaleFactorY);
+                    // Create scale and bind to factor + pivot at center
+                    Scale scale = new Scale(1, 1);
+                    props.root.getTransforms().setAll(scale);
+                    scale.xProperty().bind(scaleFactorX);
+                    scale.yProperty().bind(scaleFactorY);
 
-            // Use layoutBounds to determine visual center for pivot
-            DoubleBinding pivotX = Bindings.createDoubleBinding(
-                    () -> props.root.getLayoutBounds().getWidth() / 2.0,
-                    props.root.layoutBoundsProperty()
-            );
-            DoubleBinding pivotY = Bindings.createDoubleBinding(
-                    () -> props.root.getLayoutBounds().getHeight() / 2.0,
-                    props.root.layoutBoundsProperty()
-            );
-            scale.pivotXProperty().bind(pivotX);
-            scale.pivotYProperty().bind(pivotY);
+                    // Use layoutBounds to determine visual center for pivot
+                    DoubleBinding pivotX =
+                            Bindings.createDoubleBinding(
+                                    () -> props.root.getLayoutBounds().getWidth() / 2.0,
+                                    props.root.layoutBoundsProperty());
+                    DoubleBinding pivotY =
+                            Bindings.createDoubleBinding(
+                                    () -> props.root.getLayoutBounds().getHeight() / 2.0,
+                                    props.root.layoutBoundsProperty());
+                    scale.pivotXProperty().bind(pivotX);
+                    scale.pivotYProperty().bind(pivotY);
 
-            // Clip to available area
-            Rectangle clip = (Rectangle) props.viewport.getClip();
-            clip.xProperty().bind(Bindings.createDoubleBinding(
-                    () -> props.viewport.getInsets().getLeft(),
-                    props.viewport.insetsProperty()
-            ));
-            clip.yProperty().bind(Bindings.createDoubleBinding(
-                    () -> props.viewport.getInsets().getTop(),
-                    props.viewport.insetsProperty()
-            ));
-            clip.widthProperty().bind(availableW);
-            clip.heightProperty().bind(availableH);
-        };
+                    // Clip to available area
+                    Rectangle clip = (Rectangle) props.viewport.getClip();
+                    clip.xProperty()
+                            .bind(
+                                    Bindings.createDoubleBinding(
+                                            () -> props.viewport.getInsets().getLeft(),
+                                            props.viewport.insetsProperty()));
+                    clip.yProperty()
+                            .bind(
+                                    Bindings.createDoubleBinding(
+                                            () -> props.viewport.getInsets().getTop(),
+                                            props.viewport.insetsProperty()));
+                    clip.widthProperty().bind(availableW);
+                    clip.heightProperty().bind(availableH);
+                };
 
         JavaFXUtils.runOnFxThread(apply);
     }
@@ -256,8 +254,6 @@ public class ScreenResolutionProperties {
         return primaryStage.getHeight() - primaryStage.getScene().getHeight();
     }
 
-
-
     /**
      * Compute the greatest common divisor.
      *
@@ -266,7 +262,11 @@ public class ScreenResolutionProperties {
      * @return greatest common divisor
      */
     private static int gcd(int a, int b) {
-        while (b != 0) { int t = b; b = a % b; a = t; }
+        while (b != 0) {
+            int t = b;
+            b = a % b;
+            a = t;
+        }
         return Math.abs(a);
     }
 
@@ -286,11 +286,7 @@ public class ScreenResolutionProperties {
         return Ratio.FOUR_THREE;
     }
 
-
-
-
     private record ScaleRatio(double ratioX, double ratioY, double min) {}
 
     public record ResolutionProperties(BorderPane root, StackPane viewport) {}
-
 }
