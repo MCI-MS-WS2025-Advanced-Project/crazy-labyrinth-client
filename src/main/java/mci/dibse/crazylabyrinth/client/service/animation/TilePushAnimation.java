@@ -15,22 +15,18 @@ import lombok.extern.slf4j.Slf4j;
  * Animation for tile pushing in the game board.
  */
 @Slf4j
-public class TilePushAnimation implements GameAnimation {
+public class TilePushAnimation extends AbstractGameAnimation {
 
-    private final AnimationService animationService;
     private final int rowOrColIndex;
     private final Direction pushDirection;
     private final GridPane boardGrid;
-    private boolean isRunning = false;
-
-    private static final double TILE_PUSH_ANIMATION_DURATION = 600;
 
     public TilePushAnimation(
             AnimationService animationService,
             int rowOrColIndex,
             Direction pushDirection,
             GridPane boardGrid) {
-        this.animationService = animationService;
+        super(animationService);
         this.rowOrColIndex = rowOrColIndex;
         this.pushDirection = pushDirection;
         this.boardGrid = boardGrid;
@@ -40,9 +36,7 @@ public class TilePushAnimation implements GameAnimation {
      * Animate the tile push for the configured row/column and direction.
      */
     @Override
-    public void animate() {
-        isRunning = true;
-
+    protected void executeAnimation() {
         log.debug(
                 "Animating tile push for {} index {} in direction {}",
                 (pushDirection == Direction.UP || pushDirection == Direction.DOWN)
@@ -67,8 +61,7 @@ public class TilePushAnimation implements GameAnimation {
 
         if (transitions.isEmpty()) {
             log.debug("No tiles to animate for push");
-            isRunning = false;
-            animationService.onAnimationCompleted(this);
+            handleAnimationCompletion();
             return;
         }
 
@@ -80,8 +73,7 @@ public class TilePushAnimation implements GameAnimation {
         parallelTransition.setOnFinished(
                 event -> {
                     log.debug("Tile push animation completed for {} tiles", transitions.size());
-                    isRunning = false;
-                    animationService.onAnimationCompleted(this);
+                    handleAnimationCompletion();
                 });
 
         parallelTransition.play();
@@ -93,16 +85,6 @@ public class TilePushAnimation implements GameAnimation {
     @Override
     public void onCompleted() {
         // Cleanup if needed
-    }
-
-    /**
-     * Report whether the animation is currently running.
-     *
-     * @return true when the animation is in progress
-     */
-    @Override
-    public boolean isRunning() {
-        return isRunning;
     }
 
     /**
@@ -218,9 +200,9 @@ public class TilePushAnimation implements GameAnimation {
                 targetCell.getBoundsInParent().getCenterY()
                         - sourceCell.getBoundsInParent().getCenterY();
 
+        double duration = animationService.getAnimationConfig().getTilePushAnimationDuration();
         TranslateTransition transition =
-                new TranslateTransition(
-                        Duration.millis(TILE_PUSH_ANIMATION_DURATION), animatedNode);
+                new TranslateTransition(Duration.millis(duration), animatedNode);
         transition.setToX(deltaX);
         transition.setToY(deltaY);
         transition.setInterpolator(Interpolator.EASE_OUT);
