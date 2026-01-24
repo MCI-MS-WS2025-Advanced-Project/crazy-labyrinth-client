@@ -47,19 +47,39 @@ CurrentTurnInfoItem extends BaseItem<CurrentTurnInfo> {
 
     }
 
+    /**
+     * Return the current player id as a string.
+     *
+     * @return current player id
+     */
     public String getCurrentPlayerIdAsString() {
         return currentPlayerIdProperty.get();
     }
 
+    /**
+     * Return the current turn end time.
+     *
+     * @return turn end time
+     */
     public OffsetDateTime getTurnEndTime() {
         return turnEndTimeProperty.get();
     }
 
+    /**
+     * Add a listener for turn end time updates.
+     *
+     * @param listener listener to add
+     */
     public void addListenerToTurnEndTimeProperty(ChangeListener<OffsetDateTime> listener) {
         turnTimeChangeListener = listener;
         turnEndTimeProperty.addListener(listener);
     }
 
+    /**
+     * Update item state from the latest turn info.
+     *
+     * @param source current turn info payload
+     */
     @Override
     protected void updateItemFromSource(CurrentTurnInfo source) {
         currentPlayerIdProperty.setValue(source.getCurrentPlayerId());
@@ -67,6 +87,9 @@ CurrentTurnInfoItem extends BaseItem<CurrentTurnInfo> {
         turnStateProperty.set(source.getState());
     }
 
+    /**
+     * Unbind and clear properties.
+     */
     @Override
     protected void disposeItem() {
         currentPlayerIdProperty.unbind();

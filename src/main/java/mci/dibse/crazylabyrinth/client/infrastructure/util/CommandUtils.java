@@ -6,6 +6,14 @@ import labyrinth.contracts.models.*;
 
 public class CommandUtils {
 
+    /**
+     * Serialize a command payload to JSON based on command type.
+     *
+     * @param command command type
+     * @param payload command payload
+     * @return JSON string for the payload
+     * @throws JsonProcessingException when serialization fails
+     */
     public static String mapCommandToMessage(CommandType command, Object payload)
             throws JsonProcessingException {
         ObjectMapper mapper = ObjectMapperConfig.createCustomObjectMapper();

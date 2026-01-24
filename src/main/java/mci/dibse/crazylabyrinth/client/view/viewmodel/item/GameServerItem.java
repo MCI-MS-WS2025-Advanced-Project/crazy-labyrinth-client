@@ -37,15 +37,28 @@ public class GameServerItem extends BaseItem<GameServer> implements ViewItem {
 
     }
 
+    /**
+     * Bind the joinable property to lobby status and capacity.
+     */
     private void setJoinableProperty() {
         joinable.bind(
                 status.isEqualTo(GameStatus.LOBBY).and(currentPlayerCount.lessThan(maxPlayers)));
     }
 
+    /**
+     * Return whether the server can be joined.
+     *
+     * @return true if the server is in lobby and has capacity
+     */
     public boolean isJoinable() {
         return joinable.get();
     }
 
+    /**
+     * Update item state from the domain server.
+     *
+     * @param source source server
+     */
     protected void updateItemFromSource(GameServer source) {
         name.set(source.getName());
         uri.set(source.getUri());
@@ -55,30 +68,63 @@ public class GameServerItem extends BaseItem<GameServer> implements ViewItem {
         lastSeen.set(source.getLastSeen());
     }
 
+    /**
+     * Return the name property.
+     *
+     * @return name property
+     */
     public StringProperty nameProperty() {
         return name;
     }
 
+    /**
+     * Return the URI property.
+     *
+     * @return URI property
+     */
     public ObjectProperty<URI> uriProperty() {
         return uri;
     }
 
+    /**
+     * Return the max players property.
+     *
+     * @return max players property
+     */
     public IntegerProperty maxPlayersProperty() {
         return maxPlayers;
     }
 
+    /**
+     * Return the current player count property.
+     *
+     * @return current player count property
+     */
     public IntegerProperty currentPlayerCountProperty() {
         return currentPlayerCount;
     }
 
+    /**
+     * Return the status property.
+     *
+     * @return status property
+     */
     public ObjectProperty<GameStatus> statusProperty() {
         return status;
     }
 
+    /**
+     * Return the last seen property.
+     *
+     * @return last seen property
+     */
     public ObjectProperty<Instant> lastSeenProperty() {
         return lastSeen;
     }
 
+    /**
+     * Unbind the joinable property.
+     */
     @Override
     protected void disposeItem() {
         joinable.unbind();

@@ -57,6 +57,12 @@ public class ManagementServerClient {
                         .build();
     }
 
+    /**
+     * Fetch the list of game servers from the management server.
+     *
+     * @return response body as JSON string
+     * @throws GameManagementServerException when the request fails
+     */
     public String getGameServers() throws GameManagementServerException {
         try {
 
@@ -89,6 +95,14 @@ public class ManagementServerClient {
         }
     }
 
+    /**
+     * Send the HTTP request to retrieve game servers.
+     *
+     * @return HTTP response
+     * @throws IOException when a network error occurs
+     * @throws InterruptedException when the request is interrupted
+     * @throws HttpServerErrorException when the response indicates an error
+     */
     private HttpResponse<String> sendGetServerRequest()
             throws IOException, InterruptedException, HttpServerErrorException {
         HttpRequest request =
@@ -102,6 +116,12 @@ public class ManagementServerClient {
         return validateResponse(response);
     }
 
+    /**
+     * Validate the HTTP response status and throw on errors.
+     *
+     * @param response HTTP response
+     * @return response when status is OK
+     */
     private HttpResponse<String> validateResponse(HttpResponse<String> response) {
         int statusCode = response.statusCode();
         switch (statusCode) {
@@ -115,6 +135,12 @@ public class ManagementServerClient {
         }
     }
 
+    /**
+     * Build a detailed server error exception from a response.
+     *
+     * @param response HTTP response
+     * @return server error exception
+     */
     private HttpServerErrorException createDetailedServerErrorException(
             HttpResponse<String> response) {
         return new HttpServerErrorException(
@@ -124,9 +150,16 @@ public class ManagementServerClient {
                 java.nio.charset.StandardCharsets.UTF_8);
     }
 
+    /**
+     * Build the URI for the management server endpoint.
+     *
+     * @return management server URI
+     */
     private URI buildServerUri() {
         String base = managementServerUrl == null ? "" : managementServerUrl.trim();
         String p = (port == null || port.isBlank()) ? "" : ":" + port.trim();
+        URI uri = URI.create(base + p + PATH_GET_SERVERS);
+        log.info("Built URI for management server: {}", uri);
         return URI.create(base + p + PATH_GET_SERVERS);
     }
 }

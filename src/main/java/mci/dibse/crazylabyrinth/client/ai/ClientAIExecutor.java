@@ -85,6 +85,12 @@ public class ClientAIExecutor {
         if (pending == null) return;
         if (moveSent) return;
 
+        if (pushesSent < pending.getPushCount()) {
+            log.debug("AI: server is WAITING_FOR_MOVE but pushes remaining ({}/{}) -> waiting / not moving yet",
+                    pushesSent, pending.getPushCount());
+            return;
+        }
+
         if (pending.hasMove()) {
             Coordinates target = pending.getMove().getTarget();
             sendMove(target);
@@ -144,18 +150,16 @@ public class ClientAIExecutor {
 
         Direction[] rotated = rotateEntrances(baseEntrances, push.getRotations());
 
-        // deprecated
-        /*
         CommandType cmdType = CommandType.PUSH_TILE;
         if (pending.hasBonus() && pending.getBonus().getBonusType() == BonusType.PUSH_FIXED) {
             cmdType = CommandType.USE_PUSH_FIXED;
-        }*/
+        }
 
         PushTileCommandRecord record = new PushTileCommandRecord(
                 push.getPushIndex(),
                 push.getPushDirection(),
                 rotated,
-                CommandType.PUSH_TILE
+                cmdType
         );
 
         log.debug("AI: send push idx={} dir={} rot={}",

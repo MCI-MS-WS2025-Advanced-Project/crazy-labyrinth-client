@@ -24,13 +24,12 @@
            xmlns:fx="http://javafx.com/fxml"
            fx:id="viewport"
            fx:controller="mci.dibse.crazylabyrinth.client.view.controller.impl.GameServerDashboardController"
-           style="-fx-background-color: black;"
-           styleClass="viewport">
+            style="-fx-background-color: linear-gradient(to bottom, #f7f9fc, #eef2f7);">
 
 
     <clip>
         <Rectangle fx:id="rootClip"/>
-    </clip >
+    </clip>
     <!-- Group fx:id="contentGroup"-->
 
         <stylesheets>

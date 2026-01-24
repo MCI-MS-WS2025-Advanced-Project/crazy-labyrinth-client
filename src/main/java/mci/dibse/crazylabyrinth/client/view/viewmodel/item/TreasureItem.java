@@ -17,18 +17,31 @@ public class TreasureItem extends BaseItem<Treasure> {
     public TreasureItem(Treasure source) {
         id = source.getId();
         name = source.getName();
-        JavaFXUtils.runOnFxThread(() -> treasureImageProperty.set(ImageResourceLoader.loadTreasureImage(id)));
+        JavaFXUtils.runOnFxThread(() -> treasureImageProperty.set(ImageResourceLoader.loadImage(id)));
     }
 
+    /**
+     * Return the treasure image.
+     *
+     * @return treasure image
+     */
     public Image getTreasureImage() {
         return treasureImageProperty.get();
     }
 
+    /**
+     * Dispose item state; no-op for treasures.
+     */
     @Override
     protected void disposeItem() {
         // nothing to do here
     }
 
+    /**
+     * Update item state from the treasure payload.
+     *
+     * @param source treasure payload
+     */
     @Override
     protected void updateItemFromSource(Treasure source) {
         id = source.getId();

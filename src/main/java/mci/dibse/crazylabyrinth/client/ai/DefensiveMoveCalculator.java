@@ -84,11 +84,6 @@ public class DefensiveMoveCalculator {
                         new AiDecision.PushDecision(pushFixedBest.pushIndex,
                                 pushFixedBest.pushDirection, pushFixedBest.rotations),
                         new AiDecision.MoveDecision(pushFixedBest.moveTarget));
-                /*
-                return new AiDecision(
-                        AiDecision.BonusDecision.pushFixed(pushFixedBest.pushIndex, pushFixedBest.pushDirection, pushFixedBest.rotations),
-                        new AiDecision.MoveDecision(pushFixedBest.moveTarget)
-                );*/
             }
         }
 
@@ -99,22 +94,10 @@ public class DefensiveMoveCalculator {
             return  AiDecision.pushAndMove(
                     new AiDecision.PushDecision(1, Direction.DOWN, 0),
                     new AiDecision.MoveDecision(currentPos));
-            // deprecated
-            /*
-            return new AiDecision(
-                    new AiDecision.PushDecision(1, Direction.DOWN, 0),
-                    new AiDecision.MoveDecision(currentPos)
-            );*/
         }
 
         return AiDecision.pushAndMove(new AiDecision.PushDecision(normalBest.pushIndex, normalBest.pushDirection, normalBest.rotations),
                 new AiDecision.MoveDecision(normalBest.moveTarget));
-        // deprecated
-        /*
-        return new AiDecision(
-                new AiDecision.PushDecision(normalBest.pushIndex, normalBest.pushDirection, normalBest.rotations),
-                new AiDecision.MoveDecision(normalBest.moveTarget)
-        );*/
     }
 
     private static class DefenseBest {

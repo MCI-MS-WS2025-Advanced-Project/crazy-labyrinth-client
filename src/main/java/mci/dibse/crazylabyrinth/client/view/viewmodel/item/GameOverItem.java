@@ -32,6 +32,11 @@ public class GameOverItem extends BaseItem<GameOverEventPayload>{
         sortedRankings = new SortedList<>(filteredRankings);
     }
 
+    /**
+     * Update the game over state from the latest payload.
+     *
+     * @param source game over payload
+     */
     @Override
     protected void updateItemFromSource(GameOverEventPayload source) {
         winnerIdProperty.set(source.getWinnerId());
@@ -39,6 +44,9 @@ public class GameOverItem extends BaseItem<GameOverEventPayload>{
         rankingEntries.set(FXCollections.observableArrayList(rankingEntryList));
     }
 
+    /**
+     * Unbind properties to release references.
+     */
     @Override
     protected void disposeItem() {
         winnerIdProperty.unbind();
@@ -49,8 +57,12 @@ public class GameOverItem extends BaseItem<GameOverEventPayload>{
         sortedRankings.comparatorProperty().unbind();
     }
 
+    /**
+     * Bind the sorted list comparator to a UI property.
+     *
+     * @param comparatorReadOnlyObjectProperty comparator to bind
+     */
     public void bindSortedRankingsComparator(ReadOnlyObjectProperty<Comparator<RankingEntry>> comparatorReadOnlyObjectProperty) {
         sortedRankings.comparatorProperty().bind(comparatorReadOnlyObjectProperty);
     }
 }
-
