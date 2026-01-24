@@ -37,7 +37,7 @@
 
         <!-- ================== TOP ================== -->
         <top>
-            <StackPane  fx:id="topBar" prefHeight="48" styleClass="card,topbar">
+            <StackPane  fx:id="topBar" prefHeight="45" styleClass="card,topbar">
                 <Label fx:id="playerTurnLabel"
                        styleClass="section-header"
                        StackPane.alignment="CENTER"/>
@@ -52,7 +52,7 @@
 
         <!-- ================== BOTTOM ================== -->
         <bottom>
-            <StackPane fx:id="bottomBar" prefHeight="56" styleClass="card,timer-bar">
+            <StackPane fx:id="bottomBar" prefHeight="55" styleClass="card,timer-bar">
                 <HBox alignment="CENTER"
                       spacing="12"> <!-- styleClass="card,timer-bar" -->
                     <Label text="Verbleibende Spiel Zeit:" styleClass="setting-label"/>
@@ -89,16 +89,14 @@
                     <VBox spacing="12" fx:id="bonusBox" alignment="TOP_CENTER" fillWidth="true" styleClass="card,bonus-box">
                         <Label text="Verfügbare Boni" styleClass="section-header"/>
                         <HBox fx:id="bonusSwapBox" spacing="10" styleClass="bonus-row">
-                            <StackPane prefWidth="14" prefHeight="14"
-                                       maxWidth="14"  maxHeight="14"
-                                       StackPane.alignment="TOP_RIGHT">
+                            <StackPane fx:id="swapBonusBadge" StackPane.alignment="TOP_RIGHT">
                                 <!-- White disk + black ring -->
-                                <Circle centerX="7" centerY="7" radius="7" styleClass="bonus-badge-circle"/>
+                                <Circle fx:id="bonusSwapCircle"   styleClass="bonus-badge-circle"/>
 
                                 <!-- swapBonusImage -->
-                                <ImageView fx:id="swapBonusImage" styleClass="bonus-label-image">
+                                <ImageView fx:id="swapBonusImage">
                                     <clip>
-                                        <Circle centerX="7" centerY="7" radius="7"/>
+                                        <Circle fx:id="bonusSwapClip"/>
                                     </clip>
                                 </ImageView>
                             </StackPane>
@@ -108,16 +106,14 @@
                             <Button fx:id="bonusSwapButton" onAction="#onBonusSwapButtonClick" text="▷" styleClass="pill-button"/>
                         </HBox>
                         <HBox fx:id="bonusBeamBox" spacing="5" styleClass="bonus-row">
-                            <StackPane prefWidth="14" prefHeight="14"
-                                       maxWidth="14"  maxHeight="14"
-                                       StackPane.alignment="TOP_RIGHT">
+                            <StackPane fx:id="beamBonusBadge" StackPane.alignment="TOP_RIGHT">
                                 <!-- White disk + black ring -->
-                                <Circle centerX="7" centerY="7" radius="7" styleClass="bonus-badge-circle"/>
+                                <Circle fx:id="bonusBeamCircle"  styleClass="bonus-badge-circle"/>
 
                                 <!-- beamBonusImage -->
-                                <ImageView fx:id="beamBonusImage" styleClass="bonus-label-image">
+                                <ImageView fx:id="beamBonusImage" >
                                     <clip>
-                                        <Circle centerX="7" centerY="7" radius="7"/>
+                                        <Circle fx:id="bonusBeamClip" />
                                     </clip>
                                 </ImageView>
                             </StackPane>
@@ -127,16 +123,14 @@
                             <Button fx:id="bonusBeamButton" onAction="#onBonusBeamButtonClick" text="▷" styleClass="pill-button"/>
                         </HBox>
                         <HBox fx:id="bonusPushTwiceBox" spacing="5" styleClass="bonus-row">
-                            <StackPane prefWidth="14" prefHeight="14"
-                                       maxWidth="14"  maxHeight="14"
-                                       StackPane.alignment="TOP_RIGHT">
+                            <StackPane fx:id="pushTwiceBonusBadge" StackPane.alignment="TOP_RIGHT">
                                 <!-- White disk + black ring -->
-                                <Circle centerX="7" centerY="7" radius="7" styleClass="bonus-badge-circle"/>
+                                <Circle fx:id="bonusPushTwiceCircle"  styleClass="bonus-badge-circle"/>
 
                                 <!-- Clipped bonus image (18x18) -->
-                                <ImageView fx:id="pushTwiceBonusImage" styleClass="bonus-label-image">
+                                <ImageView fx:id="pushTwiceBonusImage" >
                                     <clip>
-                                        <Circle centerX="7" centerY="7" radius="7"/>
+                                        <Circle fx:id="bonusPushTwiceClip"/>
                                     </clip>
                                 </ImageView>
                             </StackPane>
@@ -146,16 +140,14 @@
                             <Button fx:id="bonusPushTwiceButton" onAction="#onBonusPushTwiceButtonClick" text="▷" styleClass="pill-button"/>
                         </HBox>
                         <HBox fx:id="bonusPushFixedBox" spacing="5" styleClass="bonus-row">
-                            <StackPane prefWidth="14" prefHeight="14"
-                                       maxWidth="14"  maxHeight="14"
-                                       StackPane.alignment="TOP_RIGHT">
+                            <StackPane fx:id="pushFixedBonusBadge" StackPane.alignment="TOP_RIGHT">
                                 <!-- White disk + black ring -->
-                                <Circle centerX="7" centerY="7" radius="7" styleClass="bonus-badge-circle"/>
+                                <Circle fx:id="bonusPushFixedCircle"  styleClass="bonus-badge-circle"/>
 
                                 <!-- Clipped bonus image (18x18) -->
-                                <ImageView fx:id="pushFixedBonusImage" styleClass="bonus-label-image">
+                                <ImageView fx:id="pushFixedBonusImage" >
                                     <clip>
-                                        <Circle centerX="7" centerY="7" radius="7"/>
+                                        <Circle fx:id="bonusPushFixedClip" />
                                     </clip>
                                 </ImageView>
                             </StackPane>
