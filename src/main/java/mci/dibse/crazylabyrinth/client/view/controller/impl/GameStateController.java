@@ -828,7 +828,7 @@ public class GameStateController extends BaseViewCleanup {
      */
     private void setupStyleBonusBadge(Ratio screenRation) {
         System.out.println("setupStyleBonusBadge");
-        int size = (screenRation == Ratio.FOUR_THREE) ? 14 : 18;
+        int size = (screenRation == Ratio.FOUR_THREE) ? 14 : 20;
         String styleClass = (screenRation == Ratio.FOUR_THREE) ? "bonus-label-image" : "bonus-label-image-wide";
 
         updateBadgeStyle(swapBonusBadge, swapBonusImage, bonusSwapCircle, bonusSwapClip, size, styleClass);
@@ -849,7 +849,7 @@ public class GameStateController extends BaseViewCleanup {
         badge.setMaxSize(size, size);
 
         // Update style classes carefully to avoid duplicates
-        image.getStyleClass().removeAll("bonus-label-image", "bonus-label-image-wide");
+       // image.getStyleClass().removeAll("bonus-label-image", "bonus-label-image-wide");
         image.getStyleClass().add(styleClass);
 
         // Update background circle

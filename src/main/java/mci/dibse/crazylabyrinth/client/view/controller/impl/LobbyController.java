@@ -521,25 +521,30 @@ public class LobbyController extends BaseViewCleanup {
         colorColumn.setCellValueFactory(cellData -> cellData.getValue().colorProperty());
         adminColumn.setCellValueFactory(cellData -> cellData.getValue().isAdminProperty());
 
-        // Add custom cell factory to display the text in the actual color
+        // Add custom cell factory to display a square block as the color
         colorColumn.setCellFactory(
                 column ->
                         new TableCell<PlayerInfoItem, PlayerColor>() {
+                            private final Rectangle colorBox = new Rectangle(18, 18);
+
+                            {
+                                colorBox.setStroke(Color.rgb(0, 0, 0, 0.3));
+                                colorBox.setStrokeWidth(1);
+                                colorBox.setArcWidth(4);
+                                colorBox.setArcHeight(4);
+                            }
 
                             @Override
                             protected void updateItem(PlayerColor playerColor, boolean empty) {
                                 super.updateItem(playerColor, empty);
-                                if (empty) {
+                                if (empty || playerColor == null) {
+                                    setGraphic(null);
                                     setText(null);
-                                    setTextFill(Color.BLACK);
-                                    return;
+                                } else {
+                                    colorBox.setFill(convertPlayerColorToFxColor(playerColor));
+                                    setGraphic(colorBox);
+                                    setText(null);
                                 }
-
-                                setText(playerColor != null ? playerColor.toString() : "");
-                                setTextFill(
-                                        playerColor != null
-                                                ? convertPlayerColorToFxColor(playerColor)
-                                                : Color.BLACK);
                             }
                         });
     }
