@@ -115,7 +115,7 @@
                     </VBox>
 
                 </VBox>
-                <Region VBox.vgrow="ALWAYS"/>
+                <Region VBox.vgrow="SOMETIMES"/>
 
                 <Button  text="Vollbild An/Aus" onAction="#onFullscreenToggleButtonClick" styleClass="pill-button"/>
             </VBox>
