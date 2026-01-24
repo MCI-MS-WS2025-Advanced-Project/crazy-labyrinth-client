@@ -2,22 +2,28 @@ package mci.dibse.crazylabyrinth.client;
 
 import jakarta.annotation.PostConstruct;
 import java.io.IOException;
+
+import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
+import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.input.KeyCharacterCombination;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.KeyEvent;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import mci.dibse.crazylabyrinth.client.domain.context.ApplicationSettingsRecord;
 import mci.dibse.crazylabyrinth.client.infrastructure.util.JavaFXUtils;
 import mci.dibse.crazylabyrinth.client.infrastructure.util.ScreenResolutionProperties;
 import mci.dibse.crazylabyrinth.client.view.ViewLoader;
+import mci.dibse.crazylabyrinth.client.view.controller.impl.SettingsController;
 import mci.dibse.crazylabyrinth.client.view.viewmodel.navigation.NavigationStateViewModel;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 /**
@@ -37,6 +43,18 @@ public class NavigationController {
     private static final String MAIN_VIEW = "gameServerDashboard.fxml";
     private static final String LOBBY_VIEW = "gameLobby.fxml";
     private static final String GAMEBOARD_VIEW = "gameBoard.fxml";
+
+
+    @Value("${default.game.board.view.resolution:#{T(mci.dibse.crazylabyrinth.client.domain.context.ApplicationSettingsRecord).DEFAULT_RESOLUTION}}")
+    private String defaultViewResolution;
+
+
+    @Value("${default.app.scale.ratio:#{T(mci.dibse.crazylabyrinth.client.domain.context.ApplicationSettingsRecord).DEFAULT_SCALE_RATIO}}")
+    private boolean defaultScaleRatio;
+
+
+    @Value("${default.app.fullscreen:#{T(mci.dibse.crazylabyrinth.client.domain.context.ApplicationSettingsRecord).DEFAULT_FULLSCREEN}}")
+    private boolean defaultFullscreen;
 
 
     private final NavigationStateViewModel navState;
@@ -72,11 +90,44 @@ public class NavigationController {
     /**
      * Show the main screen and initialize stage sizing.
      */
-    public void showMainScreen() {
+    public void showMainScreen()  {
         log.debug("Showing main screen...");
+        ApplicationSettingsRecord settings = null;
+        try {
+            showSettingsScreenAndSetValues();
+        } catch (Exception e) {
+             log.error("Error while showing settings screen", e);
+        }
         screenResolutionProperties.setPrimaryStage(primaryStage);
         setStageMinMaxSizes();
         showScreen(NavigationStateViewModel.ScreenId.MAIN);
+
+    }
+
+    private ApplicationSettingsRecord showSettingsScreenAndSetValues() throws IOException {
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/settings.fxml"));;
+        SettingsController controller = new SettingsController();
+        controller.setDefaultResolutionString(defaultViewResolution);
+        controller.setDefaultScaleRatio(defaultScaleRatio);
+        controller.setDefaultFullscreen(defaultFullscreen);
+
+        loader.setController(controller);
+        Parent settingsRoot = loader.load();
+
+
+        Stage settingsStage = new Stage();
+        Scene scene = new Scene(settingsRoot);
+
+        settingsStage.setTitle("The Amazing Labyrinth - Settings");
+        settingsStage.initModality(Modality.APPLICATION_MODAL);
+        settingsStage.setScene(scene);
+        settingsStage.showAndWait();
+
+        ApplicationSettingsRecord settings = controller.getSettings();
+        screenResolutionProperties.setScaleRatio(settings.scaleRatio());
+        screenResolutionProperties.setGameBoardResolution(settings.selectedResolution());
+        primaryStage.setFullScreen(settings.fullscreen());
+        return settings;
     }
 
 
