@@ -41,6 +41,7 @@ public class GameViewModel extends BaseViewModel implements PlayerConnectedAckLi
     private final GameService gameService;
     private ClientCommandService clientCommandService;
     private final TimerService timerService;
+    @Getter private boolean nextTreasureMightNotBeAvailableYet = true;
 
     @Getter private GameBoardItem gameBoardItem;
     @Getter private List<PlayerStateItem> playerStatesSorted = new ArrayList<>();
@@ -355,6 +356,7 @@ public class GameViewModel extends BaseViewModel implements PlayerConnectedAckLi
                         gameStarted(gameState);
                         return;
                     }
+                    nextTreasureMightNotBeAvailableYet = false;
                     if(NavigationStateViewModel.ScreenId.GAMEBOARD.equals(navigationStateViewModel.getCurrentScreenId())) gameUpdated(gameState);
 
                 };

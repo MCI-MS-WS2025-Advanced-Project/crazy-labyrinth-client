@@ -106,6 +106,15 @@ public class GameStateController extends BaseViewCleanup {
     @FXML public StackPane pushFixedBonusBadge;
     @FXML public ImageView pushFixedBonusImage;
 
+    @FXML public Circle bonusSwapCircle;
+    @FXML public Circle bonusSwapClip;
+    @FXML public Circle bonusBeamCircle;
+    @FXML public Circle bonusBeamClip;
+    @FXML public Circle bonusPushTwiceCircle;
+    @FXML public Circle bonusPushTwiceClip;
+    @FXML public Circle bonusPushFixedCircle;
+    @FXML public Circle bonusPushFixedClip;
+
     @FXML public Label playerTurnLabel;
 
     @FXML public Label player1;
@@ -163,6 +172,7 @@ public class GameStateController extends BaseViewCleanup {
     private final GameViewModel gameViewModel;
     private final Map<String, Label> idToPlayerLabel = new HashMap<>();
     private final Map<String, Label> idToPlayerStatusLabel = new HashMap<>();
+
 
 
     private Map<BonusType, ChangeListener<Boolean>> bonusAvailableListeners = new HashMap<>();
@@ -797,6 +807,7 @@ public class GameStateController extends BaseViewCleanup {
                 rightGameGridColomn.setPercentWidth(18);
                 rightSidebar.getStyleClass().add("sidebar-right");
                 leftSidebar.getStyleClass().add("left-sidebar");
+                setupStyleBonusBadge(screenRation);
             }
             case SIXTEEN_NINE -> {
                 leftGameGridColomn.setPercentWidth(23);
@@ -805,9 +816,53 @@ public class GameStateController extends BaseViewCleanup {
                 rightSidebar.getStyleClass().add("sidebar-right-wide");
                 leftSidebar.getStyleClass().add("sidebar-left-wide");
                 nextTreasurePaneWrapper.getStyleClass().add("nextTreasurePaneWrapper-wide");
+                setupStyleBonusBadge(screenRation);
             }
         }
     }
+
+    /**
+     * Configures the visual style and dimensions of the bonus badges based on the screen ratio.
+     *
+     * @param screenRation the current screen aspect ratio
+     */
+    private void setupStyleBonusBadge(Ratio screenRation) {
+        System.out.println("setupStyleBonusBadge");
+        int size = (screenRation == Ratio.FOUR_THREE) ? 14 : 18;
+        String styleClass = (screenRation == Ratio.FOUR_THREE) ? "bonus-label-image" : "bonus-label-image-wide";
+
+        updateBadgeStyle(swapBonusBadge, swapBonusImage, bonusSwapCircle, bonusSwapClip, size, styleClass);
+        updateBadgeStyle(beamBonusBadge, beamBonusImage, bonusBeamCircle, bonusBeamClip, size, styleClass);
+        updateBadgeStyle(pushTwiceBonusBadge, pushTwiceBonusImage, bonusPushTwiceCircle, bonusPushTwiceClip, size, styleClass);
+        updateBadgeStyle(pushFixedBonusBadge, pushFixedBonusImage, bonusPushFixedCircle, bonusPushFixedClip, size, styleClass);
+
+    }
+
+
+    /**
+     * Updates a specific bonus badge's dimensions, clipping, and CSS styling.
+     */
+    private void updateBadgeStyle(StackPane badge, ImageView image, Circle circle, Circle clip, int size, String styleClass) {
+        double radius = size / 2.0;
+
+        badge.setPrefSize(size, size);
+        badge.setMaxSize(size, size);
+
+        // Update style classes carefully to avoid duplicates
+        image.getStyleClass().removeAll("bonus-label-image", "bonus-label-image-wide");
+        image.getStyleClass().add(styleClass);
+
+        // Update background circle
+        circle.setCenterX(radius);
+        circle.setCenterY(radius);
+        circle.setRadius(radius);
+
+        // Update clip circle
+        clip.setCenterX(radius);
+        clip.setCenterY(radius);
+        clip.setRadius(radius);
+    }
+
 
     /**
      * Build the game grid UI from the current board state.
@@ -818,6 +873,17 @@ public class GameStateController extends BaseViewCleanup {
         int cols = gameBoardItem.getCols();
         Runnable apply =
                 () -> {
+
+
+                    //change style for 9x9 game board
+                    if (rows == 9) {
+                        topBar.prefHeight(30);
+                        topBar.getStyleClass().add("top-bar-9x9");
+
+                        bottomBar.prefHeight(30);
+                        bottomBar.getStyleClass().add("timer-bar-9x9");
+                    }
+
 
 
                     boardGrid.getChildren().clear();
@@ -845,12 +911,11 @@ public class GameStateController extends BaseViewCleanup {
                                 Bindings.min(parent.widthProperty(), parent.heightProperty());
 
 
-                         gameContainer.prefWidthProperty().bind(squareSizeContainer);
+                        gameContainer.prefWidthProperty().bind(squareSizeContainer);
                         gameContainer.minWidthProperty().set(squareSizeContainer.doubleValue());
                         gameContainer.minHeightProperty().set(squareSizeContainer.doubleValue());
-                         gameContainer.maxWidthProperty().set(squareSizeContainer.doubleValue());
-                         gameContainer.maxHeightProperty().set(squareSizeContainer.doubleValue());
-
+                        gameContainer.maxWidthProperty().set(squareSizeContainer.doubleValue());
+                        gameContainer.maxHeightProperty().set(squareSizeContainer.doubleValue());
                     }
 
 
@@ -1461,15 +1526,17 @@ public class GameStateController extends BaseViewCleanup {
      * Bind the next treasure image to the view model.
      */
     private void initNextTreasure() {
-        try {
             nextTreasureImage.imageProperty().bind(Bindings.createObjectBinding(
-                    () -> gameViewModel.getNextTreasureImageProperty().get(),
-                    gameViewModel.getNextTreasureItemProperty()
+                    () -> {
+                          try {
+                            return   gameViewModel.getNextTreasureImageProperty().get();
+                          } catch (NullPointerException e) {
+                              if (! gameViewModel.isNextTreasureMightNotBeAvailableYet())  throw e;
+                              log.warn("Treasure image is not yet available return emtpy Image");
+                              return new javafx.scene.image.WritableImage(1, 1);
+                          }
+                      }, gameViewModel.getNextTreasureItemProperty()
             ));
-        } catch (NullPointerException e) {
-            log.warn("Next treasure image not yet set");
-        }
-
        // ImageViewStyler.applyTreasureStylingToImageView(nextTreasureImage);
     }
 
