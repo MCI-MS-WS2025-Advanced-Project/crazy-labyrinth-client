@@ -6,6 +6,11 @@ import labyrinth.contracts.models.PlayerColor;
 
 public class ImageViewStyler {
 
+    /**
+     * Apply glow/lighting effects to a treasure image view.
+     *
+     * @param treasureImage image view to style
+     */
     public static void applyTreasureStylingToImageView(javafx.scene.image.ImageView treasureImage) {
         ColorAdjust adjust = new ColorAdjust();
         adjust.setHue(0.10);
@@ -30,6 +35,12 @@ public class ImageViewStyler {
 
     }
 
+    /**
+     * Apply outline, glow, and tint effects to a player image view.
+     *
+     * @param playerImage image view to style
+     * @param color player color for accent tint
+     */
     public static void applyPlayerStylingToImageView(javafx.scene.image.ImageView playerImage, PlayerColor color) {
 
         Color accentColor = PlayerPawnUtils.mapPlayerColorToFxColor(color);

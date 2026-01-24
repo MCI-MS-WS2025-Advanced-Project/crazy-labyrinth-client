@@ -31,6 +31,11 @@ public class ClientCommandService {
         this.eventPublisher = eventPublisher;
     }
 
+    /**
+     * Send a connect command using the provided game info.
+     *
+     * @param gameInfo connection data for the game server
+     */
     public void sendConnectCommand(GameInfoRecord gameInfo) {
         ConnectCommandPayload command = new ConnectCommandPayload();
         command.setType(CommandType.CONNECT);
@@ -52,6 +57,9 @@ public class ClientCommandService {
         eventPublisher.publishEvent(gameInfo);
     }
 
+    /**
+     * Send a disconnect command and reset local socket state.
+     */
     public void sendDisconnectCommand() {
         DisconnectCommandPayload command = new DisconnectCommandPayload();
         command.setType(CommandType.DISCONNECT);
@@ -72,6 +80,12 @@ public class ClientCommandService {
 
     }
 
+    /**
+     * Send a start game command with the selected configuration.
+     *
+     * @param startGameRecord game start settings
+     * @throws GeneralUiException when the socket fails to send
+     */
     public void sendStartGameCommand(StartGameRecord startGameRecord) throws GeneralUiException {
         StartGameCommandPayload command = new StartGameCommandPayload();
         command.setType(CommandType.START_GAME);
@@ -96,6 +110,11 @@ public class ClientCommandService {
         }
     }
 
+    /**
+     * Send a push tile command based on the provided data.
+     *
+     * @param data push tile command parameters
+     */
     public void sendPushTileCommand(PushTileCommandRecord data) {
         Object command = null;
         if (CommandType.PUSH_TILE.equals(data.commandType())) {
@@ -124,6 +143,12 @@ public class ClientCommandService {
         }
     }
 
+    /**
+     * Send a move pawn command to the target grid coordinate.
+     *
+     * @param finalRow target row
+     * @param finalCol target column
+     */
     public void sendMovePawnCommand(int finalRow, int finalCol) {
         MovePawnCommandPayload command = new MovePawnCommandPayload();
         command.setType(CommandType.MOVE_PAWN);
@@ -145,6 +170,9 @@ public class ClientCommandService {
         }
     }
 
+    /**
+     * Send a rotate tile command.
+     */
     public void sendRotateTileCommand() {
         RotateTileCommandPayload rotateTileCommandPayload = new RotateTileCommandPayload();
         rotateTileCommandPayload.setType(CommandType.ROTATE_TILE);
@@ -160,6 +188,9 @@ public class ClientCommandService {
         }
     }
 
+    /**
+     * Send a command to use the "push twice" bonus.
+     */
     public void sendUsePushTwiceComnmand() {
         UsePushTwiceCommandPayload command = new UsePushTwiceCommandPayload();
         command.setType(CommandType.USE_PUSH_TWICE);
@@ -175,6 +206,12 @@ public class ClientCommandService {
         }
     }
 
+    /**
+     * Send a command to use the beam bonus at a target coordinate.
+     *
+     * @param finalRow target row
+     * @param finalCol target column
+     */
     public void sendUseBeamCommand(int finalRow, int finalCol) {
         UseBeamCommandPayload command = new UseBeamCommandPayload();
         command.setType(CommandType.USE_BEAM);
@@ -195,6 +232,11 @@ public class ClientCommandService {
         }
     }
 
+    /**
+     * Send a command to use the swap bonus on a target player.
+     *
+     * @param playerId target player identifier
+     */
     public void sendUseSwapCommand(String playerId) {
         UseSwapCommandPayload command = new UseSwapCommandPayload();
         command.setType(CommandType.USE_SWAP);

@@ -15,6 +15,11 @@ public abstract class BaseItem<G> implements ViewItem {
     private static final int MAX_QUEUE_SIZE = 50;
 
 
+    /**
+     * Queue an update and process it on the FX thread.
+     *
+     * @param source updated source data
+     */
     public void updateFrom(G source) {
         updateQueue.offer(source);
 
@@ -28,6 +33,9 @@ public abstract class BaseItem<G> implements ViewItem {
         }
     }
 
+    /**
+     * Drain the update queue and apply changes on the FX thread.
+     */
     private void processNextUpdate() {
         Runnable updateTask =
                 () -> {
@@ -50,13 +58,24 @@ public abstract class BaseItem<G> implements ViewItem {
         JavaFXUtils.runOnFxThread(updateTask);
     }
 
+    /**
+     * Update item state from the provided source.
+     *
+     * @param source source data
+     */
     protected abstract void updateItemFromSource(G source);
 
+    /**
+     * Dispose this item on the FX thread.
+     */
     @Override
     public void dispose() {
         Runnable disposeTask = this::disposeItem;
         JavaFXUtils.runOnFxThread(disposeTask);
     }
 
+    /**
+     * Dispose item-specific resources.
+     */
     protected abstract void disposeItem();
 }

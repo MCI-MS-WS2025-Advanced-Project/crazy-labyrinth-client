@@ -89,6 +89,11 @@ public class GameServer {
         this.lastSeen = lastSeen;
     }
 
+    /**
+     * Return a string representation of the game server.
+     *
+     * @return string representation of this server
+     */
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder("GameServer{");

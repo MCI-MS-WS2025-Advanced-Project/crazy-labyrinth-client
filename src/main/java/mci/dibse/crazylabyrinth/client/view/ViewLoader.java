@@ -25,6 +25,13 @@ public class ViewLoader {
         this.applicationContext = applicationContext;
     }
 
+    /**
+     * Load an FXML view with Spring-managed controllers.
+     *
+     * @param viewName FXML filename under the view location
+     * @return loaded JavaFX parent node
+     * @throws IOException when the FXML cannot be loaded
+     */
     public Parent loadFXML(String viewName) throws IOException {
         FXMLLoader loader = new FXMLLoader(getClass().getResource(VIEW_LOCATION + viewName));
         loader.setControllerFactory(applicationContext::getBean);

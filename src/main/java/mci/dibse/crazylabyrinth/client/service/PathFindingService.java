@@ -35,18 +35,45 @@ public class PathFindingService {
     }
 
     // Coordinate encoding for primitive maps (row * 1000 + col, assuming max 999 cols)
+    /**
+     * Encode a row/column pair into a single integer.
+     *
+     * @param row row index
+     * @param col column index
+     * @return encoded coordinate value
+     */
     private static int encodeCoord(int row, int col) {
         return row * 1000 + col;
     }
 
+    /**
+     * Decode the row from an encoded coordinate.
+     *
+     * @param encoded encoded coordinate value
+     * @return decoded row
+     */
     private static int getRow(int encoded) {
         return encoded / 1000;
     }
 
+    /**
+     * Decode the column from an encoded coordinate.
+     *
+     * @param encoded encoded coordinate value
+     * @return decoded column
+     */
     private static int getCol(int encoded) {
         return encoded % 1000;
     }
 
+    /**
+     * Find a path between two coordinates on the board using A*.
+     *
+     * @param board board to search
+     * @param start start coordinate
+     * @param target target coordinate
+     * @return list of coordinates representing the path, or empty if none
+     */
     public List<CoordinatesItem> findPath(
             GameBoardItem board, CoordinatesItem start, CoordinatesItem target) {
         if (start.equals(target)) {
@@ -87,10 +114,23 @@ public class PathFindingService {
         return Collections.emptyList();
     }
 
+    /**
+     * Clear the internal path cache.
+     */
     public void clearCache() {
         pathCache.clear();
     }
 
+    /**
+     * Run the A* search on the given board tiles.
+     *
+     * @param tiles board tiles
+     * @param start start coordinate
+     * @param target target coordinate
+     * @param rows row count
+     * @param cols column count
+     * @return path coordinates or null if not found
+     */
     private List<CoordinatesItem> aStar(
             TileItem[][] tiles, CoordinatesItem start, CoordinatesItem target, int rows, int cols) {
 
@@ -160,6 +200,14 @@ public class PathFindingService {
         return null;
     }
 
+    /**
+     * Reconstruct a path from a map of predecessors.
+     *
+     * @param cameFrom map of encoded coordinate to its predecessor
+     * @param start encoded start coordinate
+     * @param target encoded target coordinate
+     * @return ordered list of coordinates from start to target
+     */
     private List<CoordinatesItem> reconstructPath(
             Map<Integer, Integer> cameFrom, int start, int target) {
         List<CoordinatesItem> path = new ArrayList<>();
@@ -183,6 +231,16 @@ public class PathFindingService {
     }
 
     // Returns flattened array of [row1, col1, row2, col2, ...] for better performance
+    /**
+     * Collect valid neighboring coordinates that can be traversed.
+     *
+     * @param tiles board tiles
+     * @param row current row
+     * @param col current column
+     * @param rows total rows
+     * @param cols total columns
+     * @return flattened array of neighboring row/col pairs
+     */
     private int[] getValidNeighborCoords(TileItem[][] tiles, int row, int col, int rows, int cols) {
         List<Integer> neighbors = new ArrayList<>();
         TileItem currentTile = tiles[row][col];
@@ -240,6 +298,14 @@ public class PathFindingService {
         return neighbors.stream().mapToInt(Integer::intValue).toArray();
     }
 
+    /**
+     * Check whether a coordinate lies outside the board bounds.
+     *
+     * @param coordinates coordinate to check
+     * @param rows total rows
+     * @param cols total columns
+     * @return true if outside bounds
+     */
     private boolean isValidPosition(CoordinatesItem coordinates, int rows, int cols) {
         return coordinates.getColumnAsInt() < 0
                 || coordinates.getColumnAsInt() >= cols
@@ -247,6 +313,15 @@ public class PathFindingService {
                 || coordinates.getRowAsInt() >= rows;
     }
 
+    /**
+     * Compute Manhattan distance between two grid coordinates.
+     *
+     * @param row1 first row
+     * @param col1 first column
+     * @param row2 second row
+     * @param col2 second column
+     * @return Manhattan distance
+     */
     private int manhattanDistance(int row1, int col1, int row2, int col2) {
         return Math.abs(col1 - col2) + Math.abs(row1 - row2);
     }

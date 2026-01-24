@@ -334,14 +334,7 @@ public class BonusUsageDecider {
 
         System.out.println("AI USED PUSH TWICE BONUS");
         return AiDecision.pushTwiceThenTwoPushesAndMove(push1, push2, new AiDecision.MoveDecision(bestGoalAfter2));
-        //deprecated
-        /*
-        return new AiDecision(
-                push1,
-                AiDecision.BonusDecision.pushTwice(),
-                push2,
-                new AiDecision.MoveDecision(bestGoalAfter2)
-        );*/
+
     }
 
     private Direction opposite(Direction d) {

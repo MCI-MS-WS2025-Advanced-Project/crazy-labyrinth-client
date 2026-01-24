@@ -29,6 +29,11 @@ public class OffensiveMoveCalculator {
 
     private static final Logger log = LoggerFactory.getLogger(OffensiveMoveCalculator.class);
 
+    private static final int PUSH_TWICE_TOP_K = 5;
+
+    private record PushCandidate(int score, int pushIndex, Direction pushDirection, int rotations) {}
+
+
     public OffensiveMoveCalculator(BoardSimulationHelper boardSimulationHelper, BonusCalculator bonusCalculator, BonusUsageDecider bonusUsageDecider, MoveTargetHelper moveTargetHelper) {
         this.AiPathFindingService = new AiPathFindingService();
         this.boardSimulationHelper = boardSimulationHelper;
@@ -48,14 +53,9 @@ public class OffensiveMoveCalculator {
         // use beam bonus if possible and win
         if (availableBonuses.contains(BonusType.BEAM)) {
             log.debug("AI USED BEAM to get home");
-            // deprecated
+
             return AiDecision.beamAndMove( homePosition,
                     new AiDecision.MoveDecision(homePosition));
-            /*
-            return new AiDecision(
-                    AiDecision.BonusDecision.beam(homePosition),
-                    new AiDecision.MoveDecision(homePosition)
-            );*/
         }
 
         // use push fixed bonus if direct win is possible
@@ -91,6 +91,9 @@ public class OffensiveMoveCalculator {
         Direction[] directions = {Direction.UP, Direction.DOWN, Direction.LEFT, Direction.RIGHT};
 
         boolean bestPushMovesAI = false;
+
+        List<PushCandidate> push1CandidatesForPushTwice = new ArrayList<>();
+        boolean canConsiderPushTwice = availableBonuses.contains(BonusType.PUSH_TWICE);
 
         for (int pushIndex : validIndices) {
             for (Direction pushDirection : directions) {
@@ -128,6 +131,10 @@ public class OffensiveMoveCalculator {
                         int dist = boardSimulationHelper.manhattanDistance(newPlayerPos, homePosition);
                         score = 10_000 - dist * 100;
                         if (pushMovesAI) score += 50;              // break ties, avoid “stuck”
+                    }
+
+                    if (canConsiderPushTwice && !homeReachable) {
+                        push1CandidatesForPushTwice.add(new PushCandidate(score, pushIndex, pushDirection, rotations));
                     }
 
                     boolean shouldUpdate = false;
@@ -179,23 +186,37 @@ public class OffensiveMoveCalculator {
             );
         } else {
 
-            // Use push twice if home is reachable after
-            boolean homeReachable = bestPath != null && !bestPath.isEmpty() && bestPath.contains(homePosition);
+            if (canConsiderPushTwice && !push1CandidatesForPushTwice.isEmpty()) {
 
-            if (!homeReachable && availableBonuses.contains(BonusType.PUSH_TWICE)) {
-                AiDecision pushTwiceTurn = bonusUsageDecider.tryUsePushTwiceForDirectGoalAfterPlannedPush(
-                        game,
-                        myPlayerId,
-                        currentPos,
-                        homePosition,
-                        availableBonuses,
-                        bestPushIndex,
-                        bestPushDirection,
-                        bestRotations,
-                        /*goalReachableAfterPlannedPush1*/ false
-                );
-                if (pushTwiceTurn != null) return pushTwiceTurn;
+                push1CandidatesForPushTwice.sort((a, b) -> {
+                    int c = Integer.compare(b.score(), a.score());
+                    if (c != 0) return c;
+                    c = Integer.compare(a.rotations(), b.rotations());
+                    if (c != 0) return c;
+                    return Integer.compare(a.pushIndex(), b.pushIndex());
+                });
+
+                int k = Math.min(PUSH_TWICE_TOP_K, push1CandidatesForPushTwice.size());
+
+                for (int i = 0; i < k; i++) {
+                    PushCandidate cand = push1CandidatesForPushTwice.get(i);
+
+                    AiDecision pushTwiceTurn = bonusUsageDecider.tryUsePushTwiceForDirectGoalAfterPlannedPush(
+                            game,
+                            myPlayerId,
+                            currentPos,
+                            homePosition,
+                            availableBonuses,
+                            cand.pushIndex(),
+                            cand.pushDirection(),
+                            cand.rotations(),
+                            /*goalReachableAfterPlannedPush1*/ false
+                    );
+
+                    if (pushTwiceTurn != null) return pushTwiceTurn;
+                }
             }
+
 
             // Try to collect bonus, if home is not possible and bonus is on path
             List<Coordinates> bonusPositions = boardSimulationHelper.findBonusPositions(board);
@@ -367,11 +388,13 @@ public class OffensiveMoveCalculator {
         int bestPathLen = Integer.MAX_VALUE;
         boolean bestPushMovesAI = false;
 
-
         List<Coordinates> bonusPositions = boardSimulationHelper.findBonusPositions(board);
 
         List<Integer> validIndices = boardSimulationHelper.getValidPushIndices(board);
         Direction[] directions = {Direction.UP, Direction.DOWN, Direction.LEFT, Direction.RIGHT};
+
+        List<PushCandidate> push1CandidatesForPushTwice = new ArrayList<>();
+        boolean canConsiderPushTwice = availableBonuses.contains(BonusType.PUSH_TWICE);
 
         for (int pushIndex : validIndices) {
             for (Direction pushDirection : directions) {
@@ -432,7 +455,10 @@ public class OffensiveMoveCalculator {
                         score = 10_000 - dist * 100; // treasure not in reach, try get closer
 
                         if (pushMovesAI) score += 50; // small bonus if push at least moves AI
+
+                        if (canConsiderPushTwice) push1CandidatesForPushTwice.add(new PushCandidate(score, pushIndex, pushDirection, rotations));
                     }
+
 
                     boolean shouldUpdate = false;
 
@@ -497,19 +523,35 @@ public class OffensiveMoveCalculator {
             if (pushFixedTurn != null) return pushFixedTurn;
 
             // 2) use push twice if treasure is reachable after
-            if (!bestTreasureReachable && availableBonuses.contains(BonusType.PUSH_TWICE)) {
-                AiDecision pushTwiceTurn = bonusUsageDecider.tryUsePushTwiceForDirectGoalAfterPlannedPush(
-                        game,
-                        myPlayerId,
-                        playerPosition,
-                        treasurePosition,
-                        availableBonuses,
-                        bestPushIndex,
-                        bestPushDirection,
-                        bestRotations,
-                        /*goalReachableAfterPlannedPush1*/ false
-                );
-                if (pushTwiceTurn != null) return pushTwiceTurn;
+            if (canConsiderPushTwice && !push1CandidatesForPushTwice.isEmpty()) {
+
+                push1CandidatesForPushTwice.sort((a, b) -> {
+                    int c = Integer.compare(b.score(), a.score());
+                    if (c != 0) return c;
+                    c = Integer.compare(a.rotations(), b.rotations());
+                    if (c != 0) return c;
+                    return Integer.compare(a.pushIndex(), b.pushIndex());
+                });
+
+                int k = Math.min(PUSH_TWICE_TOP_K, push1CandidatesForPushTwice.size());
+
+                for (int i = 0; i < k; i++) {
+                    PushCandidate cand = push1CandidatesForPushTwice.get(i);
+
+                    AiDecision pushTwiceTurn = bonusUsageDecider.tryUsePushTwiceForDirectGoalAfterPlannedPush(
+                            game,
+                            myPlayerId,
+                            playerPosition,
+                            treasurePosition,
+                            availableBonuses,
+                            cand.pushIndex(),
+                            cand.pushDirection(),
+                            cand.rotations(),
+                            /*goalReachableAfterPlannedPush1*/ false
+                    );
+
+                    if (pushTwiceTurn != null) return pushTwiceTurn;
+                }
             }
 
             // 3) use swap if treasure is reachable after
@@ -601,17 +643,6 @@ public class OffensiveMoveCalculator {
 
 
         return  AiDecision.pushAndMove(new AiDecision.PushDecision(bestPushIndex, bestPushDirection, bestRotations), new AiDecision.MoveDecision(bestMoveTarget));
-        //deprecated
-        /*
-        AiDecision.PushDecision pushDecision = new AiDecision.PushDecision(
-                bestPushIndex,
-                bestPushDirection,
-                bestRotations
-        );
-
-        AiDecision.MoveDecision moveDecision = new AiDecision.MoveDecision(bestMoveTarget);
-
-        return new AiDecision(pushDecision, moveDecision);*/
     }
 
 

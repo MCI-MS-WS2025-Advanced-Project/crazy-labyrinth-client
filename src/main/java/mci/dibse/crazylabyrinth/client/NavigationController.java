@@ -32,7 +32,6 @@ import org.springframework.stereotype.Component;
 @Slf4j
 public class NavigationController {
 
-
     private boolean startUp = true;
 
     private static final String MAIN_VIEW = "gameServerDashboard.fxml";
@@ -52,13 +51,15 @@ public class NavigationController {
         this.navState = navState;
         this.viewLoader = viewLoader;
         this.screenResolutionProperties = screenResolutionProperties;
+
     }
 
+    /**
+     * Register the navigation listener after bean construction.
+     */
     @PostConstruct
     public void init() {
         navState.getCurrentScreenProperty().addListener(navListener);
-
-
     }
 
     private final ChangeListener<NavigationStateViewModel.ScreenId> navListener =
@@ -68,31 +69,45 @@ public class NavigationController {
                 }
             };
 
+    /**
+     * Show the main screen and initialize stage sizing.
+     */
     public void showMainScreen() {
+        log.debug("Showing main screen...");
+        screenResolutionProperties.setPrimaryStage(primaryStage);
+        setStageMinMaxSizes();
         showScreen(NavigationStateViewModel.ScreenId.MAIN);
-        setStageMinMaxSizes(null);
     }
 
+    /**
+     * Load and show a screen by its screen id.
+     *
+     * @param newScreen target screen id
+     */
     private void showScreen(NavigationStateViewModel.ScreenId newScreen) {
+        log.debug("Showing main screen... {}", newScreen.name());
         String viewFile = mapScreenIdToFile(newScreen);
         try {
             Parent mainRoot = viewLoader.loadFXML(viewFile);
-         //   setStageMinMaxSizes(newScreen);
             setUpStageAndScene(newScreen, mainRoot);
         } catch (IOException | IllegalArgumentException e) {
             throw new RuntimeException(e);
         }
     }
 
+    /**
+     * Configure the stage with a new scene while preserving window state.
+     *
+     * @param newScreen target screen id
+     * @param mainRoot loaded root node
+     */
     private void setUpStageAndScene(NavigationStateViewModel.ScreenId newScreen, Parent mainRoot) {
         boolean ismaximized = primaryStage.isMaximized();
         boolean isFullScreen = primaryStage.isFullScreen();
 
+
         double prevWidth = primaryStage.getWidth();
         double prevHeight = primaryStage.getHeight();
-
-        primaryStage.setWidth(prevWidth);
-        primaryStage.setHeight(prevHeight);
 
         Scene scene = new Scene(mainRoot);
         setupFullScreen(scene);
@@ -101,9 +116,19 @@ public class NavigationController {
         primaryStage.setTitle("The Amazing Labyrinth");
         primaryStage.setFullScreen(isFullScreen);
         primaryStage.setMaximized(ismaximized);
+
+
+        primaryStage.setWidth(prevWidth);
+        primaryStage.setHeight(prevHeight);
         primaryStage.show();
     }
 
+    /**
+     * Map a screen id to an FXML file name.
+     *
+     * @param newScreen screen id
+     * @return FXML file name
+     */
     private String mapScreenIdToFile(NavigationStateViewModel.ScreenId newScreen) {
         return switch (newScreen) {
             case MAIN -> MAIN_VIEW;
@@ -113,17 +138,25 @@ public class NavigationController {
         };
     }
 
-    private void setStageMinMaxSizes(NavigationStateViewModel.ScreenId newScreen) {
+    /**
+     * Set minimum and initial stage sizes.
+     */
+    private void setStageMinMaxSizes() {
         primaryStage.setMinWidth(screenResolutionProperties.getMinViewWidth());
         primaryStage.setMinHeight(screenResolutionProperties.getMinViewHeight());
 
         if(!startUp) return;
         startUp = false;
+        log.debug("Setting stage w/h sizes to: {}x{}", screenResolutionProperties.getWidth(), screenResolutionProperties.getHeight());
         primaryStage.setWidth(screenResolutionProperties.getWidth());
         primaryStage.setHeight(screenResolutionProperties.getHeight());
-
     }
 
+    /**
+     * Configure fullscreen behavior for the scene.
+     *
+     * @param scene scene to configure
+     */
     private void setupFullScreen(Scene scene) {
         scene.addEventFilter(KeyEvent.KEY_PRESSED, event -> {
             if (event.getCode() == KeyCode.ESCAPE && primaryStage.isFullScreen()) {
