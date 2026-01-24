@@ -30,18 +30,21 @@ public class ScreenResolutionProperties {
 
     private static final Pattern p = Pattern.compile("(\\d+)\\s*[xX×*]\\s*(\\d+)");
 
-    @Value("${app.scale.ratio}")
-    private Boolean scaleRatio = true;
 
-    @Value("${game.board.view.resolution:1024x768}")
-    private String gameBoardResolution;
-    @Getter private int width = 1024;
-    @Getter private int height = 768;
+    @Value("${default.app.scale.ratio:#{T(mci.dibse.crazylabyrinth.client.domain.context.ApplicationSettingsRecord).DEFAULT_SCALE_RATIO}}")
+    @Setter private Boolean scaleRatio;
 
-    @Getter private double screenHeight  = 768;
+    @Value("${default.game.board.view.resolution:#{T(mci.dibse.crazylabyrinth.client.domain.context.ApplicationSettingsRecord).DEFAULT_RESOLUTION}}")
+    @Setter private String gameBoardResolution;
 
-    @Getter private  int minViewWidth = 1024;
-    @Getter private  int minViewHeight = 768;
+
+    @Getter private int width;
+    @Getter private int height;
+
+    @Getter private double screenHeight;
+
+    @Getter private  int minViewWidth;
+    @Getter private  int minViewHeight;
 
     @Setter private  Stage primaryStage;
 
@@ -104,7 +107,7 @@ public class ScreenResolutionProperties {
         screenHeight = height;
         if (!primaryStage.isFullScreen()) {
             isWindowDecorated = true;
-            screenHeight = (int) (height - HEIGHT_OFFSET_TO_VIEWPORT_HEIGHT_ON_SCREEN);
+            screenHeight = (int) (height - heightWithRegardsToWindowDecoration());
         } else {
             isWindowDecorated = false;
         }
