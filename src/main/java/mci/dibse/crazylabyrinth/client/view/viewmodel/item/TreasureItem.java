@@ -9,7 +9,8 @@ import mci.dibse.crazylabyrinth.client.infrastructure.util.JavaFXUtils;
 
 public class TreasureItem extends BaseItem<Treasure> {
 
-    @Getter private SimpleObjectProperty<Image> treasureImageProperty = new SimpleObjectProperty<>();
+    @Getter
+    private SimpleObjectProperty<Image> treasureImageProperty = new SimpleObjectProperty<>();
 
     @Getter private int id;
     @Getter private String name;
@@ -17,7 +18,8 @@ public class TreasureItem extends BaseItem<Treasure> {
     public TreasureItem(Treasure source) {
         id = source.getId();
         name = source.getName();
-        JavaFXUtils.runOnFxThread(() -> treasureImageProperty.set(ImageResourceLoader.loadImage(id)));
+        JavaFXUtils.runOnFxThread(
+                () -> treasureImageProperty.set(ImageResourceLoader.loadImage(id)));
     }
 
     /**

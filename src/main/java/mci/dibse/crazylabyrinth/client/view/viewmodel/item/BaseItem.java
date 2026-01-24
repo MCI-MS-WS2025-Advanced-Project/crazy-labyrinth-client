@@ -1,9 +1,8 @@
 package mci.dibse.crazylabyrinth.client.view.viewmodel.item;
 
+import java.util.concurrent.ConcurrentLinkedQueue;
 import lombok.extern.slf4j.Slf4j;
 import mci.dibse.crazylabyrinth.client.infrastructure.util.JavaFXUtils;
-
-import java.util.concurrent.ConcurrentLinkedQueue;
 
 @Slf4j
 public abstract class BaseItem<G> implements ViewItem {
@@ -13,7 +12,6 @@ public abstract class BaseItem<G> implements ViewItem {
 
     protected final ConcurrentLinkedQueue<G> updateQueue = new ConcurrentLinkedQueue<>();
     private static final int MAX_QUEUE_SIZE = 50;
-
 
     /**
      * Queue an update and process it on the FX thread.
@@ -26,7 +24,6 @@ public abstract class BaseItem<G> implements ViewItem {
         while (updateQueue.size() > MAX_QUEUE_SIZE) {
             updateQueue.poll();
         }
-
 
         if (pendingUpdate.compareAndSet(false, true)) {
             processNextUpdate();

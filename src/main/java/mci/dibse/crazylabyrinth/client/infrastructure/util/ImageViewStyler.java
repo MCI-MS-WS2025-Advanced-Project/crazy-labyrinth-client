@@ -49,7 +49,8 @@ public class ImageViewStyler {
      * @param playerImage image view to style
      * @param color player color for accent tint
      */
-    public static void applyPlayerStylingToImageView(javafx.scene.image.ImageView playerImage, PlayerColor color) {
+    public static void applyPlayerStylingToImageView(
+            javafx.scene.image.ImageView playerImage, PlayerColor color) {
 
         Color accentColor = PlayerPawnUtils.mapPlayerColorToFxColor(color);
 

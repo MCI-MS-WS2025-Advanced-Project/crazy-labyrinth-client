@@ -38,9 +38,9 @@ import mci.dibse.crazylabyrinth.client.NavigationController;
 import mci.dibse.crazylabyrinth.client.domain.context.PushTileCommandRecord;
 import mci.dibse.crazylabyrinth.client.domain.model.enums.Theme;
 import mci.dibse.crazylabyrinth.client.infrastructure.util.*;
-import mci.dibse.crazylabyrinth.client.service.GameServerSocketService;
 import mci.dibse.crazylabyrinth.client.infrastructure.util.JavaFXUtils;
 import mci.dibse.crazylabyrinth.client.infrastructure.util.PlayerPawnUtils;
+import mci.dibse.crazylabyrinth.client.service.GameServerSocketService;
 import mci.dibse.crazylabyrinth.client.service.animation.AnimationService;
 import mci.dibse.crazylabyrinth.client.view.viewmodel.GameViewModel;
 import mci.dibse.crazylabyrinth.client.view.viewmodel.item.*;
@@ -153,7 +153,6 @@ public class GameStateController extends BaseViewCleanup {
     @FXML public ColumnConstraints middleGameGridColomn;
     @FXML public ColumnConstraints rightGameGridColomn;
 
-
     private static final int GAP_BETWEEN_TILES = 2;
     private static final int MAX_PLAYERS = 4;
     private static final String TIMEOUT_LABEL = "Timeout aufgrund von Untätigkeit";
@@ -163,21 +162,17 @@ public class GameStateController extends BaseViewCleanup {
     private static final PseudoClass AVAILABLE_BONUS_BUTTON_PSEUDO_CLASS =
             PseudoClass.getPseudoClass("bonus-available");
 
-
-    private static final String QUIT_GAME_MODAL_TITLE   = "Beenden";
-    private static final String QUIT_GAME_MODAL_HEADER  = "Spiel wirklich beenden?";
-    private static final String QUIT_GAME_MODAL_CONTENT = "Das laufende Spiel wird beendet und Sie kehren zur Serverübersicht zurück";
-
+    private static final String QUIT_GAME_MODAL_TITLE = "Beenden";
+    private static final String QUIT_GAME_MODAL_HEADER = "Spiel wirklich beenden?";
+    private static final String QUIT_GAME_MODAL_CONTENT =
+            "Das laufende Spiel wird beendet und Sie kehren zur Serverübersicht zurück";
 
     private final GameViewModel gameViewModel;
     private final Map<String, Label> idToPlayerLabel = new HashMap<>();
     private final Map<String, Label> idToPlayerStatusLabel = new HashMap<>();
 
-
-
     private Map<BonusType, ChangeListener<Boolean>> bonusAvailableListeners = new HashMap<>();
     private SimpleBooleanProperty pushTwicePendingAction = new SimpleBooleanProperty(false);
-
 
     private IntegerProperty remainingGameTimer = new SimpleIntegerProperty();
     private Timeline gameTimeline;
@@ -192,14 +187,17 @@ public class GameStateController extends BaseViewCleanup {
     private final AnimationService animationService;
 
     @Autowired
-    public GameStateController(NavigationStateViewModel vm, GameViewModel gameViewModel, ScreenResolutionProperties screenResolutionProperties, NavigationController navigationController) {
+    public GameStateController(
+            NavigationStateViewModel vm,
+            GameViewModel gameViewModel,
+            ScreenResolutionProperties screenResolutionProperties,
+            NavigationController navigationController) {
         super(vm);
         this.gameViewModel = gameViewModel;
         this.screenResolutionProperties = screenResolutionProperties;
         this.animationService = new AnimationService();
         this.navigationController = navigationController;
     }
-
 
     /**
      * Initialize bindings, listeners, and UI elements for the game screen.
@@ -240,22 +238,30 @@ public class GameStateController extends BaseViewCleanup {
 
         initViewToRatio();
         // delay init of scaling & gamegrid until several pulse runs
-        viewport.sceneProperty().addListener((obs, oldScene, newScene) -> {
-            if (newScene != null) {
-                Platform.runLater(() -> {
-                    root.applyCss();
-                    root.setMaxSize(screenResolutionProperties.getWidth(), screenResolutionProperties.getScreenHeight());
-                    root.setPrefSize(screenResolutionProperties.getWidth(), screenResolutionProperties.getScreenHeight());
-                    root.layout();
-                    viewport.layout();
-                    centerStackPane.layout();
-                    Platform.runLater(() -> {
-                        initUiScaling();
-                        initGameGrid();
-                    });
-                });
-            }
-        });
+        viewport.sceneProperty()
+                .addListener(
+                        (obs, oldScene, newScene) -> {
+                            if (newScene != null) {
+                                Platform.runLater(
+                                        () -> {
+                                            root.applyCss();
+                                            root.setMaxSize(
+                                                    screenResolutionProperties.getWidth(),
+                                                    screenResolutionProperties.getScreenHeight());
+                                            root.setPrefSize(
+                                                    screenResolutionProperties.getWidth(),
+                                                    screenResolutionProperties.getScreenHeight());
+                                            root.layout();
+                                            viewport.layout();
+                                            centerStackPane.layout();
+                                            Platform.runLater(
+                                                    () -> {
+                                                        initUiScaling();
+                                                        initGameGrid();
+                                                    });
+                                        });
+                            }
+                        });
     }
 
     private void applyThemeStyleClass() {
@@ -278,9 +284,9 @@ public class GameStateController extends BaseViewCleanup {
      * Initialize UI scaling based on screen resolution.
      */
     private void initUiScaling() {
-            ScreenResolutionProperties.ResolutionProperties props = new ScreenResolutionProperties.ResolutionProperties(root,
-                    viewport);
-            screenResolutionProperties.initUiScaling(props);
+        ScreenResolutionProperties.ResolutionProperties props =
+                new ScreenResolutionProperties.ResolutionProperties(root, viewport);
+        screenResolutionProperties.initUiScaling(props);
     }
 
     /**
@@ -592,7 +598,8 @@ public class GameStateController extends BaseViewCleanup {
                             PlayerPawnUtils.mapPlayerColorToFxColor(
                                     playerStateItem.getPlayerColor()));
             idToPlayerLabel.put(playerStateItem.getPlayerIdAsString(), getPlayerLabelByIndex(i));
-            idToPlayerStatusLabel.put(playerStateItem.getPlayerIdAsString(), getPlayerStatusLabelByIndex(i));
+            idToPlayerStatusLabel.put(
+                    playerStateItem.getPlayerIdAsString(), getPlayerStatusLabelByIndex(i));
         }
 
         // clientPlayer always first
@@ -608,7 +615,8 @@ public class GameStateController extends BaseViewCleanup {
                         playerState -> {
                             Label playerLabel =
                                     idToPlayerLabel.get(playerState.getPlayerIdAsString());
-                            Label playerStatusLabel = idToPlayerStatusLabel.get(playerState.getPlayerIdAsString());
+                            Label playerStatusLabel =
+                                    idToPlayerStatusLabel.get(playerState.getPlayerIdAsString());
                             bindPlayerLabel(playerLabel, playerState, false);
                             bindPlayerStatusLabel(playerStatusLabel, playerState);
                         });
@@ -625,20 +633,23 @@ public class GameStateController extends BaseViewCleanup {
                 String.valueOf(playerState.getRemainingTreasureCountAsInt());
 
         statusLabel.textProperty().unbind();
-        statusLabel.textProperty().bind(
-                Bindings.createStringBinding(
-                        () -> {
-                            String playerStatusLabelString =
-                                    "Schätze ("
-                                            + playerState.getTreasuresFoundAsInt()
-                                            + " / "
-                                            + maxAvailableTreasurePerPlayer
-                                            + ")";
-                            if (playerState.isPlayerAiControlled()) playerStatusLabelString += " - (AI)";
-                            return playerStatusLabelString;
-                        },playerState.getPlayerInfo().get().isAiControlledProperty(),
-                        playerState.getTreasuresFound()));
-
+        statusLabel
+                .textProperty()
+                .bind(
+                        Bindings.createStringBinding(
+                                () -> {
+                                    String playerStatusLabelString =
+                                            "Schätze ("
+                                                    + playerState.getTreasuresFoundAsInt()
+                                                    + " / "
+                                                    + maxAvailableTreasurePerPlayer
+                                                    + ")";
+                                    if (playerState.isPlayerAiControlled())
+                                        playerStatusLabelString += " - (AI)";
+                                    return playerStatusLabelString;
+                                },
+                                playerState.getPlayerInfo().get().isAiControlledProperty(),
+                                playerState.getTreasuresFound()));
     }
 
     /**
@@ -666,8 +677,6 @@ public class GameStateController extends BaseViewCleanup {
      */
     private void initSpareTile() {
         extraTileWrapper.visibleProperty().set(true);
-
-
 
         ChangeListener<TileItem> spareTileListener =
                 (obs, oldValue, newValue) -> {
@@ -793,7 +802,6 @@ public class GameStateController extends BaseViewCleanup {
         extraTile.rotateProperty().bindBidirectional(currentTile.getRotation());
     }
 
-
     /**
      * Adjust layout widths for different screen ratios.
      */
@@ -899,13 +907,10 @@ public class GameStateController extends BaseViewCleanup {
 
                     idToPlayerPawn.clear();
 
-
                     if (gameContainer.getParent() instanceof Region parent) {
-
 
                         var squareSize =
                                 Bindings.min(parent.widthProperty(), parent.heightProperty());
-
 
                         var squareSizeContainer =
                                 Bindings.min(parent.widthProperty(), parent.heightProperty());
@@ -918,9 +923,6 @@ public class GameStateController extends BaseViewCleanup {
                         gameContainer.maxHeightProperty().set(squareSizeContainer.doubleValue());
                     }
 
-
-
-
                     for (int i = 0; i < rows; i++) {
 
                         ColumnConstraints cc = new ColumnConstraints();
@@ -932,8 +934,6 @@ public class GameStateController extends BaseViewCleanup {
                         rc.setPercentHeight(100.0 / rows);
                         rc.setVgrow(Priority.ALWAYS);
                         boardGrid.getRowConstraints().add(rc);
-
-
                     }
 
                     for (int row = 0; row < rows; row++) {
@@ -959,25 +959,27 @@ public class GameStateController extends BaseViewCleanup {
 
                             cellContainer.getChildren().add(imageView);
 
-
                             if (tile.hasTreasure()) {
 
                                 TreasureItem treasureItem = tile.getTreasureItem();
-                                ImageView treasureImage = new ImageView(treasureItem.getTreasureImage());
+                                ImageView treasureImage =
+                                        new ImageView(treasureItem.getTreasureImage());
                                 treasureImage.setPreserveRatio(true);
                                 double scale = 0.5;
 
-                                treasureImage.fitWidthProperty().bind(cellContainer.widthProperty().multiply(scale));
-                                treasureImage.fitHeightProperty().bind(cellContainer.heightProperty().multiply(scale));
+                                treasureImage
+                                        .fitWidthProperty()
+                                        .bind(cellContainer.widthProperty().multiply(scale));
+                                treasureImage
+                                        .fitHeightProperty()
+                                        .bind(cellContainer.heightProperty().multiply(scale));
                                 treasureImage.setRotate(tile.getRotation().get().doubleValue());
                                 ImageViewStyler.applyTreasureStylingToImageView(treasureImage);
                                 cellContainer.getChildren().add(treasureImage);
-
-
                             }
 
                             if (tile.hasBonus()) {
-                                //Label bonusNode = tempLabelImplforBonus(tile.getBonus().get());
+                                // Label bonusNode = tempLabelImplforBonus(tile.getBonus().get());
                                 StackPane bonusNode = getBonusNodeForTile(tile.getBonusType());
                                 cellContainer.getChildren().add(bonusNode);
                             }
@@ -997,23 +999,27 @@ public class GameStateController extends BaseViewCleanup {
                             if (playerStateItemOptional.isPresent()) {
                                 PlayerStateItem playerStateItem = playerStateItemOptional.get();
 
-                                PlayerColor playerColor =
-                                        playerStateItem.getPlayerColor();
-
+                                PlayerColor playerColor = playerStateItem.getPlayerColor();
 
                                 ImageView playerImage = new ImageView();
                                 Image image = ImageResourceLoader.loadImage(playerColor);
                                 playerImage.setPreserveRatio(true);
                                 playerImage.setImage(image);
-                                ImageViewStyler.applyPlayerStylingToImageView(playerImage, playerColor);
+                                ImageViewStyler.applyPlayerStylingToImageView(
+                                        playerImage, playerColor);
 
-                                if(tile.hasTreasure()) offsetPlayerPawnOnTreasurePresence(tile, playerImage);
+                                if (tile.hasTreasure())
+                                    offsetPlayerPawnOnTreasurePresence(tile, playerImage);
                                 double scale = 0.45;
-                                playerImage.fitWidthProperty().bind(cellContainer.widthProperty().multiply(scale));
-                                playerImage.fitHeightProperty().bind(cellContainer.heightProperty().multiply(scale));
-                                idToPlayerPawn.put(playerStateItem.getPlayerIdAsString(), playerImage);
+                                playerImage
+                                        .fitWidthProperty()
+                                        .bind(cellContainer.widthProperty().multiply(scale));
+                                playerImage
+                                        .fitHeightProperty()
+                                        .bind(cellContainer.heightProperty().multiply(scale));
+                                idToPlayerPawn.put(
+                                        playerStateItem.getPlayerIdAsString(), playerImage);
                                 cellContainer.getChildren().add(playerImage);
-
                             }
 
                             markPlayerHomeBase(row, col, cellContainer);
@@ -1040,10 +1046,9 @@ public class GameStateController extends BaseViewCleanup {
                                                     .otherwise(Cursor.DEFAULT));
                         }
                     }
-
                 };
         Platform.runLater(apply);
-        //JavaFXUtils.runOnFxThread(apply);
+        // JavaFXUtils.runOnFxThread(apply);
     }
 
     /**
@@ -1054,7 +1059,7 @@ public class GameStateController extends BaseViewCleanup {
      */
     private void offsetPlayerPawnOnTreasurePresence(TileItem tile, ImageView playerImage) {
         List<Direction> directions = tile.getDirections();
-        for( Direction direction : directions) {
+        for (Direction direction : directions) {
             if (Direction.DOWN.equals(direction)) continue;
             switch (direction) {
                 case UP -> playerImage.setTranslateY(-30);
@@ -1079,7 +1084,9 @@ public class GameStateController extends BaseViewCleanup {
                                 player.getHomePosition().get().getColumnAsInt() == col
                                         && player.getHomePosition().get().getRowAsInt() == row)
                 .findFirst()
-                .ifPresent(playerStateItem -> addStyleToPlayerHomeBase(cellContainer, playerStateItem));
+                .ifPresent(
+                        playerStateItem ->
+                                addStyleToPlayerHomeBase(cellContainer, playerStateItem));
     }
 
     /**
@@ -1088,39 +1095,36 @@ public class GameStateController extends BaseViewCleanup {
      * @param cellContainer cell container to decorate
      * @param playerStateItem player state item
      */
-    private void addStyleToPlayerHomeBase(StackPane cellContainer, PlayerStateItem playerStateItem) {
+    private void addStyleToPlayerHomeBase(
+            StackPane cellContainer, PlayerStateItem playerStateItem) {
 
         String styleColor = playerStateItem.getPlayerColor().toString().toLowerCase();
 
-
         Rectangle borderOverlay = new Rectangle();
-
 
         borderOverlay.widthProperty().bind(cellContainer.widthProperty());
         borderOverlay.heightProperty().bind(cellContainer.heightProperty());
 
-
         borderOverlay.setFill(Color.TRANSPARENT);
 
-        Color baseColor = Color.web(styleColor); // web() handles standard color names like "red", "blue"
+        Color baseColor =
+                Color.web(styleColor); // web() handles standard color names like "red", "blue"
         // Set the border color and thickness
-        Color softColor = new Color(
-                baseColor.getRed(),
-                baseColor.getGreen(),
-                baseColor.getBlue(),
-                0.5 // Reduce opacity to make it less intense
-        );
+        Color softColor =
+                new Color(
+                        baseColor.getRed(),
+                        baseColor.getGreen(),
+                        baseColor.getBlue(),
+                        0.5 // Reduce opacity to make it less intense
+                        );
 
         borderOverlay.setStroke(softColor);
         borderOverlay.setStrokeWidth(1.5);
         borderOverlay.setStrokeType(StrokeType.INSIDE);
 
-
         borderOverlay.setMouseTransparent(true);
 
-
         cellContainer.getChildren().add(borderOverlay);
-
     }
 
     /**
@@ -1521,7 +1525,6 @@ public class GameStateController extends BaseViewCleanup {
         }
     }
 
-
     /**
      * Bind the next treasure image to the view model.
      */
@@ -1540,7 +1543,6 @@ public class GameStateController extends BaseViewCleanup {
        // ImageViewStyler.applyTreasureStylingToImageView(nextTreasureImage);
     }
 
-
     /**
      * Create a bonus badge node for a tile.
      *
@@ -1548,8 +1550,8 @@ public class GameStateController extends BaseViewCleanup {
      * @return bonus badge node
      */
     private StackPane getBonusNodeForTile(BonusType bonusType) {
-       Image bonus =  ImageResourceLoader.loadImage(bonusType);
-       ImageView bonusImage = new ImageView(bonus);
+        Image bonus = ImageResourceLoader.loadImage(bonusType);
+        ImageView bonusImage = new ImageView(bonus);
         bonusImage.setFitWidth(18);
         bonusImage.setFitHeight(18);
         bonusImage.setPreserveRatio(false); // ensure 30x30, no letterbox

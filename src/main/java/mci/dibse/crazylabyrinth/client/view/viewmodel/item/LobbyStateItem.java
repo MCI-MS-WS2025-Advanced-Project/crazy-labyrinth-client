@@ -40,12 +40,12 @@ public class LobbyStateItem extends BaseItem<LobbyStateEventPayload> {
     public LobbyStateItem(LobbyStateEventPayload source) {
         super();
         mapChangeListener = initMapChangeListener();
-        Runnable apply = () -> {
-            byId.addListener(this.mapChangeListener);
-            updateFrom(source);
-        };
+        Runnable apply =
+                () -> {
+                    byId.addListener(this.mapChangeListener);
+                    updateFrom(source);
+                };
         JavaFXUtils.runOnFxThread(apply);
-
     }
 
     /**
@@ -88,15 +88,17 @@ public class LobbyStateItem extends BaseItem<LobbyStateEventPayload> {
                                         .noneMatch(info -> info.getId().equals(playerId)));
         this.playerCount.set(String.valueOf(playerInfos.size()));
         playerInfos.stream()
-                .map(i -> {
-                    if (byId.containsKey(i.getId())) {
-                        PlayerInfoItem item = byId.get(i.getId());
-                        item.updateFrom(i);
-                        return item;
-                    } else {
-                        return playerItemFromPlayerInfo(i);
-                    }
-                }).forEach(item -> byId.putIfAbsent(item.getId(), item));
+                .map(
+                        i -> {
+                            if (byId.containsKey(i.getId())) {
+                                PlayerInfoItem item = byId.get(i.getId());
+                                item.updateFrom(i);
+                                return item;
+                            } else {
+                                return playerItemFromPlayerInfo(i);
+                            }
+                        })
+                .forEach(item -> byId.putIfAbsent(item.getId(), item));
     }
 
     /**

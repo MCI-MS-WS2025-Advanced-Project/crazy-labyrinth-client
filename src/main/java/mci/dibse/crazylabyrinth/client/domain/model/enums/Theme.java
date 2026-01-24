@@ -8,6 +8,7 @@ public enum Theme {
 
     private String displayName;
     private int id;
+
     Theme(String displayName, int id) {
         this.displayName = displayName;
         this.id = id;
@@ -18,13 +19,16 @@ public enum Theme {
      *
      * @return display name
      */
-    public String getDisplayName() { return displayName; }
+    public String getDisplayName() {
+        return displayName;
+    }
 
     /**
      * Return the theme identifier.
      *
      * @return theme id
      */
-    public int getId() { return id; }
-
+    public int getId() {
+        return id;
+    }
 }

@@ -1,5 +1,8 @@
 package mci.dibse.crazylabyrinth.client.test.unit;
 
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.Mockito.*;
+
 import labyrinth.contracts.models.Direction;
 import labyrinth.contracts.models.GameBoard;
 import labyrinth.contracts.models.Tile;
@@ -9,9 +12,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
-
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.mockito.Mockito.*;
 
 class GameBoardItemTest {
 
@@ -62,7 +62,7 @@ class GameBoardItemTest {
         Tile t = mock(Tile.class);
 
         // Setup directions
-        Direction[] validEntrances = new Direction[]{ Direction.UP, Direction.RIGHT };
+        Direction[] validEntrances = new Direction[] {Direction.UP, Direction.RIGHT};
         doReturn(validEntrances).when(t).getEntrances();
 
         // Prevent NPEs for other properties used in TileItem constructor
@@ -92,7 +92,8 @@ class GameBoardItemTest {
         doReturn(nextTiles).when(nextState).getTiles();
         doReturn(createMockTile()).when(nextState).getSpareTile();
 
-        // WHEN: updateItemFromSource() is called for the GameBoardItem (reflection because the method is protected)
+        // WHEN: updateItemFromSource() is called for the GameBoardItem (reflection because the
+        // method is protected)
         ReflectionTestUtils.invokeMethod(gameBoardItem, "updateItemFromSource", nextState);
 
         // THEN: GameBoard properties (e.g. tiles array) are updated and not null

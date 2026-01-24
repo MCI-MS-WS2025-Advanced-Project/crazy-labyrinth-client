@@ -3,9 +3,7 @@ package mci.dibse.crazylabyrinth.client.view.viewmodel;
 import static mci.dibse.crazylabyrinth.client.domain.context.ApplicationEvents.BACK_TO_GAME_SERVER_DASHBOARD;
 
 import jakarta.annotation.PostConstruct;
-
 import java.util.*;
-
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.StringProperty;
@@ -38,9 +36,7 @@ import org.springframework.stereotype.Component;
 public class LobbyViewModel extends BaseViewModel
         implements LobbyStateUpdateListener, PlayerConnectedAckListener {
 
-
     public final SimpleBooleanProperty isResultsAvailable = new SimpleBooleanProperty(false);
-
 
     @Value("${game.default.bonus.enabled:false}")
     private boolean GAME_DEFAULT_BONUS_ENABLED;
@@ -135,10 +131,9 @@ public class LobbyViewModel extends BaseViewModel
                                     return player.getId().equals(clientPlayer.getId());
                                 })
                         .findFirst();
-        if(clientPlayerInfo.isPresent()) return clientPlayerInfo.get().getIsAdmin();
+        if (clientPlayerInfo.isPresent()) return clientPlayerInfo.get().getIsAdmin();
         return false;
     }
-
 
     /**
      * Return whether bonuses are enabled by default.
@@ -246,7 +241,6 @@ public class LobbyViewModel extends BaseViewModel
         isResultsAvailable.set(true);
     }
 
-
     /**
      * Apply lobby state updates and initialize view state if needed.
      *
@@ -292,9 +286,8 @@ public class LobbyViewModel extends BaseViewModel
 
         isResultsAvailable.removeListener(resultsListener);
         isResultsAvailable.set(false);
-        if(gameOverItem != null) gameOverItem.dispose();
+        if (gameOverItem != null) gameOverItem.dispose();
         gameOverItem = null;
-
     }
 
     /**
@@ -418,7 +411,6 @@ public class LobbyViewModel extends BaseViewModel
                 && !NavigationStateViewModel.ScreenId.LOBBY.equals(newValue);
     }
 
-
     /**
      * Return the player name for a given player id.
      *
@@ -426,9 +418,10 @@ public class LobbyViewModel extends BaseViewModel
      * @return player name or the id when not found
      */
     public String getPlayerNameForId(String item) {
-        Optional<PlayerInfoItem> playerOptional = lobbyStateItem.getPlayerList().stream()
-                .filter(player -> player.getId().equals(item))
-                .findFirst();
+        Optional<PlayerInfoItem> playerOptional =
+                lobbyStateItem.getPlayerList().stream()
+                        .filter(player -> player.getId().equals(item))
+                        .findFirst();
         if (playerOptional.isPresent()) {
             return playerOptional.get().getName();
         }
@@ -441,7 +434,8 @@ public class LobbyViewModel extends BaseViewModel
      *
      * @param comparatorReadOnlyObjectProperty comparator to bind
      */
-    public void bindSortedRankingsComparator(ReadOnlyObjectProperty<Comparator<RankingEntry>> comparatorReadOnlyObjectProperty) {
+    public void bindSortedRankingsComparator(
+            ReadOnlyObjectProperty<Comparator<RankingEntry>> comparatorReadOnlyObjectProperty) {
         gameOverItem.bindSortedRankingsComparator(comparatorReadOnlyObjectProperty);
     }
 }
