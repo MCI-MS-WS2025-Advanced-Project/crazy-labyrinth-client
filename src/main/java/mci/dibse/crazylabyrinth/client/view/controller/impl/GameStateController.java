@@ -1128,6 +1128,7 @@ public class GameStateController extends BaseViewCleanup {
      *
      * @param item UI element to bind
      * @param size board size
+     * @return true when the index is valid for pushing
      */
     private void bindSlotWidth(Region item, int size) {
         item.prefWidthProperty().bind(boardGrid.widthProperty().divide(size));
@@ -1920,23 +1921,39 @@ public class GameStateController extends BaseViewCleanup {
         gameViewModel
                 .getPlayerStatesSorted()
                 .forEach(
-                        playerStateItem ->
-                                playerStateItem
-                                        .getCurrentPosition()
-                                        .addListener(
-                                                (obs, oldPos, newPos) -> {
-                                                    if (gameViewModel
-                                                            .getCurrentTurnState()
-                                                            .equals(TurnState.WAITING_FOR_MOVE)) {
-                                                        animationService.animatePlayerPath(
-                                                                gameViewModel.getGameBoardItem(),
-                                                                idToPlayerPawn.get(
-                                                                        playerStateItem
-                                                                                .getPlayerIdAsString()),
-                                                                oldPos,
-                                                                newPos,
-                                                                boardGrid);
-                                                    }
-                                                }));
+                        playerStateItem -> {
+                            playerStateItem
+                                    .getCurrentPosition()
+                                    .addListener(
+                                            (obs, oldPos, newPos) -> {
+                                                if (animationService.isTilePushAnimationActive()) {
+                                                    log.debug(
+                                                            "Skipping player movement animation"
+                                                                    + " during tile push");
+                                                    return;
+                                                }
+
+                                                if (gameViewModel
+                                                        .getCurrentTurnState()
+                                                        .equals(TurnState.WAITING_FOR_MOVE)) {
+                                                    animationService.animatePlayerPath(
+                                                            gameViewModel.getGameBoardItem(),
+                                                            idToPlayerPawn.get(
+                                                                    playerStateItem
+                                                                            .getPlayerIdAsString()),
+                                                            oldPos,
+                                                            newPos,
+                                                            boardGrid);
+                                                } else {
+                                                    animationService.animateBeam(
+                                                            idToPlayerPawn.get(
+                                                                    playerStateItem
+                                                                            .getPlayerIdAsString()),
+                                                            oldPos,
+                                                            newPos,
+                                                            boardGrid);
+                                                }
+                                            });
+                        });
     }
 }

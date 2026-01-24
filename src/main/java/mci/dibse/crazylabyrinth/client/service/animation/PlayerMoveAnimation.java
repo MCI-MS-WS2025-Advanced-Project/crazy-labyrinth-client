@@ -19,17 +19,13 @@ import mci.dibse.crazylabyrinth.client.view.viewmodel.item.GameBoardItem;
  * Animation for player movement across the game board.
  */
 @Slf4j
-public class PlayerMoveAnimation implements GameAnimation {
+public class PlayerMoveAnimation extends AbstractGameAnimation {
 
-    private final AnimationService animationService;
     private final GameBoardItem board;
     private final ImageView playerPawn;
     private final CoordinatesItem from;
     private final CoordinatesItem to;
     private final GridPane boardGrid;
-    private boolean isRunning = false;
-
-    private static final double PLAYER_ANIMATION_DURATION = 500;
 
     public PlayerMoveAnimation(
             AnimationService animationService,
@@ -38,7 +34,7 @@ public class PlayerMoveAnimation implements GameAnimation {
             CoordinatesItem from,
             CoordinatesItem to,
             GridPane boardGrid) {
-        this.animationService = animationService;
+        super(animationService);
         this.board = board;
         this.playerPawn = playerPawn;
         this.from = from;
@@ -47,18 +43,22 @@ public class PlayerMoveAnimation implements GameAnimation {
     }
 
     /**
-     * Animate the player pawn along the computed path.
+     * Perform pre-animation validation.
      */
     @Override
-    public void animate() {
+    protected boolean preAnimationValidation() {
         if (from.equals(to)) {
             log.debug("No movement for player as from and to positions are the same");
-            animationService.onAnimationCompleted(this);
-            return;
+            return false;
         }
+        return true;
+    }
 
-        isRunning = true;
-
+    /**
+     * Execute the player movement animation.
+     */
+    @Override
+    protected void executeAnimation() {
         List<CoordinatesItem> path = new PathFindingService().findPath(board, from, to);
 
         Path animationPath = new Path();
@@ -100,8 +100,7 @@ public class PlayerMoveAnimation implements GameAnimation {
         transition.setOnFinished(
                 event -> {
                     log.debug("Movement animation completed for player");
-                    isRunning = false;
-                    animationService.onAnimationCompleted(this);
+                    handleAnimationCompletion();
                 });
 
         transition.play();
@@ -116,25 +115,16 @@ public class PlayerMoveAnimation implements GameAnimation {
     }
 
     /**
-     * Report whether the animation is currently running.
-     *
-     * @return true when the animation is in progress
-     */
-    @Override
-    public boolean isRunning() {
-        return isRunning;
-    }
-
-    /**
      * Calculate animation duration based on path length.
      *
      * @param path computed path
      * @return duration for the animation
      */
-    private static Duration calculateDuration(List<CoordinatesItem> path) {
+    private Duration calculateDuration(List<CoordinatesItem> path) {
         int pathSteps = path.size() - 1;
         double speedMultiplier = Math.max(0.5, 1.0 - (pathSteps - 1) * 0.1);
-        return Duration.millis(PLAYER_ANIMATION_DURATION * pathSteps * speedMultiplier);
+        double baseDuration = animationService.getAnimationConfig().getPlayerAnimationDuration();
+        return Duration.millis(baseDuration * pathSteps * speedMultiplier);
     }
 
     /**
