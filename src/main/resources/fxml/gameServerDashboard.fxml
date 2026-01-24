@@ -20,11 +20,12 @@
 <?import javafx.scene.shape.Rectangle?>
 <?import javafx.scene.Group?>
 <?import javafx.scene.layout.Region?>
+<?import javafx.scene.control.ProgressIndicator?>
 <StackPane xmlns="http://javafx.com/javafx"
            xmlns:fx="http://javafx.com/fxml"
            fx:id="viewport"
            fx:controller="mci.dibse.crazylabyrinth.client.view.controller.impl.GameServerDashboardController"
-            style="-fx-background-color: linear-gradient(to bottom, #f7f9fc, #eef2f7);">
+           style="-fx-background-color: linear-gradient(to bottom, #f7f9fc, #eef2f7);">
 
 
     <clip>
@@ -85,6 +86,7 @@
                         </contextMenu -->
 
                     </TableView>
+                    <ProgressIndicator fx:id="progressJoining"/>
                 </StackPane>
             </center>
 

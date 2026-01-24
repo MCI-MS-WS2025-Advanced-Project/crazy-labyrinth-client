@@ -1461,10 +1461,15 @@ public class GameStateController extends BaseViewCleanup {
      * Bind the next treasure image to the view model.
      */
     private void initNextTreasure() {
-        nextTreasureImage.imageProperty().bind(Bindings.createObjectBinding(
-                () -> gameViewModel.getNextTreasureImageProperty().get(),
-                        gameViewModel.getNextTreasureItemProperty()
-                ));
+        try {
+            nextTreasureImage.imageProperty().bind(Bindings.createObjectBinding(
+                    () -> gameViewModel.getNextTreasureImageProperty().get(),
+                    gameViewModel.getNextTreasureItemProperty()
+            ));
+        } catch (NullPointerException e) {
+            log.warn("Next treasure image not yet set");
+        }
+
        // ImageViewStyler.applyTreasureStylingToImageView(nextTreasureImage);
     }
 

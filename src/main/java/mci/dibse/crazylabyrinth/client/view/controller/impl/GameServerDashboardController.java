@@ -4,6 +4,7 @@ import static mci.dibse.crazylabyrinth.client.infrastructure.util.JavaFXUtils.ru
 
 import java.time.Instant;
 import java.util.Optional;
+import java.util.concurrent.Executor;
 
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
@@ -25,6 +26,7 @@ import mci.dibse.crazylabyrinth.client.view.viewmodel.GameServerDashboardViewMod
 import mci.dibse.crazylabyrinth.client.view.viewmodel.item.GameServerItem;
 import mci.dibse.crazylabyrinth.client.view.viewmodel.navigation.NavigationStateViewModel;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
 /**
@@ -41,6 +43,7 @@ public class GameServerDashboardController extends BaseViewCleanup {
     @FXML public Button refreshButton;
     @FXML public CheckBox showOnlyJoinable;
     @FXML public Label serverCountLabel;
+    @FXML public ProgressIndicator progressJoining;
 
     @FXML public TableView<GameServerItem> serversTable;
     @FXML public TableColumn<GameServerItem, String> nameCol;
@@ -73,13 +76,19 @@ public class GameServerDashboardController extends BaseViewCleanup {
 
     private ScreenResolutionProperties screenResolutionProperties;
 
+
+
+    @Qualifier("commandExecutor")
+    private Executor commandExecutor;
+
     @Autowired
     public GameServerDashboardController(
-            GameServerDashboardViewModel vm, NavigationStateViewModel navState, ScreenResolutionProperties screenResolutionProperties, NavigationController navigationController) {
+            GameServerDashboardViewModel vm, NavigationStateViewModel navState, ScreenResolutionProperties screenResolutionProperties, NavigationController navigationController, Executor commandExecutor) {
         super(navState);
         this.viewModel = vm;
         this.screenResolutionProperties = screenResolutionProperties;
         this.navigationController = navigationController;
+        this.commandExecutor = commandExecutor;
     }
 
     /**
@@ -87,6 +96,8 @@ public class GameServerDashboardController extends BaseViewCleanup {
      */
     @FXML
     public void initialize() {
+
+        setupProgressIndicator();
         setupTableData();
         setupTableColumns();
         setupTableRowFactory();
@@ -102,6 +113,15 @@ public class GameServerDashboardController extends BaseViewCleanup {
                 });
             }
         });
+    }
+
+    /**
+     * Initialize UI progress indicator
+     */
+    private void setupProgressIndicator() {
+        progressJoining.setVisible(false);
+        progressJoining.setManaged(false);
+        progressJoining.setMinSize(100, 100);
     }
 
     /**
@@ -397,12 +417,30 @@ public class GameServerDashboardController extends BaseViewCleanup {
                                                 serverItem.getName().getValue(),
                                                 String.valueOf(
                                                         serverItem.getMaxPlayers().getValue()));
-                                viewModel.joinSelectedServer(gameInfo);
+
+
+                                executeJoinCommand(gameInfo);
+
                             });
                 };
         runOnFxThread(dialogTask);
     }
 
+
+    private void executeJoinCommand(GameInfoRecord gameInfo) {
+        progressJoining.setVisible(true);
+        progressJoining.setManaged(true);
+        commandExecutor.execute(() ->  {
+            try {
+                viewModel.joinSelectedServer(gameInfo);
+            } finally {
+                JavaFXUtils.runOnFxThread( () -> {
+                    progressJoining.setVisible(false);
+                    progressJoining.setManaged(false);
+                });
+            }
+        });
+    }
 
 
 }
