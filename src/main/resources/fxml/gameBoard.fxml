@@ -58,6 +58,11 @@
                     <Label text="Verbleibende Spiel Zeit:" styleClass="setting-label"/>
                     <Label fx:id="gameCounterLabel" styleClass="badge"/>
                 </HBox>
+                <ToggleButton fx:id="aiTakeoverButton"
+                              StackPane.alignment="CENTER_LEFT"
+                              text="🤖 Vertretung"
+                              styleClass="pill-button"/>
+
                 <Button StackPane.alignment="CENTER_RIGHT" alignment="CENTER" fx:id="leaveGameButton" onAction="#onLeaveGameButtonClick" text="Verlassen" styleClass="pill-button, leaveGameButton"/>
             </StackPane>
         </bottom>

@@ -44,6 +44,12 @@
 .secondary-button:hover { -fx-background-color: #e5e7eb; }
 .secondary-button:pressed { -fx-background-color: #d1d5db; }
 
+.ai-on {
+    -fx-border-color: #00c853;
+    -fx-border-width: 2;
+    -fx-font-weight: bold;
+}
+
 /* TableView styling */
 .table-view { -fx-background-color: transparent; -fx-padding: 0; }
 .table-view .column-header-background {
