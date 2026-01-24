@@ -30,7 +30,7 @@ public class GameServerSocketClient {
     private static final String SOCKET_GAME_PATH = "/game";
 
     private static final int RETRY_DELAY_SECONDS = 1;
-    private static final int CONNECT_TIMEOUT_SECONDS = 10;
+    private static final int CONNECT_TIMEOUT_SECONDS = 5;
 
     private static final String WARNING_LOST_CONNECTION =
             "Cannot send message: WebSocket is not connected. Scheduling retry in {}s";

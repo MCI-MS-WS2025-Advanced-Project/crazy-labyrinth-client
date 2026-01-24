@@ -38,7 +38,9 @@ public class PlayerStateItem extends BaseItem<PlayerState> {
         super();
         List<TreasureItem> treasureItems =
                 Arrays.stream(source.getTreasuresFound()).map(TreasureItem::new).toList();
-        List<AchievementType> achievements = Arrays.stream(source.getAchievements()).toList();
+
+        List<AchievementType> achievements = processAchievementList(source);
+
         List<BonusType> bonuses = Arrays.stream(source.getAvailableBonuses()).toList();
         Runnable apply =
                 () -> {
@@ -169,10 +171,9 @@ public class PlayerStateItem extends BaseItem<PlayerState> {
 
         this.remainingTreasureCount.set(source.getRemainingTreasureCount());
 
-        List<AchievementType> achievements = Arrays.stream(source.getAchievements()).toList();
-        // achievements = achievements.stream().filter(a ->
-        // !this.achievementTypes.contains(a)).toList();
-        // this.achievementTypes.addAll(achievements);
+
+
+        List<AchievementType> achievements = processAchievementList(source);
         this.achievementTypes.set(FXCollections.observableArrayList(achievements));
 
         List<BonusType> bonuses = Arrays.stream(source.getAvailableBonuses()).toList();
@@ -197,5 +198,13 @@ public class PlayerStateItem extends BaseItem<PlayerState> {
         playerInfo.unbind();
         currentPosition.unbind();
         homePosition.unbind();
+    }
+
+    //"Wir hatten ausgemacht, dass die Achievements erst am Schluss mittels achievementUnlockEvent (Broadcast) "verteilt" werden und nicht während dem Spiel"
+    private List<AchievementType> processAchievementList(PlayerState source) {
+        List<AchievementType> achievements;
+        if (source.getAchievements() != null) achievements = Arrays.stream(source.getAchievements()).toList();
+        else achievements = new java.util.ArrayList<>();
+        return achievements;
     }
 }

@@ -264,6 +264,7 @@ public class GameServerDashboardViewModel extends BaseViewModel
             clientCommandService.sendConnectCommand(gameInfo);
         } catch (GeneralUiException e) {
             setError(e.getMessage());
+            throw e;
         }
     }
 
