@@ -45,8 +45,8 @@
 
 
             <top>
-                <ToolBar>
-                    <Button fx:id="refreshButton" text="Refresh" mnemonicParsing="false" />
+                <ToolBar style="-fx-padding: 10">
+                    <Button fx:id="refreshButton" text="Refresh" mnemonicParsing="false"/>
                     <Separator orientation="VERTICAL" />
                     <CheckBox fx:id="showOnlyJoinable" text="Only joinable" />
                     <Region HBox.hgrow="ALWAYS"/>
@@ -91,10 +91,15 @@
             <left></left>
             <right></right>
             <bottom>
-                <HBox spacing="12" alignment="CENTER_LEFT" style="-fx-padding: 10;">
+
+
+
+                <HBox spacing="12" alignment="CENTER" style="-fx-padding: 10 20 10 20;">
                     <!--padding>
                         <Insets top="10" right="10" bottom="10" left="10"/>
                     </padding-->
+                    <Button  text="Vollbild An/Aus" onAction="#onFullscreenToggleButtonClick" styleClass="pill-button"/>
+                    <Region HBox.hgrow="ALWAYS"/>
                 <Label text="Servers:" />
                 <Label fx:id="serverCountLabel" text="0" />
                 </HBox>

@@ -79,6 +79,14 @@ public class NavigationController {
         showScreen(NavigationStateViewModel.ScreenId.MAIN);
     }
 
+
+    public void toogleFullScreen() {
+        if (primaryStage != null) {
+            primaryStage.setFullScreen(!primaryStage.isFullScreen());
+        }
+
+    }
+
     /**
      * Load and show a screen by its screen id.
      *
@@ -110,8 +118,9 @@ public class NavigationController {
         double prevHeight = primaryStage.getHeight();
 
         Scene scene = new Scene(mainRoot);
-        setupFullScreen(scene);
+        // setupFullScreen(scene);
         primaryStage.setFullScreenExitKeyCombination(new KeyCodeCombination(KeyCode.ESCAPE));
+        primaryStage.setFullScreenExitHint("");
         primaryStage.setScene(scene);
         primaryStage.setTitle("The Amazing Labyrinth");
         primaryStage.setFullScreen(isFullScreen);

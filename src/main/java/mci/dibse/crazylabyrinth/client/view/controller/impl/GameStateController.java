@@ -11,6 +11,7 @@ import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.css.PseudoClass;
@@ -47,6 +48,8 @@ import mci.dibse.crazylabyrinth.client.view.viewmodel.navigation.NavigationState
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
+
+import static labyrinth.contracts.models.CommandType.PUSH_TILE;
 
 @Component
 @Slf4j
@@ -163,6 +166,7 @@ public class GameStateController extends BaseViewCleanup {
 
 
     private Map<BonusType, ChangeListener<Boolean>> bonusAvailableListeners = new HashMap<>();
+    private SimpleBooleanProperty pushTwicePendingAction = new SimpleBooleanProperty(false);
 
 
     private IntegerProperty remainingGameTimer = new SimpleIntegerProperty();
@@ -365,11 +369,23 @@ public class GameStateController extends BaseViewCleanup {
      */
     @EventListener
     public void handleSendCommandEvent(GameServerSocketService.SendCommand event) {
-        switch (event.commandType()) {
-            case PUSH_TILE, USE_PUSH_FIXED -> toggleOrSetBonusButton(BONUS_TYPE.PUSH_FIXED, false);
+        CommandType command = event.commandType();
+        switch (command) {
+            case PUSH_TILE, USE_PUSH_FIXED ->  {
+                toggleOrSetBonusButton(BONUS_TYPE.PUSH_FIXED, false);
+                if(PUSH_TILE.equals(command)) {
+                    if (gameViewModel.isPushTwiceTileBonusActive()) {
+                        toggleOrSetBonusButton(BONUS_TYPE.PUSH_TWICE, false);
+                    } else {
+                        pushTwicePendingAction.set(false);
+                    }
+                }
+            }
             case USE_BEAM -> toggleOrSetBonusButton(BONUS_TYPE.BEAM, false);
             case USE_SWAP -> toggleOrSetBonusButton(BONUS_TYPE.SWAP, false);
-            case USE_PUSH_TWICE -> toggleOrSetBonusButton(BONUS_TYPE.PUSH_TWICE, false);
+           case USE_PUSH_TWICE -> {
+               pushTwicePendingAction.set(true);
+           }
         }
     }
 
@@ -830,8 +846,8 @@ public class GameStateController extends BaseViewCleanup {
 
 
                          gameContainer.prefWidthProperty().bind(squareSizeContainer);
-                 //      gameContainer.minWidthProperty().set(squareSizeContainer.doubleValue());
-                 //       gameContainer.minHeightProperty().set(squareSizeContainer.doubleValue());
+                        gameContainer.minWidthProperty().set(squareSizeContainer.doubleValue());
+                        gameContainer.minHeightProperty().set(squareSizeContainer.doubleValue());
                          gameContainer.maxWidthProperty().set(squareSizeContainer.doubleValue());
                          gameContainer.maxHeightProperty().set(squareSizeContainer.doubleValue());
 
@@ -1193,7 +1209,7 @@ public class GameStateController extends BaseViewCleanup {
      */
     private Button createArrowButton(String text, int index, Direction dir) {
         Button b = createBaseArrowButton(text, dir);
-        b.setOnAction(_ -> choosePushTileCommand(index, dir, CommandType.PUSH_TILE));
+        b.setOnAction(_ -> choosePushTileCommand(index, dir, PUSH_TILE));
         b.disableProperty().bind(shouldPushTileButtonBeDisabled());
         return b;
     }
@@ -1347,10 +1363,11 @@ public class GameStateController extends BaseViewCleanup {
         return isNotMyTurnAndTimeoutAndPushPhase()
                 .or(
                         Bindings.createBooleanBinding(
-                                () -> gameViewModel.isAnyBonusActive(bonusType),
+                                () -> gameViewModel.isAnyBonusActive(bonusType, pushTwicePendingAction),
                                 gameViewModel.getIsPushFixedTileBonusActiveProperty(),
                                 gameViewModel.getIsSwapBonusActiveProperty(),
-                                gameViewModel.getIsBeamTileBonusActiveProperty()));
+                                gameViewModel.getIsBeamTileBonusActiveProperty(),
+                                pushTwicePendingAction));
     }
 
     /**
@@ -1595,17 +1612,13 @@ public class GameStateController extends BaseViewCleanup {
                 .visibleProperty()
                 .bind(
                         Bindings.createBooleanBinding(
-                                () ->
-                                        getAvailableBonusCountForTypeAndClient(BonusType.PUSH_TWICE)
-                                                > 0,
+                                this::checkIfPushTwiceBoxShouldBeVisible,
                                 gameViewModel.getClientPlayerState().getAvailableBonusTypes()));
         bonusPushTwiceBox
                 .managedProperty()
                 .bind(
                         Bindings.createBooleanBinding(
-                                () ->
-                                        getAvailableBonusCountForTypeAndClient(BonusType.PUSH_TWICE)
-                                                > 0,
+                                this::checkIfPushTwiceBoxShouldBeVisible,
                                 gameViewModel.getClientPlayerState().getAvailableBonusTypes()));
         bonusPushTwiceCount
                 .textProperty()
@@ -1618,13 +1631,13 @@ public class GameStateController extends BaseViewCleanup {
                                 },
                                 gameViewModel.getClientPlayerState().getAvailableBonusTypes()));
 
-         bonusPushTwiceButton.disableProperty().bind(isNotMyTurnAndTimeoutAndPushPhase());
+         bonusPushTwiceButton.disableProperty().bind(shouldBonusButtonBeDisabled(BonusType.PUSH_TWICE));
 
         ChangeListener<Boolean> bonusPushTwiceButtonAvailableListener =
                 (ov, oldVal, newVal) -> {
                     bonusPushTwiceButton.pseudoClassStateChanged(
                             AVAILABLE_BONUS_BUTTON_PSEUDO_CLASS,
-                            isNotMyTurnAndTimeoutAndPushPhase().not().get());
+                            shouldBonusButtonBeDisabled(BonusType.PUSH_TWICE).not().get());
                 };
         bonusPushTwiceButton.disableProperty().addListener(bonusPushTwiceButtonAvailableListener);
         bonusAvailableListeners.put(BonusType.PUSH_TWICE, bonusPushTwiceButtonAvailableListener);
@@ -1668,6 +1681,11 @@ public class GameStateController extends BaseViewCleanup {
                 };
         bonusPushFixedButton.disableProperty().addListener(bonusPushFixedButtonAvailableListener);
         bonusAvailableListeners.put(BonusType.PUSH_FIXED, bonusPushFixedButtonAvailableListener);
+    }
+
+    private Boolean checkIfPushTwiceBoxShouldBeVisible() {
+        return getAvailableBonusCountForTypeAndClient(BonusType.PUSH_TWICE) > 0
+                ||  gameViewModel.isPushTwiceTileBonusActive();
     }
 
     /**
@@ -1856,6 +1874,10 @@ public class GameStateController extends BaseViewCleanup {
         Runnable onConfirm = gameViewModel::leaveGame;
         JavaFXUtils.showConfirmationModal(
                 QUIT_GAME_MODAL_TITLE, QUIT_GAME_MODAL_HEADER, QUIT_GAME_MODAL_CONTENT, onConfirm);
+    }
+
+    public void onFullscreenToggleButtonClick(ActionEvent actionEvent) {
+        navigationController.toogleFullScreen();
     }
 
     private enum BONUS_TYPE {

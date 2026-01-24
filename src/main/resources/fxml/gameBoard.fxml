@@ -58,6 +58,7 @@
                     <Label text="Verbleibende Spiel Zeit:" styleClass="setting-label"/>
                     <Label fx:id="gameCounterLabel" styleClass="badge"/>
                 </HBox>
+                <Button StackPane.alignment="CENTER_LEFT" text="Vollbild An/Aus" onAction="#onFullscreenToggleButtonClick" styleClass="pill-button" style="-fx-pref-width: 100"/>
                 <Button StackPane.alignment="CENTER_RIGHT" alignment="CENTER" fx:id="leaveGameButton" onAction="#onLeaveGameButtonClick" text="Verlassen" styleClass="pill-button, leaveGameButton"/>
             </StackPane>
         </bottom>

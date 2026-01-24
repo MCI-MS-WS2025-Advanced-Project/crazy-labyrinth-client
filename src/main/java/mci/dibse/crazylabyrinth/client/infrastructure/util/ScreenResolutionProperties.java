@@ -13,8 +13,6 @@ import javafx.stage.Stage;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import mci.dibse.crazylabyrinth.client.NavigationController;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -118,9 +116,16 @@ public class ScreenResolutionProperties {
 
             // Center the root inside the StackPane
             StackPane.setAlignment(props.root, Pos.CENTER);
+            props.viewport.setPrefWidth(width);
             props.root.setPrefWidth(width);
 
             double rootHeight = primaryStage.getHeight() - primaryStage.getScene().getHeight();
+            props.viewport.setPrefHeight(rootHeight);
+
+            props.viewport.setMinSize(Region.USE_PREF_SIZE, Region.USE_PREF_SIZE);
+            props.viewport.setMaxSize(width, finalScreenHeight);
+
+
             props.root.setPrefHeight(rootHeight);
 
             props.root.setMinSize(Region.USE_PREF_SIZE, Region.USE_PREF_SIZE);
@@ -152,17 +157,30 @@ public class ScreenResolutionProperties {
 
             // Scale factor based on available area vs. design (root) size
             DoubleBinding scaleFactorX = Bindings.createDoubleBinding(() -> {
-                ScaleRatio ratio = getScaleRatio(availableW, availableH);
-                if(!scaleRatio) return ratio.ratioX();
+                ScaleRatio ratio = getScaleRatio(availableW, availableH, props);
+                if(!scaleRatio || primaryStage.isMaximized() || primaryStage.isFullScreen()) {
+
+                    return ratio.ratioX();
+                }
                 return ratio.min();
-            }, availableW);
+            },primaryStage.heightProperty(),
+                    primaryStage.widthProperty(),
+                    primaryStage.fullScreenProperty(),
+                    primaryStage.maximizedProperty());
 
             // Scale factor based on available area vs. design (root) size
             DoubleBinding scaleFactorY = Bindings.createDoubleBinding(() -> {
-                ScaleRatio ratio = getScaleRatio(availableW, availableH);
-                if(!scaleRatio || primaryStage.isMaximized()) return ratio.ratioY();
+                ScaleRatio ratio = getScaleRatio(availableW, availableH, props);
+
+                if(!scaleRatio || primaryStage.isMaximized() || primaryStage.isFullScreen())
+                {
+                    return ratio.ratioY();
+                }
                 return ratio.min();
-            },availableH);
+            },primaryStage.heightProperty(),
+                    primaryStage.widthProperty(),
+                    primaryStage.fullScreenProperty(),
+                    primaryStage.maximizedProperty());
 
 
             // Create scale and bind to factor + pivot at center
@@ -205,15 +223,25 @@ public class ScreenResolutionProperties {
      *
      * @param availableW available width binding
      * @param availableH available height binding
+     * @param props
      * @return scale ratio container
      */
-    private ScaleRatio getScaleRatio(DoubleBinding availableW, DoubleBinding availableH) {
-        double offset = heightWithRegardsToWindowDecoration();
+    private ScaleRatio getScaleRatio(DoubleBinding availableW, DoubleBinding availableH, ResolutionProperties props) {
+        double offsetW = width - widthWithRegardsToWindowDecoration();
+        double offsetH = height - heightWithRegardsToWindowDecoration();
 
-        double scaleX = availableW.get() / width;
-        double scaleY = availableH.get() /  (height - offset);
+        props.root.setMaxSize(offsetW, offsetH);
+        props.viewport.setMaxSize(offsetW, offsetH);
+
+        double scaleX = availableW.get() / offsetW;
+        double scaleY = availableH.get() /  offsetH;
+
 
         return new ScaleRatio(scaleX, scaleY, Math.min(scaleX, scaleY));
+    }
+
+    private double widthWithRegardsToWindowDecoration() {
+        return primaryStage.getWidth() - primaryStage.getScene().getWidth();
     }
 
     /**

@@ -160,6 +160,10 @@ public class GameServerDashboardController extends BaseViewCleanup {
 
     }
 
+    public void onFullscreenToggleButtonClick(ActionEvent actionEvent) {
+        navigationController.toogleFullScreen();
+    }
+
     /**
      * Decide whether cleanup should run when leaving the main screen.
      *
@@ -398,6 +402,7 @@ public class GameServerDashboardController extends BaseViewCleanup {
                 };
         runOnFxThread(dialogTask);
     }
+
 
 
 }
