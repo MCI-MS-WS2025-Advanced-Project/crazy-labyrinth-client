@@ -266,25 +266,35 @@ public class GameViewModel extends BaseViewModel implements PlayerConnectedAckLi
     /**
      * Check if any other bonus is active that would block the given bonus type.
      *
-     * @param bonusType bonus type to check
+     * @param bonusType              bonus type to check
+     * @param pushTwicePendingAction
      * @return true when another bonus is currently active
      */
-    public boolean isAnyBonusActive(BonusType bonusType) {
+    public boolean isAnyBonusActive(BonusType bonusType, SimpleBooleanProperty pushTwicePendingAction) {
         switch (bonusType) {
             case BonusType.SWAP -> {
                 return isPushFixedTileBonusActive()
                         || isPushTwiceTileBonusActive()
-                        || isBeamTileBonusActive();
+                        || isBeamTileBonusActive()
+                        || pushTwicePendingAction.get();
             }
             case BonusType.PUSH_FIXED -> {
                 return isPushTwiceTileBonusActive()
                         || isSwapBonusActive()
-                        || isBeamTileBonusActive();
+                        || isBeamTileBonusActive()
+                        || pushTwicePendingAction.get();
             }
             case BonusType.BEAM -> {
                 return isPushFixedTileBonusActive()
                         || isPushTwiceTileBonusActive()
-                        || isSwapBonusActive();
+                        || isSwapBonusActive()
+                        || pushTwicePendingAction.get();
+            }
+            case PUSH_TWICE -> {
+                return isPushFixedTileBonusActive()
+                        || isSwapBonusActive()
+                        || isBeamTileBonusActive()
+                        || pushTwicePendingAction.get();
             }
         }
         return false;
@@ -481,6 +491,7 @@ public class GameViewModel extends BaseViewModel implements PlayerConnectedAckLi
             clientCommandService.sendUsePushTwiceComnmand();
         } catch (GeneralUiException e) {
             setError(e.getMessage());
+            throw new RuntimeException("error sending push twice command");
         }
     }
 

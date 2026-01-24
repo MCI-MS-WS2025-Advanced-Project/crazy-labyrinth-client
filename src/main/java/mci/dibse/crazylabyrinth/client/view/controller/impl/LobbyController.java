@@ -30,6 +30,7 @@ import javafx.util.Duration;
 import labyrinth.contracts.models.*;
 import lombok.extern.slf4j.Slf4j;
 import labyrinth.contracts.models.RankingEntry;
+import mci.dibse.crazylabyrinth.client.NavigationController;
 import mci.dibse.crazylabyrinth.client.domain.context.ApplicationEvents;
 import mci.dibse.crazylabyrinth.client.domain.model.enums.Theme;
 import mci.dibse.crazylabyrinth.client.domain.model.record.StartGameRecord;
@@ -52,6 +53,7 @@ public class LobbyController extends BaseViewCleanup {
 
     private final GameViewModel gameViewModel;
     private final AchievementService achievementService;
+    private final NavigationController navigationController;
     public BooleanProperty clientAdmin = new SimpleBooleanProperty(false);
 
     // todo add results
@@ -126,12 +128,13 @@ public class LobbyController extends BaseViewCleanup {
     ChangeListener<Theme> themeChangeListener;
 
     @Autowired
-    public LobbyController(NavigationStateViewModel navState, LobbyViewModel lobbyViewModel, ScreenResolutionProperties screenResolutionProperties, GameViewModel gameViewModel, AchievementService achievementService) {
+    public LobbyController(NavigationStateViewModel navState, LobbyViewModel lobbyViewModel, ScreenResolutionProperties screenResolutionProperties, GameViewModel gameViewModel, AchievementService achievementService, NavigationController navigationController) {
         super(navState);
         this.lobbyViewModel = lobbyViewModel;
         this.screenResolutionProperties = screenResolutionProperties;
         this.gameViewModel = gameViewModel;
         this.achievementService = achievementService;
+        this.navigationController = navigationController;
     }
 
     /**
@@ -719,6 +722,10 @@ public class LobbyController extends BaseViewCleanup {
      */
     private void setThemeForGameBoard(Theme theme) {
         FileNameMapper.setTheme(theme);
+    }
+
+    public void onFullscreenToggleButtonClick(ActionEvent actionEvent) {
+        navigationController.toogleFullScreen();
     }
 
 
