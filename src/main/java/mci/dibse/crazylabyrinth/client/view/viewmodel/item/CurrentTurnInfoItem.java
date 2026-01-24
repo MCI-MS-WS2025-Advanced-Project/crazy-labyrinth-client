@@ -23,13 +23,13 @@ public class CurrentTurnInfoItem extends BaseItem<CurrentTurnInfo> {
 
     public CurrentTurnInfoItem(CurrentTurnInfo currentTurnInfo) {
         super();
-        Runnable apply = () -> {
-            currentPlayerIdProperty.set(currentTurnInfo.getCurrentPlayerId());
-            turnEndTimeProperty.set(currentTurnInfo.getTurnEndTime());
-            turnStateProperty.set(currentTurnInfo.getState());
-        };
+        Runnable apply =
+                () -> {
+                    currentPlayerIdProperty.set(currentTurnInfo.getCurrentPlayerId());
+                    turnEndTimeProperty.set(currentTurnInfo.getTurnEndTime());
+                    turnStateProperty.set(currentTurnInfo.getState());
+                };
         JavaFXUtils.runOnFxThread(apply);
-
     }
 
     /**

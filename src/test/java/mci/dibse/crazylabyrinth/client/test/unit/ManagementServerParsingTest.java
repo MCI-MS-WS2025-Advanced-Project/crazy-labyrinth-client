@@ -5,10 +5,10 @@ import static org.mockito.Mockito.*;
 
 import java.util.Collection;
 import mci.dibse.crazylabyrinth.client.domain.model.management.GameServer;
+import mci.dibse.crazylabyrinth.client.infrastructure.exceptions.GeneralUiException;
 import mci.dibse.crazylabyrinth.client.infrastructure.management.ManagementServerClient;
 import mci.dibse.crazylabyrinth.client.service.GameServerManagementService;
 import mci.dibse.crazylabyrinth.client.test.data.TestDataFactory;
-import mci.dibse.crazylabyrinth.client.infrastructure.exceptions.GeneralUiException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -21,8 +21,7 @@ class ManagementServerParsingTest {
 
     private GameServerManagementService gameServerService;
 
-    @Mock
-    private ManagementServerClient clientMock;
+    @Mock private ManagementServerClient clientMock;
 
     @BeforeEach
     void setUp() {
@@ -45,8 +44,12 @@ class ManagementServerParsingTest {
         assertFalse(servers.isEmpty());
 
         // Log output for documentation purposes
-        System.out.println("UT-SERVERLIST-01 Result: Successfully parsed " + servers.size() + " servers.");
-        servers.forEach(s -> System.out.println(" -> Found Server: " + s.getName() + " [" + s.getId() + "]"));
+        System.out.println(
+                "UT-SERVERLIST-01 Result: Successfully parsed " + servers.size() + " servers.");
+        servers.forEach(
+                s ->
+                        System.out.println(
+                                " -> Found Server: " + s.getName() + " [" + s.getId() + "]"));
     }
 
     @Test
@@ -70,11 +73,15 @@ class ManagementServerParsingTest {
         when(clientMock.getGameServers()).thenReturn("{ \"invalid\": ");
 
         // WHEN & THEN: Verify that a GeneralUiException is thrown due to parsing error
-        GeneralUiException ex = assertThrows(GeneralUiException.class, () -> {
-            gameServerService.refreshGameServerList();
-        });
+        GeneralUiException ex =
+                assertThrows(
+                        GeneralUiException.class,
+                        () -> {
+                            gameServerService.refreshGameServerList();
+                        });
 
         // Confirmation of successful error handling
-        System.out.println("UT-SERVERLIST-03 Result: Exception correctly caught. Message: " + ex.getMessage());
+        System.out.println(
+                "UT-SERVERLIST-03 Result: Exception correctly caught. Message: " + ex.getMessage());
     }
 }

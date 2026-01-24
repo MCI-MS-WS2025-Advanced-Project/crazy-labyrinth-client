@@ -152,27 +152,28 @@ public class GameServerManagementService {
      * @param gameServersDTO server DTOs to validate
      */
     private void validateGameServerUrl(List<GameServerDTO> gameServersDTO) {
-        gameServersDTO.forEach(dto -> {
-            URI uri = dto.getUri();
-            String path = uri.getPath();
-            if (path == null || !uri.getPath().startsWith("/game")) {
-                URI baseWithPath = null;
-                try {
-                    baseWithPath = new URI(
-                            uri.getScheme(),
-                            uri.getUserInfo(),
-                            uri.getHost(),
-                            uri.getPort(),
-                            "/game",
-                            uri.getQuery(),
-                            uri.getFragment()
-                    );
-                } catch (URISyntaxException e) {
-                    throw new RuntimeException(e);
-                }
-                dto.setUri(baseWithPath);
-            }
-        });
+        gameServersDTO.forEach(
+                dto -> {
+                    URI uri = dto.getUri();
+                    String path = uri.getPath();
+                    if (path == null || !uri.getPath().startsWith("/game")) {
+                        URI baseWithPath = null;
+                        try {
+                            baseWithPath =
+                                    new URI(
+                                            uri.getScheme(),
+                                            uri.getUserInfo(),
+                                            uri.getHost(),
+                                            uri.getPort(),
+                                            "/game",
+                                            uri.getQuery(),
+                                            uri.getFragment());
+                        } catch (URISyntaxException e) {
+                            throw new RuntimeException(e);
+                        }
+                        dto.setUri(baseWithPath);
+                    }
+                });
     }
 
     /**

@@ -147,7 +147,7 @@ public class ServerEventService {
      */
     private void handleAchievement(AchievementUnlockedEventPayload achievement) {
         log.debug("achievement unlocked event received{}", achievement);
-        //applicationEventPublisher.publishEvent(achievement);
+        // applicationEventPublisher.publishEvent(achievement);
         achievementService.handleAchievementEvent(achievement);
     }
 

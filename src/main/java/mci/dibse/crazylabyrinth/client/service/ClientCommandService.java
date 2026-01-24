@@ -77,7 +77,6 @@ public class ClientCommandService {
             eventPublisher.publishEvent(CommandType.DISCONNECT);
             eventPublisher.publishEvent(BACK_TO_GAME_SERVER_DASHBOARD);
         }
-
     }
 
     /**
