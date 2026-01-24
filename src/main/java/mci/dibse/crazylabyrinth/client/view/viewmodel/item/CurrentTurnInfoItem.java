@@ -1,6 +1,9 @@
 package mci.dibse.crazylabyrinth.client.view.viewmodel.item;
 
 import java.time.OffsetDateTime;
+
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.value.ChangeListener;
@@ -9,7 +12,8 @@ import labyrinth.contracts.models.TurnState;
 import lombok.Getter;
 import mci.dibse.crazylabyrinth.client.infrastructure.util.JavaFXUtils;
 
-public class CurrentTurnInfoItem extends BaseItem<CurrentTurnInfo> {
+public class
+CurrentTurnInfoItem extends BaseItem<CurrentTurnInfo> {
 
     @Getter private SimpleStringProperty currentPlayerIdProperty = new SimpleStringProperty();
 
@@ -18,6 +22,17 @@ public class CurrentTurnInfoItem extends BaseItem<CurrentTurnInfo> {
 
     @Getter
     private SimpleObjectProperty<TurnState> turnStateProperty = new SimpleObjectProperty<>();
+
+    @Getter
+    private final BooleanProperty aiTakeoverEnabledProperty = new SimpleBooleanProperty(false);
+
+    public boolean isAiTakeoverEnabled() {
+        return aiTakeoverEnabledProperty.get();
+    }
+
+    public void toggleAiTakeover() {
+        aiTakeoverEnabledProperty.set(!aiTakeoverEnabledProperty.get());
+    }
 
     private ChangeListener<OffsetDateTime> turnTimeChangeListener;
 

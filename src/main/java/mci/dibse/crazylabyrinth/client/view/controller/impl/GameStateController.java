@@ -9,9 +9,7 @@ import javafx.animation.Timeline;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
-import javafx.beans.property.IntegerProperty;
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleIntegerProperty;
+import javafx.beans.property.*;
 import javafx.beans.value.ChangeListener;
 import javafx.css.PseudoClass;
 import javafx.event.ActionEvent;
@@ -22,6 +20,7 @@ import javafx.scene.Group;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.ToggleButton;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
@@ -32,6 +31,9 @@ import javafx.scene.shape.StrokeType;
 import javafx.util.Duration;
 import labyrinth.contracts.models.*;
 import lombok.extern.slf4j.Slf4j;
+import mci.dibse.crazylabyrinth.client.ai.AiDecision;
+import mci.dibse.crazylabyrinth.client.ai.AiStrategySelector;
+import mci.dibse.crazylabyrinth.client.ai.ClientAIExecutor;
 import mci.dibse.crazylabyrinth.client.domain.context.PushTileCommandRecord;
 import mci.dibse.crazylabyrinth.client.infrastructure.util.*;
 import mci.dibse.crazylabyrinth.client.service.GameServerSocketService;
@@ -115,6 +117,9 @@ public class GameStateController extends BaseViewCleanup {
     @FXML public Group contentGroup;
     @FXML public GridPane mainLayoutGrid;
 
+    @FXML public ToggleButton aiTakeoverButton;
+
+    @Autowired private AiStrategySelector aiStrategySelector;
 
     private static final int GAP_BETWEEN_TILES = 2;
     private static final int MAX_PLAYERS = 4;
@@ -149,6 +154,12 @@ public class GameStateController extends BaseViewCleanup {
     private final Map<String, ImageView> idToPlayerPawn = new HashMap<>();
 
     private final AnimationService animationService;
+
+    private final BooleanProperty aiTakeoverEnabledProperty = new SimpleBooleanProperty(false);
+    private BooleanBinding isMyTurnBinding;
+    private boolean aiRunning = false;
+    private ClientAIExecutor clientAIExecutor;
+    private ChangeListener<TurnState> aiTurnStateListener;
 
     @Autowired
     public GameStateController(NavigationStateViewModel vm, GameViewModel gameViewModel, ScreenResolutionProperties screenResolutionProperties) {
@@ -192,6 +203,67 @@ public class GameStateController extends BaseViewCleanup {
 
         initGameTimer();
 
+        clientAIExecutor = new ClientAIExecutor(gameViewModel);
+
+        // AI Can only be activated or deactivated when it's not the current user turn
+        isMyTurnBinding = Bindings.createBooleanBinding(
+                () -> {
+                    String myId = gameViewModel.getClientPlayerState().getPlayerIdAsString();
+                    String currentId = gameViewModel.getCurrentPlayerIdAsString();
+                    return myId != null && myId.equals(currentId);
+                },
+                gameViewModel.getCurrentPlayerIdProperty()
+        );
+
+        aiTakeoverButton.disableProperty().bind(isMyTurnBinding);
+
+        aiTurnStateListener = (obs, oldV, newV) -> {
+            clientAIExecutor.onTurnStateChanged(newV);
+
+            if (!aiTakeoverEnabledProperty.get()) return;
+            if (!isMyTurnBinding.get()) return;
+            if (aiRunning) return;
+
+            // Nur neue Decision berechnen, wenn keine pending Decision läuft
+            if (newV == TurnState.WAITING_FOR_PUSH && !clientAIExecutor.hasPendingDecision()) {
+                runAiFullTurn();
+            }
+        };
+
+
+        gameViewModel.getCurrentTurnStateProperty().addListener(aiTurnStateListener);
+
+        // Change Text ON/OFF
+        aiTakeoverButton.textProperty().bind(
+                Bindings.when(aiTakeoverEnabledProperty)
+                        .then("🤖 Vertretung: ON")
+                        .otherwise("🤖 Vertretung: OFF")
+        );
+
+        // Change Style for ON & OFF
+        aiTakeoverEnabledProperty.addListener((obs, oldV, newV) -> {
+            if (newV) {
+                if (!aiTakeoverButton.getStyleClass().contains("ai-on")) {
+                    aiTakeoverButton.getStyleClass().add("ai-on");
+                }
+            } else {
+                aiTakeoverButton.getStyleClass().remove("ai-on");
+            }
+        });
+
+        aiTakeoverButton.selectedProperty().bindBidirectional(aiTakeoverEnabledProperty);
+
+
+        BooleanBinding aiControlsLocked = aiTakeoverEnabledProperty.and(isMyTurnBinding);
+
+        // Blocking Moves from User
+        boardGrid.mouseTransparentProperty().bind(aiTakeoverEnabledProperty);
+        extraTileContainer.mouseTransparentProperty().bind(aiTakeoverEnabledProperty);
+        topArrowBox.mouseTransparentProperty().bind(aiTakeoverEnabledProperty);
+        rightArrowBox.mouseTransparentProperty().bind(aiTakeoverEnabledProperty);
+        bottomArrowBox.mouseTransparentProperty().bind(aiTakeoverEnabledProperty);
+        leftArrowBox.mouseTransparentProperty().bind(aiTakeoverEnabledProperty);
+
 
         // delay init of scaling & gamegrid until several pulse runs
         viewport.sceneProperty().addListener((obs, oldScene, newScene) -> {
@@ -208,6 +280,57 @@ public class GameStateController extends BaseViewCleanup {
             }
         });
     }
+
+
+    private void runAiFullTurn() {
+        if (aiRunning) return;
+        aiRunning = true;
+
+        try {
+            // Safety guards
+            if (!aiTakeoverEnabledProperty.get()) return;
+            if (!isMyTurnBinding.get()) return;
+
+            var gs = gameViewModel.getLastGameState();
+            if (gs == null) return;
+
+            String myId = gameViewModel.getClientPlayer().getId();
+            var target = gameViewModel.getCurrentTargetTreasureForAi(); // Treasure (id==0 -> Home)
+
+            AiDecision decision = aiStrategySelector.calculateFullTurn(gs, myId, target);
+
+            String pushInfo = (decision.getPushCount() > 0)
+                    ? ("#1 idx=" + decision.getPushes().get(0).getPushIndex()
+                    + " dir=" + decision.getPushes().get(0).getPushDirection()
+                    + " rot=" + decision.getPushes().get(0).getRotations()
+                    + (decision.getPushCount() > 1 ? " | #2 idx=" + decision.getPushes().get(1).getPushIndex()
+                    + " dir=" + decision.getPushes().get(1).getPushDirection()
+                    + " rot=" + decision.getPushes().get(1).getRotations()
+                    : ""))
+                    : "no-push";
+
+            String bonusInfo = (decision.hasBonus()) ? decision.getBonus().getBonusType().name() : "none";
+
+            String moveInfo = (decision.hasMove())
+                    ? "(" + decision.getMove().getTarget().getRow() + "," + decision.getMove().getTarget().getColumn() + ")"
+                    : "null";
+
+            log.warn("AI decision: bonus={} push={} move={}", bonusInfo, pushInfo, moveInfo);
+
+            clientAIExecutor.executeDecision(decision);
+
+
+        } catch (Exception e) {
+            log.error("AI full turn failed", e);
+        } finally {
+            aiRunning = false;
+        }
+    }
+
+
+
+
+
 
     private void initUiScaling() {
             ScreenResolutionProperties.ResolutionProperties props = new ScreenResolutionProperties.ResolutionProperties(root,
@@ -283,6 +406,33 @@ public class GameStateController extends BaseViewCleanup {
                 .removeListener(bonusAvailableListeners.get(BonusType.PUSH_FIXED));
 
         gameCounterLabel.textProperty().unbind();
+
+        aiTakeoverButton.selectedProperty().unbindBidirectional(aiTakeoverEnabledProperty);
+        aiTakeoverButton.disableProperty().unbind();
+
+        boardGrid.mouseTransparentProperty().unbind();
+        extraTileContainer.mouseTransparentProperty().unbind();
+        topArrowBox.mouseTransparentProperty().unbind();
+        rightArrowBox.mouseTransparentProperty().unbind();
+        bottomArrowBox.mouseTransparentProperty().unbind();
+        leftArrowBox.mouseTransparentProperty().unbind();
+        rotateRightButton.disableProperty().unbind();
+
+        if (aiTakeoverButton != null) {
+            aiTakeoverButton.getStyleClass().remove("ai-on");
+        }
+
+        aiTakeoverEnabledProperty.set(false);
+        aiRunning = false;
+
+        if (aiTurnStateListener != null) {
+            gameViewModel.getCurrentTurnStateProperty().removeListener(aiTurnStateListener);
+            aiTurnStateListener = null;
+        }
+
+        aiTakeoverButton.textProperty().unbind();
+        if (turnTimeline != null) turnTimeline.stop();
+        if (gameTimeline != null) gameTimeline.stop();
     }
 
     @EventListener
@@ -581,6 +731,9 @@ public class GameStateController extends BaseViewCleanup {
                     gameViewModel.getPendingRotationProperty().set(true);
                     gameViewModel.onRightRotationOfSpareTile();
                 });
+
+        rotateRightButton.disableProperty().bind(aiTakeoverEnabledProperty);
+
     }
 
     private void bindSpareTileTreasureImage(TileItem currentTile) {
@@ -1031,12 +1184,14 @@ public class GameStateController extends BaseViewCleanup {
         return isNotMyTurnAndTimeoutAndPushPhase()
                 .or(gameViewModel.getIsPushFixedTileBonusActiveProperty())
                 .or(gameViewModel.getIsBeamTileBonusActiveProperty())
-                .or(gameViewModel.getIsSwapBonusActiveProperty());
+                .or(gameViewModel.getIsSwapBonusActiveProperty())
+                .or(aiTakeoverEnabledProperty);
     }
 
     private BooleanBinding shouldPushFixedTileButtonBeDisabled() {
         return isNotMyTurnAndTimeoutAndPushPhase()
-                .or(gameViewModel.getIsPushFixedTileBonusActiveProperty().not());
+                .or(gameViewModel.getIsPushFixedTileBonusActiveProperty().not())
+                .or(gameViewModel.getIsBeamTileBonusActiveProperty());
     }
 
     private BooleanBinding shouldBonusButtonBeDisabled(BonusType bonusType) {
@@ -1046,7 +1201,8 @@ public class GameStateController extends BaseViewCleanup {
                                 () -> gameViewModel.isAnyBonusActive(bonusType),
                                 gameViewModel.getIsPushFixedTileBonusActiveProperty(),
                                 gameViewModel.getIsSwapBonusActiveProperty(),
-                                gameViewModel.getIsBeamTileBonusActiveProperty()));
+                                gameViewModel.getIsBeamTileBonusActiveProperty()))
+                .or(aiTakeoverEnabledProperty);
     }
 
     private void choosePushTileCommand(int index, Direction dir, CommandType type) {
