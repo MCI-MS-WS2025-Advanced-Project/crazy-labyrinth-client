@@ -5,6 +5,7 @@ import labyrinth.contracts.models.LobbyStateEventPayload;
 import mci.dibse.crazylabyrinth.client.service.LobbyService;
 import mci.dibse.crazylabyrinth.client.service.LobbyStateUpdateListener;
 import mci.dibse.crazylabyrinth.client.service.PlayerConnectedAckListener;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -17,6 +18,23 @@ class LobbyServiceTest {
     @BeforeEach
     void setUp() {
         lobbyService = new LobbyService();
+    }
+    @BeforeAll
+    static void initToolkit() {
+        // Check if we are running in a headless environment (CI)
+        // Most CI runners set 'headless' or 'GITHUB_ACTIONS'
+        boolean isCi = System.getenv("GITHUB_ACTIONS") != null;
+        if (isCi) {
+            System.setProperty("glass.platform", "Monocle");
+            System.setProperty("monocle.platform", "Headless");
+            System.setProperty("prism.order", "sw");
+        }
+
+        try {
+            com.sun.javafx.application.PlatformImpl.startup(() -> {});
+        } catch (IllegalStateException e) {
+            // Toolkit already initialized
+        }
     }
 
     @Test

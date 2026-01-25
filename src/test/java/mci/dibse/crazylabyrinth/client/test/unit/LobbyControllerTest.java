@@ -22,18 +22,22 @@ import org.springframework.test.util.ReflectionTestUtils;
 import static org.mockito.Mockito.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-/**
- * Unit test for LobbyController.
- * Covers initialization, bindings, and admin-specific view logic.
- */
 class LobbyControllerTest {
 
     @BeforeAll
     static void initToolkit() {
+        // Check if we are running in a headless environment (CI)
+        // Most CI runners set 'headless' or 'GITHUB_ACTIONS'
+        boolean isCi = System.getenv("GITHUB_ACTIONS") != null;
+        if (isCi) {
+            System.setProperty("glass.platform", "Monocle");
+            System.setProperty("monocle.platform", "Headless");
+            System.setProperty("prism.order", "sw");
+        }
+
         try {
-            // Initialize JavaFX Toolkit for testing UI components
             com.sun.javafx.application.PlatformImpl.startup(() -> {});
-        } catch (IllegalStateException ignored) {
+        } catch (IllegalStateException e) {
             // Toolkit already initialized
         }
     }
