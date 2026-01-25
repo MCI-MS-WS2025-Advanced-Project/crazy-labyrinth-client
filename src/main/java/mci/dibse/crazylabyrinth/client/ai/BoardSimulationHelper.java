@@ -5,25 +5,36 @@ import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
-// TODO: JAVA Doc überarbeiten
+
 /**
- * Helper class for board simulation and geometry calculations.
- * Contains pure functions for coordinate transformations, rotations, and board state analysis.
+ * Helper component providing utility methods for board simulation and lightweight geometry operations.
+ *
+ * <p>This class contains methods to:
+ * <ul>
+ *   <li>compute the resulting {@link Coordinates} after a push operation,</li>
+ *   <li>rotate tile entrance directions by 90° clockwise steps,</li>
+ *   <li>search for treasures/bonuses on a {@link GameBoard},</li>
+ *   <li>derive valid push indices,</li>
+ *   <li>determine the tile that would be pushed out,</li>
+ *   <li>and detect reverse pushes based on {@link GameBoard#getLastPush()}.</li>
+ * </ul>
  */
 @Component
 public class BoardSimulationHelper {
 
     /**
-     * Calculates the new position of a player after a tile push operation.
+     * Calculates the new player position after a push operation on the board.
      *
-     * @param currentPos the current position of the player
-     * @param pushIndex the index where the push occurs (row or column)
-     * @param pushDirection the direction of the push
-     * @param rows total number of rows on the board
-     * @param cols total number of columns on the board
-     * @return the new position after the push, potentially wrapped around
+     * <p>The position is shifted by one field if the player's current row/column matches the pushed axis,
+     * and wraps around the board edges using modulo arithmetic.
+     *
+     * @param currentPos the current player position
+     * @param pushIndex the row/column index at which the push is executed
+     * @param pushDirection the push direction
+     * @param rows the total number of rows on the board
+     * @param cols the total number of columns on the board
+     * @return the updated position after applying the push shift (with wrap-around)
      */
     public Coordinates calculatePositionAfterPush(
             Coordinates currentPos,
@@ -62,11 +73,13 @@ public class BoardSimulationHelper {
     }
 
     /**
-     * Calculates the rotated entrances of a tile after applying a number of clockwise rotations.
+     * Computes the rotated entrances for a tile by applying a given number of clockwise 90° rotations.
      *
-     * @param originalEntrances the original set of entrances
-     * @param rotations the number of 90-degree clockwise rotations to apply
-     * @return list of rotated entrances
+     * <p>If {@code originalEntrances} is {@code null}, an empty array is returned.
+     *
+     * @param originalEntrances the original entrances
+     * @param rotations the number of clockwise 90° rotations to apply
+     * @return the entrances after rotation as an array
      */
     public Direction[] calculateRotatedEntrances(
             Direction[] originalEntrances,
@@ -87,10 +100,10 @@ public class BoardSimulationHelper {
 
 
     /**
-     * Rotates a list of entrances by 90 degrees clockwise.
+     * Rotates each direction in the given entrance list by 90° clockwise.
      *
-     * @param entrances the list of entrances to rotate
-     * @return the rotated list of entrances
+     * @param entrances the entrance directions to rotate
+     * @return a new list containing the rotated directions
      */
     private List<Direction> rotateEntrancesClockwise(List<Direction> entrances) {
         List<Direction> rotated = new ArrayList<>();
@@ -100,8 +113,9 @@ public class BoardSimulationHelper {
         return rotated;
     }
 
+
     /**
-     * Rotates a single direction by 90 degrees clockwise.
+     * Rotates a single {@link Direction} by 90° clockwise.
      *
      * @param dir the direction to rotate
      * @return the rotated direction
@@ -116,13 +130,15 @@ public class BoardSimulationHelper {
     }
 
     /**
-     * Finds the position of a specific treasure on the board.
+     * Finds the board position of the tile carrying the given treasure id.
      *
-     * @param board the game board
-     * @param treasure the treasure to find (can be null if all treasures collected)
-     * @return the coordinates of the treasure, or null if not found
+     * <p>If {@code treasure} is {@code null}, this method returns {@code null} without searching.
+     *
+     * @param board the current game board
+     * @param treasure the treasure id to search for; may be {@code null}
+     * @return the coordinates of the matching treasure tile, or {@code null} if not found or if {@code treasure} is {@code null}
      */
-    public Coordinates findTreasurePosition(GameBoard board, Treasure treasure) {
+    public Coordinates findTreasurePosition(GameBoard board, Integer treasure) {
         if (treasure == null) {
             return null; // No treasure to find
         }
@@ -132,7 +148,7 @@ public class BoardSimulationHelper {
         for (int row = 0; row < board.getRows(); row++) {
             for (int col = 0; col < board.getCols(); col++) {
                 Tile tile = tiles[row][col];
-                if (tile.getTreasure() != null && tile.getTreasure().equals(treasure)) {
+                if (tile.getTreasure() != null && tile.getTreasure().getId() == treasure) {
                     return AiContractUtil.coord(row, col);
                 }
             }
@@ -142,10 +158,10 @@ public class BoardSimulationHelper {
     }
 
     /**
-     * Finds the position of Bonus on the board.
+     * Collects the coordinates of all tiles on the board that currently contain a bonus.
      *
-     * @param board the game board
-     * @return the coordinates of the treasure, or null if not found
+     * @param board the current game board
+     * @return a list of coordinates for all tiles with a non-null bonus (may be empty)
      */
     public List<Coordinates> findBonusPositions(GameBoard board) {
         List<Coordinates> result = new ArrayList<>();
@@ -164,16 +180,26 @@ public class BoardSimulationHelper {
 
 
 
-    // TODO JAVADOC
+    /**
+     * Computes the Manhattan distance between two coordinates.
+     *
+     * @param a first coordinate
+     * @param b second coordinate
+     * @return {@code |a.row - b.row| + |a.col - b.col|}
+     */
     public int manhattanDistance(Coordinates a, Coordinates b) {
         return Math.abs(a.getRow() - b.getRow()) + Math.abs(a.getColumn() - b.getColumn());
     }
 
+
     /**
-     * Returns all valid push indices for the board (odd indices: 1, 3, 5, ...).
+     * Returns the list of push indices considered valid by this helper.
+     *
+     * <p>The indices are generated as odd numbers starting at 1 up to (but excluding) the maximum of
+     * {@link GameBoard#getRows()} and {@link GameBoard#getCols()}.
      *
      * @param board the game board
-     * @return list of valid push indices
+     * @return a list of valid push indices (may be empty)
      */
     public List<Integer> getValidPushIndices(GameBoard board) {
         List<Integer> indices = new ArrayList<>();
@@ -186,6 +212,16 @@ public class BoardSimulationHelper {
         return indices;
     }
 
+
+    /**
+     * Returns the list of push indices considered valid for "fixed" pushes by this helper.
+     *
+     * <p>The indices are generated as even numbers starting at 2 up to {@code size - 1}, where
+     * {@code size} is {@code max(rows, cols)}.
+     *
+     * @param board the game board
+     * @return a list of valid indices for fixed pushes (may be empty)
+     */
     public List<Integer> getValidPushFixedIndices(GameBoard board) {
         List<Integer> indices = new ArrayList<>();
         int size = Math.max(board.getRows(), board.getCols());
@@ -198,13 +234,15 @@ public class BoardSimulationHelper {
 
 
     /**
-     * Calculates which tile will be pushed out when a push is executed.
-     * This tile becomes the new spare tile that the opponent can use.
+     * Determines which tile would be pushed out of the board for the given push action.
      *
-     * @param board the game board
-     * @param pushIndex the index where the push occurs (row or column number)
-     * @param pushDirection the direction of the push
-     * @return the tile that will be pushed out (becomes new spare tile)
+     * <p>The returned tile corresponds to the edge tile on the pushed row/column that is shifted out
+     * in the given {@link Direction}.
+     *
+     * @param board the current game board
+     * @param pushIndex the row/column index at which the push is executed
+     * @param pushDirection the push direction
+     * @return the tile that would be pushed out, or {@code null} if {@code pushDirection} is not handled
      */
     public Tile getTilePushedOut(GameBoard board, int pushIndex, Direction pushDirection) {
         Tile[][] tiles = board.getTiles();
@@ -229,14 +267,17 @@ public class BoardSimulationHelper {
         }
     }
 
+
     /**
-     * Checks if a push would reverse the last push operation.
-     * A reverse push is not allowed in Crazy Labyrinth rules.
+     * Determines which tile would be pushed out of the board for the given push action.
      *
-     * @param board the game board
-     * @param pushIndex the index to push at
-     * @param pushDirection the direction to push
-     * @return true if this push would reverse the last push, false otherwise
+     * <p>The returned tile corresponds to the edge tile on the pushed row/column that is shifted out
+     * in the given {@link Direction}.
+     *
+     * @param board the current game board
+     * @param pushIndex the row/column index at which the push is executed
+     * @param pushDirection the push direction
+     * @return the tile that would be pushed out, or {@code null} if {@code pushDirection} is not handled
      */
     public boolean isReversePush(GameBoard board, int pushIndex, Direction pushDirection) {
         if (board.getLastPush() == null) {

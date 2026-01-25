@@ -1,15 +1,12 @@
 package mci.dibse.crazylabyrinth.client.ai;
 
 import labyrinth.contracts.models.GameStateEventPayload;
-import labyrinth.contracts.models.PlayerState;
-import labyrinth.contracts.models.PlayerInfo;
-import labyrinth.contracts.models.TurnState;
 import labyrinth.contracts.models.GameBoard;
 import labyrinth.contracts.models.Coordinates;
 import labyrinth.contracts.models.Direction;
 import labyrinth.contracts.models.BonusType;
 import labyrinth.contracts.models.Tile;
-import labyrinth.contracts.models.Treasure;
+
 
 import org.springframework.stereotype.Component;
 import org.slf4j.Logger;
@@ -17,7 +14,25 @@ import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
-// TODO: JAVADOC
+
+/**
+ * Computes offensive {@link AiDecision}s for progressing towards the AI's current objective.
+ *
+ * <p><b>What it is for:</b> Produces push + move decisions that either:
+ * <ul>
+ *   <li>bring the AI to its home position when the "home" objective is active, or</li>
+ *   <li>move the AI towards (or directly onto) the current treasure target.</li>
+ * </ul>
+ *
+ * <p><b>How it works (as implemented):</b>
+ * <ul>
+ *   <li>Enumerates legal pushes (index + {@link Direction}) and rotations (0..3).</li>
+ *   <li>Simulates the resulting player/goal positions after a push via {@link BoardSimulationHelper}.</li>
+ *   <li>Evaluates reachability and paths on the virtually pushed board via {@link AiPathFindingService}.</li>
+ *   <li>Optionally attempts bonus-based shortcuts via {@link BonusUsageDecider} and opportunistic bonus collection via {@link BonusCalculator}.</li>
+ *   <li>Chooses a move target with collision avoidance using {@link MoveTargetHelper}.</li>
+ * </ul>
+ */
 @Component
 public class OffensiveMoveCalculator {
 
@@ -43,16 +58,47 @@ public class OffensiveMoveCalculator {
 
     }
 
-    // TODO: JAVADOC richtig
     /**
-     * Calculates offensive move when no treasures are left (return home).
+     * Calculates an offensive decision for the "go home" objective (no treasure target).
+     *
+     * <p><b>What it is for:</b> Attempts to reach {@code homePosition} as efficiently as possible.</p>
+     *
+     * <p><b>Bonus handling (as implemented):</b>
+     * <ul>
+     *   <li>If {@link BonusType#BEAM} is available, immediately returns a {@code beamAndMove} decision to {@code homePosition}.</li>
+     *   <li>If {@link BonusType#PUSH_FIXED} is available, tries BonusUsageDecider#tryUsePushFixedForDirectGoal(...).</li>
+     *   <li>If {@link BonusType#SWAP} is available, tries BonusUsageDecider#tryUseSwapIfItEnablesGoal(...).</li>
+     * </ul>
+     *
+     * <p><b>Push evaluation (as implemented):</b>
+     * <ul>
+     *   <li>Evaluates all legal pushes from {@link BoardSimulationHelper#getValidPushIndices(GameBoard)} excluding reverse pushes.</li>
+     *   <li>Scores candidates primarily by reachability of {@code homePosition} after the virtual push and secondarily by
+     *       Manhattan distance when not reachable.</li>
+     *   <li>Tracks top candidates for a later PUSH_TWICE attempt when {@link BonusType#PUSH_TWICE} is available and home is not reachable.</li>
+     * </ul>
+     *
+     * <p><b>Move target selection (as implemented):</b>
+     * <ul>
+     *   <li>If a path to home exists after the chosen push, chooses the farthest unoccupied position on the path via
+     *       MoveTargetHelper#findBestUnoccupiedPositionAfterPush(...).</li>
+     *   <li>If no path exists, optionally tries PUSH_TWICE (top-K push1 candidates), otherwise optionally targets a bonus
+     *       that is "on the way" via BonusCalculator#chooseBonusMoveTargetAfterChosenPush(...).</li>
+     * </ul>
+     *
+     * @param game the current game state payload
+     * @param myPlayerId the AI player's id
+     * @param availableBonuses the set of bonuses available to the AI
+     * @param currentPos the AI's current position (pre-push)
+     * @param homePosition the AI's home position
+     * @return an {@link AiDecision} containing a push and a move (or a bonus-based decision when applied)
      */
     public AiDecision calculateMoveToHome(GameStateEventPayload game, String myPlayerId, Set<BonusType> availableBonuses, Coordinates currentPos, Coordinates homePosition) {
         GameBoard board = game.getBoard();
 
         // use beam bonus if possible and win
         if (availableBonuses.contains(BonusType.BEAM)) {
-            log.debug("AI USED BEAM to get home");
+            log.info("AI USED BEAM to get home");
 
             return AiDecision.beamAndMove( homePosition,
                     new AiDecision.MoveDecision(homePosition));
@@ -64,7 +110,7 @@ public class OffensiveMoveCalculator {
                     game, myPlayerId, currentPos, availableBonuses, homePosition
             );
             if (pushFixedTurn != null) {
-                log.warn("USED PUSH_FIXED TO GET HOME!");
+                log.info("USED PUSH_FIXED TO GET HOME!");
                 return pushFixedTurn;
             }
         }
@@ -73,7 +119,7 @@ public class OffensiveMoveCalculator {
         if(availableBonuses.contains(BonusType.SWAP)) {
             AiDecision swapTurn = bonusUsageDecider.tryUseSwapIfItEnablesGoal(game, myPlayerId, availableBonuses, homePosition);
             if (swapTurn != null) {
-                log.warn("USED SWAP TO GET HOME!");
+                log.info("USED SWAP TO GET HOME!");
                 return swapTurn;
             }
         }
@@ -233,7 +279,7 @@ public class OffensiveMoveCalculator {
             );
 
             if (bonusMoveTarget != null) {
-                log.warn("Home not possible: Bot collects bonus which is on the way!");
+                log.info("Home not possible: Bot collects bonus which is on the way!");
                 bestMoveTarget = bonusMoveTarget;
             } else {
                 bestMoveTarget = bestPosAfterPush;
@@ -242,16 +288,30 @@ public class OffensiveMoveCalculator {
 
         return AiDecision.pushAndMove(new AiDecision.PushDecision(bestPushIndex, bestPushDirection, bestRotations),
                 new AiDecision.MoveDecision(bestMoveTarget));
-        // deprecated
-        /*
-        return new AiDecision(
-                new AiDecision.PushDecision(bestPushIndex, bestPushDirection, bestRotations),
-                new AiDecision.MoveDecision(bestMoveTarget)
-        );*/
     }
 
 
-    // TODO JAVADOC
+    /**
+     * Calculates an offensive decision for the special case where the target treasure is currently on the spare tile.
+     *
+     * <p><b>What it is for:</b> Since the treasure enters the board through the insertion point of the performed push,
+     * this method evaluates pushes/rotations and targets the insertion coordinate returned by {@link #insertionPointCoordinates(GameBoard, int, Direction)}.</p>
+     *
+     * <p><b>How it works (as implemented):</b>
+     * <ul>
+     *   <li>Iterates over legal push indices and directions (excluding reverse pushes) and all 4 rotations.</li>
+     *   <li>Computes the treasure position after the push as the insertion point coordinate for that push.</li>
+     *   <li>Computes a path to that position using {@code AiPathFindingService.findPathAfterVirtualPush(...)}.</li>
+     *   <li>Scores candidates by reachability and path length, otherwise by Manhattan distance.</li>
+     *   <li>Selects a move target with occupancy checks after the push.</li>
+     * </ul>
+     *
+     * @param game the current game state payload
+     * @param board the current game board
+     * @param myPlayerId the AI player's id
+     * @param playerPosition the AI's current position (pre-push)
+     * @return an {@link AiDecision} containing the selected push and move target
+     */
     public AiDecision calculateMoveTreasureOnSpareTile(
             GameStateEventPayload game,
             GameBoard board,
@@ -343,25 +403,48 @@ public class OffensiveMoveCalculator {
 
         return  AiDecision.pushAndMove(new AiDecision.PushDecision(bestPushIndex, bestPushDirection, bestRotations),
                 new AiDecision.MoveDecision(moveTarget));
-        // deprecated
-        /*
-        return new AiDecision(
-                new AiDecision.PushDecision(bestPushIndex, bestPushDirection, bestRotations),
-                new AiDecision.MoveDecision(moveTarget)
-        );*/
     }
 
 
-    // TODO: JAVADOC Anpassen
     /**
-     * Calculates offensive move for normal treasure hunting (greedy algorithm).
+     * Calculates an offensive decision for normal treasure hunting (target treasure is on the board).
      *
-     * @param game the game state
-     * @param board the game board
-     * @param myPlayerId the AI player
-     * @param playerPosition the current player position
-     * @param treasurePosition the target treasure position (BEFORE push)
-     * @return the best offensive decision
+     * <p><b>What it is for:</b> Chooses a push (including spare tile rotation) and a move target to reach the target treasure
+     * after the push, or to get closer when direct reachability is not possible.</p>
+     *
+     * <p><b>Push evaluation (as implemented):</b>
+     * <ul>
+     *   <li>Enumerates all legal pushes (valid indices, four directions) and rotations 0..3, excluding reverse pushes.</li>
+     *   <li>Simulates the AI position and treasure position after the push.</li>
+     *   <li>Computes a path after the virtual push and scores candidates primarily by (a) reachability and (b) path length.</li>
+     *   <li>When the treasure is not reachable, uses Manhattan distance as a secondary score and applies deterministic tie-breakers
+     *       (reachability, path length, whether the push moves the AI, proximity of push index to player axis, rotations, index).</li>
+     * </ul>
+     *
+     * <p><b>Bonus attempts when treasure is not reachable (as implemented):</b>
+     * <ul>
+     *   <li>Tries BonusUsageDecider#tryUsePushFixedForDirectGoal(...).</li>
+     *   <li>If BonusType#PUSH_TWICE} is available, tries PUSH_TWICE using the top-K push1 candidates.</li>
+     *   <li>Tries BonusUsageDecider#tryUseSwapIfItEnablesGoal(...).</li>
+     *   <li>Tries BonusUsageDecider#tryUseBeamForDirectTreasure(...).</li>
+     * </ul>
+     *
+     * <p><b>Move target selection (as implemented):</b>
+     * <ul>
+     *   <li>If treasure is reachable: move directly to it if unoccupied after the push, otherwise choose the best unoccupied
+     *       position along the path.</li>
+     *   <li>If treasure is not reachable: choose the reachable position closest to the treasure using
+     *       findClosestReachableToTreasureAfterVirtualPush(...) (with occupancy handling), and optionally override
+     *       the move to an opportunistic bonus target via BonusCalculator#chooseBonusMoveTargetAfterChosenPush(...).</li>
+     * </ul>
+     *
+     * @param game the current game state payload
+     * @param board the current game board
+     * @param myPlayerId the AI player's id
+     * @param availableBonuses the set of bonuses available to the AI
+     * @param playerPosition the AI's current position (pre-push)
+     * @param treasurePosition the target treasure position (pre-push)
+     * @return an {@link AiDecision} describing the chosen push and move (or a bonus-based decision when applicable)
      */
     public AiDecision calculateOffensiveMove(
             GameStateEventPayload game,
@@ -464,31 +547,48 @@ public class OffensiveMoveCalculator {
 
                     if (score > bestScore) {
                         shouldUpdate = true;
-                    } else if (score == bestScore) {
+                    }
+                    else if (score == bestScore) {
 
                         // 1) safety: reachable better than not reachable
                         if (treasureReachable && !bestTreasureReachable) {
                             shouldUpdate = true;
-                        } else if (treasureReachable == bestTreasureReachable) {
+                        }
+                        else if (treasureReachable == bestTreasureReachable) {
 
                             // 2) if reachable: shortest path
                             if (treasureReachable && pathLen < bestPathLen) {
                                 shouldUpdate = true;
                             }
-
                             // 3) not reachable: AI is moved is better
                             else if (!treasureReachable && pushMovesAI && !bestPushMovesAI) {
                                 shouldUpdate = true;
                             }
+                            // 4-6 not reachable, AI not moves
+                            else if (!treasureReachable && !pushMovesAI && !bestPushMovesAI) {
 
-                            // 4) not reachable and AI not moved: use the one with less rotations
-                            else if (rotations < bestRotations) {
-                                shouldUpdate = true;
-                            }
+                                int axisThis = (pushDirection == Direction.LEFT || pushDirection == Direction.RIGHT)
+                                        ? playerPosition.getRow()
+                                        : playerPosition.getColumn();
+                                int distThis = Math.abs(pushIndex - axisThis);
 
-                            // 5) not reachable, AI not moved, same rotations: use the one with smaller index
-                            else if (pushIndex < bestPushIndex) {
-                                shouldUpdate = true;
+                                int axisBest = (bestPushDirection == Direction.LEFT || bestPushDirection == Direction.RIGHT)
+                                        ? playerPosition.getRow()
+                                        : playerPosition.getColumn();
+                                int distBest = Math.abs(bestPushIndex - axisBest);
+
+                                // 4) closer index to player
+                                if (distThis < distBest) {
+                                    shouldUpdate = true;
+                                }
+                                // 5) fewer rotations
+                                else if (distThis == distBest && rotations < bestRotations) {
+                                    shouldUpdate = true;
+                                }
+                                // 6) smaller index
+                                else if (distThis == distBest && rotations == bestRotations && pushIndex < bestPushIndex) {
+                                    shouldUpdate = true;
+                                }
                             }
                         }
                     }
@@ -576,7 +676,7 @@ public class OffensiveMoveCalculator {
             if (!moveTargetHelper.isPositionOccupiedAfterPush(game, bestTreasurePosAfterPush, myPlayerId,
                     bestPushIndex, bestPushDirection)) {
                 bestMoveTarget = bestTreasurePosAfterPush;
-                log.warn("Treasure is reachable: Bot collects treasure!");
+                log.debug("Treasure is reachable: Bot collects treasure!");
             } else {
                 bestMoveTarget = moveTargetHelper.findBestUnoccupiedPositionAfterPush(
                         game,
@@ -587,7 +687,7 @@ public class OffensiveMoveCalculator {
                         bestPushDirection,
                         bestAiPosAfterPush
                 );
-                log.warn("Treasure position is occupied: Bot moves to best unoccupied position!");
+                log.debug("Treasure position is occupied: Bot moves to best unoccupied position!");
             }
 
         } else {
@@ -634,20 +734,32 @@ public class OffensiveMoveCalculator {
 
             if (bonusMoveTarget != null) {
                 bestMoveTarget = bonusMoveTarget;
-                log.warn("Treasure not reachable: Bot collects bonus!");
+                log.info("Treasure not reachable: Bot collects bonus!");
             }
 
-            log.warn("Treasure not reachable: Bot tries to get closer!");
+            log.debug("Treasure not reachable: Bot tries to get closer!");
         }
-
-
 
         return  AiDecision.pushAndMove(new AiDecision.PushDecision(bestPushIndex, bestPushDirection, bestRotations), new AiDecision.MoveDecision(bestMoveTarget));
     }
 
 
 
-    // TODO: JAVADOC
+    /**
+     * Finds the reachable coordinate (after a virtual push) that minimizes Manhattan distance to the treasure.
+     *
+     * <p><b>What it is for:</b> Used when the treasure is not directly reachable after the chosen push.
+     * It computes the reachable set after the virtual push and selects the coordinate that is closest to {@code treasure}
+     * according to {@link BoardSimulationHelper#manhattanDistance(Coordinates, Coordinates)}.</p>
+     *
+     * @param board the game board
+     * @param pushIndex the push index used for the virtual push
+     * @param pushDirection the push direction used for the virtual push
+     * @param rotatedEntrances the rotated entrances for the spare tile used in the virtual push
+     * @param from the AI position after the push
+     * @param treasure the treasure position after the push
+     * @return the reachable coordinate closest to {@code treasure} (or {@code from} if no better coordinate is found)
+     */
     private Coordinates findClosestReachableToTreasureAfterVirtualPush(
             GameBoard board,
             int pushIndex,
@@ -674,14 +786,33 @@ public class OffensiveMoveCalculator {
         return best;
     }
 
-    // TODO JAVADOC
-    public boolean isTreasureOnSpareTile(GameBoard board, Treasure targetTreasure) {
+    /**
+     * Checks whether the current target treasure is located on the spare tile.
+     *
+     * <p><b>What it is for:</b> Enables the special-case handling in calculateMoveTreasureOnSpareTile(...) by
+     * detecting when the spare tile carries the target treasure id.</p>
+     *
+     * @param board the current game board
+     * @param targetTreasure the target treasure id; may be {@code null}
+     * @return {@code true} if the spare tile exists and carries the given treasure id; {@code false} otherwise
+     */
+    public boolean isTreasureOnSpareTile(GameBoard board, Integer targetTreasure) {
         if (targetTreasure == null) return false;
         Tile spare = board.getSpareTile();
-        return spare != null && spare.getTreasure() == targetTreasure;
+        return spare != null && spare.getTreasure().getId() == targetTreasure;
     }
 
-    //TODO JAVADOC
+    /**
+     * Computes the board coordinate where the spare tile is inserted for the given push action.
+     *
+     * <p><b>What it is for:</b> Used by calculateMoveTreasureOnSpareTile(...) to determine where a treasure on the
+     * spare tile will appear on the board after performing the push.</p>
+     *
+     * @param board the game board (used for row/column bounds)
+     * @param pushIndex the pushed row/column index
+     * @param dir the push direction
+     * @return the insertion-point coordinate for the spare tile for the given push direction and index
+     */
     private Coordinates insertionPointCoordinates(GameBoard board, int pushIndex, Direction dir) {
         int rows = board.getRows();
         int cols = board.getCols();

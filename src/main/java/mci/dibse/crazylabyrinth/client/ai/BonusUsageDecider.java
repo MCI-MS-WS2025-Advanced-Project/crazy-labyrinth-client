@@ -18,7 +18,20 @@ import java.util.List;
 import java.util.Set;
 
 
-// TODO: ADD JAVADOCS
+/**
+ * Decides whether and how the AI should use available bonus actions to directly enable or improve reaching a target.
+ *
+ * <p>Purpose in the AI flow:
+ * <ul>
+ *   <li>Evaluates specific bonus types (e.g., {@link BonusType#BEAM}, {@link BonusType#SWAP},
+ *       {@link BonusType#PUSH_FIXED}, {@link BonusType#PUSH_TWICE}) against a provided goal/treasure context.</li>
+ *   <li>Returns an {@link AiDecision} only when the corresponding bonus is available and the method's
+ *       internal conditions are met.</li>
+ * </ul>
+ *
+ * <p>This component uses {@link AiPathFindingService} for reachability checks, {@link BoardSimulationHelper}
+ * for coordinate updates under virtual pushes, and {@link MoveTargetHelper} for occupancy-related decisions.
+ */
 @Component
 public class BonusUsageDecider {
 
@@ -32,6 +45,23 @@ public class BonusUsageDecider {
         this.moveTargetHelper = moveTargetHelper;
     }
 
+    /**
+     * Attempts to use the {@link BonusType#BEAM} bonus to directly collect a treasure by beaming to its position.
+     *
+     * <p>Returns {@code null} if:
+     * <ul>
+     *   <li>{@code treasurePos} is {@code null},</li>
+     *   <li>{@link BonusType#BEAM} is not contained in {@code availableBonuses},</li>
+     *   <li>or the treasure position is occupied by another player according to
+     *       {@link MoveTargetHelper#isPositionOccupied(GameStateEventPayload, Coordinates, String)}.</li>
+     * </ul>
+     *
+     * @param game the current game state payload (used for occupancy checks)
+     * @param myPlayerId the AI player's id (excluded from occupancy checks)
+     * @param availableBonuses the set of bonuses available to the AI
+     * @param treasurePos the target treasure position
+     * @return an {@link AiDecision} representing a beam action and a move to {@code treasurePos}, or {@code null} if not applicable
+     */
     public AiDecision tryUseBeamForDirectTreasure(GameStateEventPayload game, String myPlayerId, Set<BonusType> availableBonuses, Coordinates treasurePos) {
         if (treasurePos == null) return null;
 
@@ -44,17 +74,35 @@ public class BonusUsageDecider {
         }
 
         System.out.println("AI USED BEAM BONUS");
-        // TODO: hier könnte auch beam auf target und dann move der am besten ist (bei beam wird schon gesammelt), gleiches für swap
 
         return AiDecision.beamAndMove(treasurePos, new AiDecision.MoveDecision(treasurePos));
-        /*
-        return new AiDecision(
-                AiDecision.BonusDecision.beam(treasurePos),
-                new AiDecision.MoveDecision(treasurePos)
-        );*/
     }
 
 
+    /**
+     * Attempts to use the {@link BonusType#PUSH_FIXED} bonus to make the goal reachable in the same turn.
+     *
+     * <p>What this method does:
+     * <ul>
+     *   <li>Enumerates indices from {@link BoardSimulationHelper#getValidPushFixedIndices(GameBoard)} and the four {@link Direction}s.</li>
+     *   <li>Filters to legal shifts via {@link AiContractUtil#canShift(GameBoard, int, Direction)} and excludes reverse pushes
+     *       via {@link BoardSimulationHelper#isReversePush(GameBoard, int, Direction)}.</li>
+     *   <li>Tries all 4 rotations for the spare tile entrances and performs virtual reachability checks with
+     *       {@code AiPathFindingService.findPathAfterVirtualPush(...)}.</li>
+     *   <li>Scores candidates by path length and selects the best-scoring push/rotation.</li>
+     *   <li>Selects the move target as the goal position after the chosen push if it is not occupied; otherwise chooses an
+     *       alternative via {@link MoveTargetHelper#findBestUnoccupiedPositionAfterPush(GameStateEventPayload, List, Coordinates, String, int, Direction, Coordinates)}.</li>
+     * </ul>
+     *
+     * <p>Returns {@code null} if the goal is {@code null}, the bonus is not available, or no push/rotation makes the goal reachable.</p>
+     *
+     * @param game the current game state payload
+     * @param myPlayerId the AI player's id (used for occupancy checks)
+     * @param currentPos the AI's current position (pre-push)
+     * @param availableBonuses the set of bonuses available to the AI
+     * @param goalPos the desired goal position (pre-push)
+     * @return an {@link AiDecision} representing the push-fixed bonus usage and a move, or {@code null} if not applicable
+     */
     public AiDecision tryUsePushFixedForDirectGoal(
             GameStateEventPayload game,
             String myPlayerId,
@@ -139,15 +187,29 @@ public class BonusUsageDecider {
                 new AiDecision.MoveDecision(moveTarget)
         );
 
-        // deprecated
-        /*
-        return new AiDecision(
-                AiDecision.BonusDecision.pushFixed(bestIdx, bestDir, bestRot),
-                new AiDecision.MoveDecision(moveTarget)
-        );*/
     }
 
 
+    /**
+     * Attempts to use the {@link BonusType#SWAP} bonus to enable reaching the given goal position.
+     *
+     * <p>This method searches for a target player to swap with. It considers:
+     * <ul>
+     *   <li>a player currently standing on {@code goalPos} (immediate best case),</li>
+     *   <li>otherwise, players for which a path to {@code goalPos} exists according to {@code AiPathFindingService.findPath(...)}.</li>
+     * </ul>
+     *
+     * <p>The selected target is the one with the shortest path length; ties are resolved deterministically by comparing
+     * player ids lexicographically.</p>
+     *
+     * <p>Returns {@code null} if the goal is {@code null}, the bonus is not available, or no suitable target player is found.</p>
+     *
+     * @param game the current game state payload
+     * @param myPlayerId the AI player's id (excluded from candidate selection)
+     * @param availableBonuses the set of bonuses available to the AI
+     * @param goalPos the goal position the AI wants to reach
+     * @return an {@link AiDecision} representing the swap action and a move towards {@code goalPos}, or {@code null} if not applicable
+     */
     public AiDecision tryUseSwapIfItEnablesGoal(GameStateEventPayload game, String myPlayerId, Set<BonusType> availableBonuses, Coordinates goalPos) {
         if (goalPos == null) return null;
         if (!availableBonuses.contains(BonusType.SWAP)) return null;
@@ -205,25 +267,40 @@ public class BonusUsageDecider {
         System.out.println("AI USED Swap BONUS");
 
         return AiDecision.swapAndMove(bestTargetPlayerId, new AiDecision.MoveDecision(goalPos));
-        /*
-        return new AiDecision(
-                AiDecision.BonusDecision.swap(bestTargetPlayerId),
-                new AiDecision.MoveDecision(goalPos)
-        );*/
     }
 
 
     /**
-     * Decides whether using PUSH_TWICE after the already planned first push would enable
-     * reaching the goal in the same turn.
+     * Attempts to use the {@link BonusType#PUSH_TWICE} bonus to make the goal reachable after a planned first push.
      *
-     * Contract:
-     * - This method does NOT re-evaluate push1 (already chosen by Offensive/Defensive calculator).
-     * - It only decides whether to activate PUSH_TWICE and which second push (index/dir/rot) to do.
-     * - Conservative V1: only return a decision if goal becomes reachable after two pushes.
+     * <p>Purpose of this method:
+     * <ul>
+     *   <li>Given an already planned first push (index/direction/rotation), decide whether spending PUSH_TWICE
+     *       and selecting a second push can make the goal reachable within the same turn.</li>
+     * </ul>
      *
-     * @param goalReachableAfterPlannedPush1 pass the already-known result from the calculator
-     *                                      (avoid duplicate pathfinding for push1).
+     * <p>Contract implemented by this method:
+     * <ul>
+     *   <li>Does not re-evaluate or change the provided first push parameters.</li>
+     *   <li>Returns {@code null} when the goal is already reachable after push #1
+     *       (as indicated by {@code goalReachableAfterPlannedPush1}).</li>
+     *   <li>Searches a second push among {@link BoardSimulationHelper#getValidPushIndices(GameBoard)} and the four {@link Direction}s.</li>
+     *   <li>Excludes illegal shifts via {@link AiContractUtil#canShift(GameBoard, int, Direction)} and excludes a direct undo of push #1
+     *       via {@link #isUndoSecondPush(int, Direction, int, Direction)}.</li>
+     *   <li>Uses {@code AiPathFindingService.findPathAfterTwoPushes(...)} to check reachability after both pushes.</li>
+     *   <li>Applies a conservative occupancy filter via {@link #isOccupiedAfterTwoPushes(GameStateEventPayload, Coordinates, String, int, Direction, int, Direction)}.</li>
+     * </ul>
+     *
+     * @param game the current game state payload
+     * @param myPlayerId the AI player's id (excluded from occupancy checks)
+     * @param originalPlayerPos the AI's original position (pre-push #1)
+     * @param originalGoalPos the goal position (pre-push #1)
+     * @param availableBonuses the set of bonuses available to the AI
+     * @param push1Index the already planned first push index
+     * @param push1Direction the already planned first push direction
+     * @param push1Rotations the already planned first push rotation count (0..3)
+     * @param goalReachableAfterPlannedPush1 whether the goal is already reachable after push #1
+     * @return an {@link AiDecision} representing PUSH_TWICE usage (two pushes + move), or {@code null} if not applicable
      */
     public AiDecision tryUsePushTwiceForDirectGoalAfterPlannedPush(
             GameStateEventPayload game,
@@ -267,21 +344,15 @@ public class BonusUsageDecider {
         for (int push2Index : validIndices) {
             for (Direction push2Direction : directions) {
 
-                // Must be a legal shift on the *current* board
+                // Must be a legal shift on the current board
                 if (!AiContractUtil.canShift(board, push2Index, push2Direction)) continue;
 
-                // Avoid "undo" of push #1 (internal constraint)
                 if (isUndoSecondPush(push1Index, push1Direction, push2Index, push2Direction)) continue;
 
-                // Optional: you can also reuse the existing helper against last real push,
-                // but note: after push1 is planned, the board's last push is still the real one.
-                // So this is NOT the right check for undo; keep it only if you want to ban
-                // pushing the reverse of the *last real push* again:
-                // if (boardSimulationHelper.isReversePush(board, push2Index, push2Direction)) continue;
 
                 for (int rot2 = 0; rot2 < 4; rot2++) {
 
-                    // Positions after push #2 (apply to already shifted positions from push1)
+
                     Coordinates aiAfter2 = boardSimulationHelper.calculatePositionAfterPush(
                             aiAfter1, push2Index, push2Direction, rows, cols
                     );
@@ -289,7 +360,6 @@ public class BonusUsageDecider {
                             goalAfter1, push2Index, push2Direction, rows, cols
                     );
 
-                    // Path after two pushes (uses your PathFindingService's built-in virtual 2-push logic)
                     List<Coordinates> path = AiPathFindingService.findPathAfterTwoPushes(
                             board,
                             push1Index, push1Direction, push1Rotations,
@@ -300,7 +370,7 @@ public class BonusUsageDecider {
                     boolean reachable = path != null && !path.isEmpty() && path.contains(goalAfter2);
                     if (!reachable) continue;
 
-                    // Conservative: don't attempt landing on a spot that will be occupied
+
                     if (isOccupiedAfterTwoPushes(
                             game, goalAfter2, myPlayerId,
                             push1Index, push1Direction,
@@ -312,7 +382,7 @@ public class BonusUsageDecider {
                     int len = path.size() - 1;
                     int score = 1_000_000 - len * 100;
 
-                    // Tie-breaker: deterministic order (keep first found unless strictly better)
+                    // Tie-breaker: deterministic order
                     if (score > bestScore) {
                         bestScore = score;
                         bestPush2Index = push2Index;
@@ -327,8 +397,6 @@ public class BonusUsageDecider {
 
         if (bestPush2Index == -1) return null;
 
-        // Conservative V1 move: go directly to goalAfter2 (it's reachable).
-        // If you later want collision-avoiding "best unoccupied on path", do it here.
         AiDecision.PushDecision push1 = new AiDecision.PushDecision(push1Index, push1Direction, push1Rotations);
         AiDecision.PushDecision push2 = new AiDecision.PushDecision(bestPush2Index, bestPush2Direction, bestPush2Rotations);
 
@@ -337,6 +405,12 @@ public class BonusUsageDecider {
 
     }
 
+    /**
+     * Returns the opposite direction for the given {@link Direction}.
+     *
+     * @param d a direction
+     * @return the opposite direction
+     */
     private Direction opposite(Direction d) {
         return switch (d) {
             case UP -> Direction.DOWN;
@@ -346,18 +420,39 @@ public class BonusUsageDecider {
         };
     }
 
+
     /**
-     * Prevents the common "undo" case where the second push simply reverses the first push.
-     * This is NOT the same as BoardSimulationHelper.isReversePush(...) which compares to the
-     * last real push stored in the Board. Here we compare push2 vs push1 (internal).
+     * Checks whether the second push would directly undo the first push by using the same index and the opposite direction.
+     *
+     * <p>This is an internal constraint comparing push #2 against push #1. It is distinct from
+     * {@link BoardSimulationHelper#isReversePush(GameBoard, int, Direction)}, which compares against the board's stored last push.</p>
+     *
+     * @param push1Index the first push index
+     * @param push1Dir the first push direction
+     * @param push2Index the second push index
+     * @param push2Dir the second push direction
+     * @return {@code true} if push #2 undoes push #1; {@code false} otherwise
      */
     private boolean isUndoSecondPush(int push1Index, Direction push1Dir, int push2Index, Direction push2Dir) {
         return push1Index == push2Index && push2Dir == opposite(push1Dir);
     }
 
+
     /**
-     * Conservative occupancy check: after two pushes, do not move onto a position that will
-     * be occupied by another player.
+     * Conservatively checks whether a given position would be occupied by another player after applying two pushes.
+     *
+     * <p>For each player (excluding {@code excludePlayerId}), this method applies
+     * {@link BoardSimulationHelper#calculatePositionAfterPush(Coordinates, int, Direction, int, int)} twice:
+     * first with push #1 and then with push #2. If any resulting position equals {@code position}, the position is treated as occupied.</p>
+     *
+     * @param game the current game state payload
+     * @param position the position to test (interpreted as the post-two-push position)
+     * @param excludePlayerId a player id to exclude from the occupancy check (typically the AI itself)
+     * @param push1Index first push index
+     * @param push1Direction first push direction
+     * @param push2Index second push index
+     * @param push2Direction second push direction
+     * @return {@code true} if any other player ends up on {@code position} after both pushes; {@code false} otherwise
      */
     private boolean isOccupiedAfterTwoPushes(
             GameStateEventPayload game,

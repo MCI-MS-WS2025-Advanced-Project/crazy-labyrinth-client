@@ -12,8 +12,20 @@ import java.util.Set;
 
 
 /**
- * Helper class for calculating defensive moves when opponents threaten to win.
- * Finds pushes that block opponent winning paths while validating safety.
+ * Computes defensive {@link AiDecision}s when at least one opponent is considered an immediate threat.
+ *
+ * <p><b>What it is for:</b> This calculator searches push (and rotation) candidates that prevent opponents from winning
+ * on their next turn. It evaluates each candidate by simulating the effects of the push and then checking opponent
+ * reachability towards their home positions.</p>
+ *
+ * <p><b>How it works (high level):</b>
+ * <ul>
+ *   <li>Identifies "dangerous" opponents (those with {@code remainingTreasureCount == null}).</li>
+ *   <li>Evaluates all legal pushes (normal indices), excluding reverse pushes.</li>
+ *   <li>Optionally evaluates "push fixed" candidates (fixed indices) if {@link BonusType#PUSH_FIXED} is available.</li>
+ *   <li>For each candidate, applies a threat check via {@link OpponentThreatDetector} and path checks via {@link AiPathFindingService}.</li>
+ *   <li>Uses a score with strong penalties for enabling opponent wins, and small secondary incentives for the AI's own progress.</li>
+ * </ul>
  */
 @Component
 public class DefensiveMoveCalculator {
@@ -35,16 +47,32 @@ public class DefensiveMoveCalculator {
         this.moveTargetHelper = moveTargetHelper;
     }
 
-    /**
-     * Calculates a defensive move that prevents opponents from winning.
-     * Evaluates all possible pushes and ensures they don't open new winning paths.
-     *
-     * @param game the current game state
-     * @param board the game board
-     * @return the best defensive decision
-     */
 
-    public AiDecision calculateDefensiveMove(GameStateEventPayload game, GameBoard board, String myPlayerId, Set<BonusType> availableBonuses, Coordinates currentPos, Coordinates myHomePosition, Treasure myTargetTreasure) {
+    /**
+     * Calculates a defensive decision consisting of a push (with rotations) and a move target.
+     *
+     * <p><b>What it is for:</b> Attempts to select a push that reduces opponent winning chances while still producing a valid
+     * push-and-move turn for the AI.</p>
+     *
+     * <p><b>Behavior details:</b>
+     * <ul>
+     *   <li>Builds a list of "dangerous" opponents as players whose {@code remainingTreasureCount} is {@code null}.</li>
+     *   <li>Searches for the best defensive turn among normal push indices using findBestDefensiveTurn(...)}.</li>
+     *   <li>If the best normal result is missing or not safe and {@link BonusType#PUSH_FIXED} is available,
+     *       it additionally searches among fixed indices and may return a {@code pushFixedThenPushAndMove} decision.</li>
+     *   <li>If no normal candidate exists, returns a hard fallback decision using a fixed push and staying at the current position.</li>
+     * </ul>
+     *
+     * @param game the current game state payload
+     * @param board the current game board
+     * @param myPlayerId the AI player's id
+     * @param availableBonuses the set of bonuses currently available to the AI
+     * @param currentPos the AI player's current position (pre-push)
+     * @param myHomePosition the AI player's home position
+     * @param myTargetTreasure the current target treasure id; may be {@code null}
+     * @return a defensive {@link AiDecision} (push + move), potentially using {@link BonusType#PUSH_FIXED} when selected
+     */
+    public AiDecision calculateDefensiveMove(GameStateEventPayload game, GameBoard board, String myPlayerId, Set<BonusType> availableBonuses, Coordinates currentPos, Coordinates myHomePosition, Integer myTargetTreasure) {
 
 
         // Find ALL opponents that could win soon (Home phase)
@@ -55,14 +83,6 @@ public class DefensiveMoveCalculator {
                 dangerousOpponents.add(opponent);
             }
         }
-
-        // If no dangerous opponents, you can still play "safe offense" or just fallback to offense.
-        // But selector probably calls this only when needed.
-        if (dangerousOpponents.isEmpty()) {
-            // Keep current behavior: just do a normal "progress" move (still push & move).
-            // Easiest: no extra defense penalty, let scoring do its job.
-        }
-
 
         DefenseBest normalBest = findBestDefensiveTurn(game, board, myPlayerId, dangerousOpponents, boardSimulationHelper.getValidPushIndices(board), myTargetTreasure, myHomePosition, currentPos, false);
 
@@ -90,16 +110,31 @@ public class DefensiveMoveCalculator {
         // Fallback to best normal defense (even if not safe, it's our best shot)
         if (normalBest == null) {
             // absolute fallback: do nothing harmful (still must push & move) -> keep defaults
-            // TODO: Hier noch auf Reverse überprüfen
-            return  AiDecision.pushAndMove(
-                    new AiDecision.PushDecision(1, Direction.DOWN, 0),
-                    new AiDecision.MoveDecision(currentPos));
+            if (!boardSimulationHelper.isReversePush(board, 1, Direction.DOWN)) {
+                return AiDecision.pushAndMove(
+                        new AiDecision.PushDecision(1, Direction.DOWN, 0),
+                        new AiDecision.MoveDecision(currentPos)
+                );
+            } else {
+                return AiDecision.pushAndMove(
+                        new AiDecision.PushDecision(1, Direction.UP, 0),
+                        new AiDecision.MoveDecision(currentPos)
+                );
+            }
         }
 
         return AiDecision.pushAndMove(new AiDecision.PushDecision(normalBest.pushIndex, normalBest.pushDirection, normalBest.rotations),
                 new AiDecision.MoveDecision(normalBest.moveTarget));
     }
 
+
+    /**
+     * Internal value holder for the best defensive candidate found during search.
+     *
+     * <p><b>What it is for:</b> Stores the chosen push parameters, the selected move target and the computed score.
+     * The {@code safe} flag indicates whether the candidate avoids allowing an opponent win on the next turn
+     * according to the threat checks performed during evaluation.</p>
+     */
     private static class DefenseBest {
         final int score;
         final int pushIndex;
@@ -118,13 +153,60 @@ public class DefensiveMoveCalculator {
         }
     }
 
+    /**
+     * Searches the best defensive candidate among a set of push indices.
+     *
+     * <p><b>What it is for:</b> Core search routine used by calculateDefensiveMove(...) for:
+     * <ul>
+     *   <li>normal defense search (valid push indices), and</li>
+     *   <li>optional push-fixed defense search (valid fixed indices) when {@code isPushFixedMode} is {@code true}.</li>
+     * </ul>
+     *
+     * <p><b>What it does per candidate (push index, direction, rotation):</b>
+     * <ul>
+     *   <li>Skips illegal pushes via {@link AiContractUtil#canShift(GameBoard, int, Direction)} and reverse pushes via
+     *       {@link BoardSimulationHelper#isReversePush(GameBoard, int, Direction)}.</li>
+     *   <li>Builds a rotated spare {@link Tile} by rotating entrances with
+     *       {@link BoardSimulationHelper#calculateRotatedEntrances(Direction[], int)} and copying treasure/bonus flags.</li>
+     *   <li>Computes positions after the push for AI and opponents with
+     *       {@link BoardSimulationHelper#calculatePositionAfterPush(Coordinates, int, Direction, int, int)}.</li>
+     *   <li>Per dangerous opponent:
+     *     <ul>
+     *       <li>Checks whether a direct path to home exists after the candidate push using
+     *           {@code AiPathFindingService.findPathAfterVirtualPushWithTile(...)}; such candidates are discarded.</li>
+     *       <li>Checks whether the opponent can win next turn via
+     *           {@link OpponentThreatDetector#canOpponentWinAfterThisPush(GameBoard, int, Direction, int, PlayerState, Coordinates)}.</li>
+     *     </ul>
+     *   </li>
+     *   <li>Computes a defense score with a strong penalty if any opponent can win next turn; otherwise rewards safety.</li>
+     *   <li>Optionally adds small secondary scoring for AI progress towards its own target (treasure or home) and selects a
+     *       move target using {@link MoveTargetHelper#findBestUnoccupiedPositionAfterPush(GameStateEventPayload, List, Coordinates, String, int, Direction, Coordinates)}.</li>
+     * </ul>
+     *
+     * <p><b>Selection:</b> Chooses the candidate with the highest score; ties prefer {@code safe} candidates.</p>
+     *
+     * <p><b>Final guard:</b> After selecting the best candidate, ensures the chosen move target is not occupied after the push
+     * using {@link MoveTargetHelper#isPositionOccupiedAfterPush(GameStateEventPayload, Coordinates, String, int, Direction)}.
+     * If occupied, it falls back to the AI position after the selected push.</p>
+     *
+     * @param game the current game state payload
+     * @param board the current game board
+     * @param myPlayerId the AI player's id
+     * @param dangerousOpponents list of opponents considered threatening (evaluated for defensive checks)
+     * @param pushIndices push indices to evaluate (normal or fixed indices)
+     * @param myTargetTreasure the AI's current target treasure id; may be {@code null}
+     * @param myHomePosition the AI's home position
+     * @param currentPos the AI's current position
+     * @param isPushFixedMode whether this search is performed for the PUSH_FIXED variant (parameter is informational)
+     * @return the best {@link DefenseBest} found, or {@code null} if no legal candidate exists
+     */
     private DefenseBest findBestDefensiveTurn(
             GameStateEventPayload game,
             GameBoard board,
             String myPlayerId,
             List<PlayerState> dangerousOpponents,
             List<Integer> pushIndices,
-            Treasure myTargetTreasure,
+            Integer myTargetTreasure,
             Coordinates myHomePosition,
             Coordinates currentPos,
             boolean isPushFixedMode
@@ -148,7 +230,7 @@ public class DefensiveMoveCalculator {
 
                 for (int rotations = 0; rotations < 4; rotations++) {
 
-                    // Build rotated spare tile (like in your current code)
+                    // Build rotated spare tile
                     Direction[] rotatedEntrances =
                             boardSimulationHelper.calculateRotatedEntrances(spare.getEntrances(), rotations);
 
@@ -156,14 +238,14 @@ public class DefensiveMoveCalculator {
                     rotatedSpareTile.setEntrances(rotatedEntrances);
                     rotatedSpareTile.setTreasure(spare.getTreasure());
                     rotatedSpareTile.setBonus(spare.getBonus());
-                    rotatedSpareTile.setIsFixed(false); // oder spare.getIsFixed() wenn du willst
+                    rotatedSpareTile.setIsFixed(false);
 
                     // AI position after this push
                     Coordinates aiPosAfterPush = boardSimulationHelper.calculatePositionAfterPush(
                             currentPos, pushIndex, pushDirection, board.getRows(), board.getCols()
                     );
 
-                    // ----- Threat evaluation (Worst-case over all dangerous opponents) -----
+
                     boolean opensDirectWin = false;
                     boolean allowsWinInOnePush = false;
 
@@ -175,7 +257,7 @@ public class DefensiveMoveCalculator {
                                 oppPos, pushIndex, pushDirection, board.getRows(), board.getCols()
                         );
 
-                        // CHECK 1: "Direct" path exists after our push (opponent can keep it with a harmless push)
+                        // CHECK 1: "Direct" path exists after our push
                         List<Coordinates> directPath = AiPathFindingService.findPathAfterVirtualPushWithTile(
                                 board, pushIndex, pushDirection, rotatedSpareTile,
                                 oppAfterPush, oppHome
@@ -194,7 +276,6 @@ public class DefensiveMoveCalculator {
 
                         if (canWinNextTurn) {
                             allowsWinInOnePush = true;
-                            // do NOT break; check other opponents too (worst-case)
                         }
                     }
 
@@ -203,7 +284,7 @@ public class DefensiveMoveCalculator {
                         continue;
                     }
 
-                    // ----- Base scoring -----
+
                     int defenseScore = 0;
 
                     // Huge penalty if any opponent can win next turn
@@ -213,7 +294,7 @@ public class DefensiveMoveCalculator {
                         defenseScore += 10_000; // reward "safe" candidates
                     }
 
-                    // ----- AI progress scoring (only secondary) -----
+                    // AI progress scoring (only secondary)
                     Coordinates targetPosAfterPush = null;
 
                     if (myTargetTreasure != null) {
@@ -226,7 +307,7 @@ public class DefensiveMoveCalculator {
                             );
                         }
                     } else {
-                        // All treasures collected -> go home (fixed edge)
+                        // All treasures collected -> go home
                         targetPosAfterPush = myHomePosition;
                     }
 
