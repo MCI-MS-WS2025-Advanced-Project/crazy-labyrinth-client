@@ -26,6 +26,7 @@ import javafx.scene.shape.Rectangle;
 import javafx.util.Duration;
 import labyrinth.contracts.models.*;
 import labyrinth.contracts.models.RankingEntry;
+import lombok.extern.slf4j.Slf4j;
 import mci.dibse.crazylabyrinth.client.NavigationController;
 import mci.dibse.crazylabyrinth.client.domain.context.ApplicationEvents;
 import mci.dibse.crazylabyrinth.client.domain.model.enums.Theme;
