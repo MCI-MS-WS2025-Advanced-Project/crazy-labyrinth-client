@@ -71,7 +71,7 @@ public class GameServerDashboardViewModel extends BaseViewModel
         this.navigationStateViewModel = navigationStateViewModel;
     }
 
-    // todo test
+
     /**
      * Dispose items and clear server state.
      */

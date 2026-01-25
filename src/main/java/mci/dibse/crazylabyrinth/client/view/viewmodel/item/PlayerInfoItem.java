@@ -125,6 +125,6 @@ public class PlayerInfoItem extends BaseItem<PlayerInfo> {
      */
     @Override
     protected void disposeItem() {
-        // todo?
+        // nothing to do here
     }
 }

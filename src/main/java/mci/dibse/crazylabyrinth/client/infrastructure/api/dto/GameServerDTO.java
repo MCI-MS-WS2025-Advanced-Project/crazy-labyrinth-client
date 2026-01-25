@@ -47,12 +47,7 @@ public class GameServerDTO {
 
     @NotNull private GameStatus status;
 
-    // TODO: keep as Instant here & format to readable String in frontend?
-    /*
-       type: string
-       format: date-time
-       example: "2025-10-07T14:12:00Z"
-    */
+
     @NotNull private Instant lastSeen;
 
     public GameServerDTO() {}

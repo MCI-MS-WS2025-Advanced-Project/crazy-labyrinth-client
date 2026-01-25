@@ -96,7 +96,6 @@ public class ServerEventService {
      */
     private void handleError(ActionErrorEventPayload actionError) {
         log.debug("Received action error: {}", actionError);
-        // todo
         applicationEventPublisher.publishEvent(actionError);
     }
 
