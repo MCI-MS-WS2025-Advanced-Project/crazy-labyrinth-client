@@ -25,8 +25,8 @@ class GameServerDashboardControllerTest {
     }
 
     @Test
-    @DisplayName("UT-VIEW-05 - GameServerDashboardController initialization path")
-    void testDashboardInitialization_UT_VIEW_05() throws Exception {
+    @DisplayName("UT-VIEW-02 - GameServerDashboardController initialization path")
+    void testDashboardInitialization_UT_VIEW_02() throws Exception {
         // GIVEN: Dependencies are mocked
         GameServerDashboardViewModel mockVM = mock(GameServerDashboardViewModel.class);
         NavigationStateViewModel mockNav = mock(NavigationStateViewModel.class);
@@ -60,6 +60,6 @@ class GameServerDashboardControllerTest {
 
         // THEN: Successful path coverage
         assertNotNull(controller);
-        System.out.println("UT-VIEW-05 Result: Dashboard initialized.");
+        System.out.println("UT-VIEW-02 Result: Dashboard initialized.");
     }
 }
