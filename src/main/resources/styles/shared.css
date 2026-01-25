@@ -82,6 +82,12 @@
 .pill-button:hover { -fx-background-color: linear-gradient(to bottom, #ffffff, #e4ecf6); }
 .pill-button:pressed { -fx-background-color: linear-gradient(to bottom, #dde6f1, #cfd8e6); }
 
+.ai-on {
+    -fx-border-color: #00c853;
+    -fx-border-width: 2;
+    -fx-font-weight: bold;
+}
+
 /* TableView styling */
 .table-view {
     -fx-background-color: transparent;

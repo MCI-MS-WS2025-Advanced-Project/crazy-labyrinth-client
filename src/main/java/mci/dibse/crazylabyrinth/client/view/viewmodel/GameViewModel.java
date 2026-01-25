@@ -27,6 +27,8 @@ import mci.dibse.crazylabyrinth.client.infrastructure.util.ResultsPlayerInfoLook
 import mci.dibse.crazylabyrinth.client.service.*;
 import mci.dibse.crazylabyrinth.client.view.viewmodel.item.*;
 import mci.dibse.crazylabyrinth.client.view.viewmodel.navigation.NavigationStateViewModel;
+import labyrinth.contracts.models.GameStateEventPayload;
+import labyrinth.contracts.models.Treasure;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
@@ -43,6 +45,12 @@ public class GameViewModel extends BaseViewModel implements PlayerConnectedAckLi
     private ClientCommandService clientCommandService;
     private final TimerService timerService;
     @Getter private boolean nextTreasureMightNotBeAvailableYet = true;
+
+    private final SimpleObjectProperty<GameStateEventPayload> lastGameStateProperty = new SimpleObjectProperty<>();
+
+    public GameStateEventPayload getLastGameState() {
+        return lastGameStateProperty.get();
+    }
 
     @Getter private GameBoardItem gameBoardItem;
     @Getter private List<PlayerStateItem> playerStatesSorted = new ArrayList<>();
@@ -356,8 +364,11 @@ public class GameViewModel extends BaseViewModel implements PlayerConnectedAckLi
      */
     @EventListener
     public void handleGameStateEvent(GameStateEventPayload gameState) {
+        if (gameState == null) return;
         Runnable task =
                 () -> {
+                    lastGameStateProperty.set(gameState);
+
                     if (EventType.GAME_STARTED.equals(gameState.getType())) {
                         gameStarted(gameState);
                         return;
@@ -566,6 +577,18 @@ public class GameViewModel extends BaseViewModel implements PlayerConnectedAckLi
     public boolean isCurrentTurnTimeSet() {
         return currentTurnInfoItem != null;
     }
+
+
+    public Treasure getCurrentTargetTreasureForAi() {
+        TreasureItem item = nextTreasureItemProperty.get();
+        if (item == null) return null;
+
+        Treasure t = new Treasure();
+        t.setId(item.getId());
+        t.setName(item.getName());
+        return t;
+    }
+
 
     /**
      * Decide whether to run custom cleanup on navigation changes.
