@@ -14,7 +14,6 @@ import mci.dibse.crazylabyrinth.client.view.viewmodel.navigation.NavigationState
 import mci.dibse.crazylabyrinth.client.view.viewmodel.item.GameBoardItem;
 import mci.dibse.crazylabyrinth.client.view.viewmodel.item.PlayerStateItem;
 import mci.dibse.crazylabyrinth.client.infrastructure.util.ScreenResolutionProperties;
-import labyrinth.contracts.models.TurnState;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -29,16 +28,22 @@ class GameStateControllerTest {
 
     @BeforeAll
     static void initToolkit() {
-        try { com.sun.javafx.application.PlatformImpl.startup(() -> {}); } catch (Exception ignored) {}
+        // Check if we are running in a headless environment (CI)
+        // Most CI runners set 'headless' or 'GITHUB_ACTIONS'
+        boolean isCi = System.getenv("GITHUB_ACTIONS") != null;
+        if (isCi) {
+            System.setProperty("glass.platform", "Monocle");
+            System.setProperty("monocle.platform", "Headless");
+            System.setProperty("prism.order", "sw");
+        }
+
+        try {
+            com.sun.javafx.application.PlatformImpl.startup(() -> {});
+        } catch (IllegalStateException e) {
+            // Toolkit already initialized
+        }
     }
 
-    /**
-     * UT-VIEW-04 - GameStateController initialization path
-     * Musskriterium: C4
-     * Priorität: P1
-     * Severity: High
-     * Testobjekt: GameStateController
-     */
     @Test
     @DisplayName("UT-VIEW-04 - GameStateController initialization path")
     void testControllerInitialization_UT_VIEW_04() throws Exception {
@@ -52,7 +57,6 @@ class GameStateControllerTest {
         // GIVEN: Required properties are initialized to avoid NPEs
         when(mockNav.getCurrentScreenProperty()).thenReturn(new SimpleObjectProperty<>());
         when(mockVM.getCurrentPlayerIdProperty()).thenReturn(new SimpleStringProperty("p1"));
-        when(mockVM.getCurrentTurnStateProperty()).thenReturn(new SimpleObjectProperty<>(TurnState.WAITING_FOR_PUSH));
         when(mockVM.getTurnTimeoutProperty()).thenReturn(new SimpleBooleanProperty(false));
         when(mockVM.getPendingRotationProperty()).thenReturn(new SimpleBooleanProperty(false));
         when(mockVM.getPlayerStatesSorted()).thenReturn(new ArrayList<>());
