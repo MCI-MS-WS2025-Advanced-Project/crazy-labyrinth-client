@@ -47,7 +47,6 @@ public class GameServerDTO {
 
     @NotNull private GameStatus status;
 
-
     @NotNull private Instant lastSeen;
 
     public GameServerDTO() {}

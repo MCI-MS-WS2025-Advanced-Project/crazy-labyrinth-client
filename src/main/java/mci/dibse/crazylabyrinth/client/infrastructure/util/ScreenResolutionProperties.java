@@ -106,7 +106,7 @@ public class ScreenResolutionProperties {
      */
     public void initUiScaling(ResolutionProperties props) {
         screenHeight = height;
-       double  screenWidth = width;
+        double screenWidth = width;
 
         if (!primaryStage.isFullScreen() && !borderless) {
             isWindowDecorated = true;
@@ -250,11 +250,8 @@ public class ScreenResolutionProperties {
         props.root.setMaxSize(offsetW, offsetH);
         props.viewport.setMaxSize(offsetW, offsetH);
 
-
-
         double scaleX = availableW.get() / offsetW;
         double scaleY = availableH.get() / offsetH;
-
 
         return new ScaleRatio(scaleX, scaleY, Math.min(scaleX, scaleY));
     }

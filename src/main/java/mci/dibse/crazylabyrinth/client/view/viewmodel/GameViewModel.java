@@ -368,9 +368,8 @@ public class GameViewModel extends BaseViewModel implements PlayerConnectedAckLi
                 };
         JavaFXUtils.runOnFxThread(task);
 
-        //cache player info for later lookup in lobby
+        // cache player info for later lookup in lobby
         resultsPlayerInfoLookupHelper.cachePlayerInfoFromPlayerStates(gameState.getPlayers());
-
     }
 
     /**
@@ -551,7 +550,8 @@ public class GameViewModel extends BaseViewModel implements PlayerConnectedAckLi
      * @return remaining turn time in seconds
      */
     public Long getRemainingTurnTimeInSeconds() {
-        if (timerService.getCurrentServerTimeWithGameServerOffset() == null || currentTurnInfoItem.getTurnEndTime() == null) return 0L;
+        if (timerService.getCurrentServerTimeWithGameServerOffset() == null
+                || currentTurnInfoItem.getTurnEndTime() == null) return 0L;
         return Duration.between(
                         timerService.getCurrentServerTimeWithGameServerOffset(),
                         currentTurnInfoItem.getTurnEndTime())

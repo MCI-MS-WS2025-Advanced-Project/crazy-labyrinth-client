@@ -189,8 +189,6 @@ public class GameStateController extends BaseViewCleanup {
     private final AnimationService animationService;
     private AnimationInitializerService animationInitializerService;
 
-
-
     @Autowired
     public GameStateController(
             NavigationStateViewModel vm,
@@ -202,7 +200,6 @@ public class GameStateController extends BaseViewCleanup {
         this.screenResolutionProperties = screenResolutionProperties;
         this.animationService = new AnimationService();
         this.navigationController = navigationController;
-
     }
 
     /**
@@ -1611,7 +1608,6 @@ public class GameStateController extends BaseViewCleanup {
         StackPane.setAlignment(bonusBadge, Pos.TOP_RIGHT);
         return bonusBadge;
     }
-
 
     /**
      * Initialize bonus UI bindings and listeners.

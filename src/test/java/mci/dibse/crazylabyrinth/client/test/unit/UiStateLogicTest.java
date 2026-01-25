@@ -34,7 +34,8 @@ class UiStateLogicTest {
         }
         try {
             com.sun.javafx.application.PlatformImpl.startup(() -> {});
-        } catch (IllegalStateException ignored) {}
+        } catch (IllegalStateException ignored) {
+        }
     }
 
     @BeforeEach
@@ -43,15 +44,19 @@ class UiStateLogicTest {
         when(navMock.getCurrentScreenProperty())
                 .thenReturn(new SimpleObjectProperty<>(NavigationStateViewModel.ScreenId.LOBBY));
 
-        // Use a latch to ensure ViewModel is safely created on the FX thread if it initializes UI properties
+        // Use a latch to ensure ViewModel is safely created on the FX thread if it initializes UI
+        // properties
         CountDownLatch latch = new CountDownLatch(1);
-        Platform.runLater(() -> {
-            lobbyViewModel = new LobbyViewModel(navMock, mock(LobbyService.class), null);
-            latch.countDown();
-        });
+        Platform.runLater(
+                () -> {
+                    lobbyViewModel =
+                            new LobbyViewModel(navMock, mock(LobbyService.class), null, null);
+                    latch.countDown();
+                });
         latch.await(5, TimeUnit.SECONDS);
 
-        GameInfoRecord mockInfo = new GameInfoRecord(URI.create("ws://localhost:8080"), "TestServer", "Player1", "4");
+        GameInfoRecord mockInfo =
+                new GameInfoRecord(URI.create("ws://localhost:8080"), "TestServer", "Player1", "4");
         ReflectionTestUtils.setField(lobbyViewModel, "gameInfo", mockInfo);
     }
 
@@ -64,14 +69,20 @@ class UiStateLogicTest {
         ReflectionTestUtils.setField(lobbyViewModel, "clientPlayer", admin);
 
         // WHEN: Event arrives
-        labyrinth.contracts.models.LobbyStateEventPayload payload = new labyrinth.contracts.models.LobbyStateEventPayload();
-        payload.setPlayers(new labyrinth.contracts.models.PlayerInfo[] { createPlayer("Admin", true), createPlayer("P2", false) });
+        labyrinth.contracts.models.LobbyStateEventPayload payload =
+                new labyrinth.contracts.models.LobbyStateEventPayload();
+        payload.setPlayers(
+                new labyrinth.contracts.models.PlayerInfo[] {
+                    createPlayer("Admin", true), createPlayer("P2", false)
+                });
 
         // Execute on FX thread and wait for completion to avoid pipeline hangs
         runOnFxThread(() -> lobbyViewModel.onLobbyStateUpdated(payload));
 
         // THEN: Verify state [cite: 236]
-        assertTrue(lobbyViewModel.getPlayersListProperty().size() >= 2, "Condition (2 players) must be met");
+        assertTrue(
+                lobbyViewModel.getPlayersListProperty().size() >= 2,
+                "Condition (2 players) must be met");
         System.out.println("UT-GAMESTATE-01: Verified.");
     }
 
@@ -82,22 +93,26 @@ class UiStateLogicTest {
         admin.setId("Admin");
         ReflectionTestUtils.setField(lobbyViewModel, "clientPlayer", admin);
 
-        labyrinth.contracts.models.LobbyStateEventPayload payload = new labyrinth.contracts.models.LobbyStateEventPayload();
-        payload.setPlayers(new labyrinth.contracts.models.PlayerInfo[] { createPlayer("Admin", true) });
+        labyrinth.contracts.models.LobbyStateEventPayload payload =
+                new labyrinth.contracts.models.LobbyStateEventPayload();
+        payload.setPlayers(
+                new labyrinth.contracts.models.PlayerInfo[] {createPlayer("Admin", true)});
 
         runOnFxThread(() -> lobbyViewModel.onLobbyStateUpdated(payload));
 
         // THEN: Verify state [cite: 246]
-        assertFalse(lobbyViewModel.getPlayersListProperty().size() >= 2, "Disabled for < 2 players");
+        assertFalse(
+                lobbyViewModel.getPlayersListProperty().size() >= 2, "Disabled for < 2 players");
         System.out.println("UT-GAMESTATE-02: Verified.");
     }
 
     private void runOnFxThread(Runnable action) throws InterruptedException {
         CountDownLatch latch = new CountDownLatch(1);
-        Platform.runLater(() -> {
-            action.run();
-            latch.countDown();
-        });
+        Platform.runLater(
+                () -> {
+                    action.run();
+                    latch.countDown();
+                });
         if (!latch.await(5, TimeUnit.SECONDS)) {
             throw new RuntimeException("FX Thread timed out during test execution");
         }

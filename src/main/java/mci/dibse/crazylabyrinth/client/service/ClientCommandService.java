@@ -251,7 +251,4 @@ public class ClientCommandService {
             throw new GeneralUiException("Failed to send  use swap command");
         }
     }
-
-
-
 }

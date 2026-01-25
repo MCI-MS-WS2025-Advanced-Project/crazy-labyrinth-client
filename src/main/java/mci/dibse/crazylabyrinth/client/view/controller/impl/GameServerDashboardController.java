@@ -129,7 +129,6 @@ public class GameServerDashboardController extends BaseViewCleanup {
         screenResolutionProperties.initUiScaling(props);
     }
 
-
     /**
      * Clean up bindings and table state on view exit.
      */

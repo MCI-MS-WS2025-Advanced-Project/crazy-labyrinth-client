@@ -69,7 +69,6 @@ public class LobbyViewModel extends BaseViewModel
     private GameOverItem gameOverItem = null;
     private ChangeListener<Boolean> resultsListener;
 
-
     private ResultsPlayerInfoLookupHelper playerInfoLookupMap;
 
     @Autowired
@@ -281,7 +280,6 @@ public class LobbyViewModel extends BaseViewModel
             return;
         }
         lobbyStateItem.updateFrom(lobbyState);
-
     }
 
     /**
@@ -446,8 +444,8 @@ public class LobbyViewModel extends BaseViewModel
         if (playerOptional.isPresent()) {
             return playerOptional.get().getName();
         }
-       Optional<String> name=  lookUpQueueForPlayerInfo(item);
-       if (name.isPresent()) return name.get();
+        Optional<String> name = lookUpQueueForPlayerInfo(item);
+        if (name.isPresent()) return name.get();
 
         log.info("Player with id {} not found in lobby", item);
         return item;
@@ -455,7 +453,6 @@ public class LobbyViewModel extends BaseViewModel
 
     private Optional<String> lookUpQueueForPlayerInfo(String id) {
         return playerInfoLookupMap.lookUpCachedPlayerInfo(id);
-
     }
 
     /**

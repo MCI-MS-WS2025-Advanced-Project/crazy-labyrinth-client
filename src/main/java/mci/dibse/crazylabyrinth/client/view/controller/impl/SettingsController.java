@@ -25,7 +25,6 @@ public class SettingsController {
     @FXML private CheckBox fullscreenCheckBox;
     @FXML private CheckBox borderlessCheckBox;
 
-
     private boolean saved = false;
     private String selectedResolution;
     private boolean scaleRatio;

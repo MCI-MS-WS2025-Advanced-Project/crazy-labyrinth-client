@@ -1,5 +1,8 @@
 package mci.dibse.crazylabyrinth.client.test.unit;
 
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
 import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -18,9 +21,6 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
-
-import static org.mockito.Mockito.*;
-import static org.junit.jupiter.api.Assertions.*;
 
 class LobbyControllerTest {
 
@@ -59,11 +59,13 @@ class LobbyControllerTest {
         when(mockNavState.getCurrentScreenProperty()).thenReturn(new SimpleObjectProperty<>());
 
         // GIVEN: Mocking ViewModel Properties to prevent NPEs during JavaFX binding
-        when(mockLobbyVM.getPlayersListProperty()).thenReturn(new SimpleListProperty<>(FXCollections.observableArrayList()));
+        when(mockLobbyVM.getPlayersListProperty())
+                .thenReturn(new SimpleListProperty<>(FXCollections.observableArrayList()));
         when(mockLobbyVM.isClientAdmin()).thenReturn(true);
         when(mockLobbyVM.getMaxPlayersProperty()).thenReturn(new SimpleStringProperty("4"));
         when(mockLobbyVM.getPlayerCountProperty()).thenReturn(new SimpleStringProperty("1"));
-        when(mockLobbyVM.getGameNameProperty()).thenReturn(new SimpleStringProperty("Test Labyrinth"));
+        when(mockLobbyVM.getGameNameProperty())
+                .thenReturn(new SimpleStringProperty("Test Labyrinth"));
         when(mockLobbyVM.getHasError()).thenReturn(new SimpleBooleanProperty(false));
         when(mockLobbyVM.getErrorMessage()).thenReturn(new SimpleStringProperty(""));
 
@@ -80,15 +82,25 @@ class LobbyControllerTest {
         when(mockLobbyVM.isDefaultBonusEnabled()).thenReturn(false);
 
         // WHEN: Instantiate Controller
-        LobbyController controller = new LobbyController(
-                mockNavState, mockLobbyVM, mockRes, mockGameVM, mockAchievementService, mockNavController);
+        LobbyController controller =
+                new LobbyController(
+                        mockNavState,
+                        mockLobbyVM,
+                        mockRes,
+                        mockGameVM,
+                        mockAchievementService,
+                        mockNavController);
 
         // GIVEN: Inject FXML fields manually using Reflection
         injectFxmlFields(controller);
 
         // THEN: Ensure initialize does not throw exceptions
-        assertDoesNotThrow(controller::initialize, "Initialization failed. Check field names or missing properties.");
-        System.out.println("UT-VIEW-04 Result: LobbyController successfully initialized. Symbol errors fixed.");
+        assertDoesNotThrow(
+                controller::initialize,
+                "Initialization failed. Check field names or missing properties.");
+        System.out.println(
+                "UT-VIEW-04 Result: LobbyController successfully initialized. Symbol errors"
+                        + " fixed.");
     }
 
     private void injectFxmlFields(LobbyController controller) {

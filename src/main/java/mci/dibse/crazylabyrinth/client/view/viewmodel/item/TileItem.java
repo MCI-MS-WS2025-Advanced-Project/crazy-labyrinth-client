@@ -121,8 +121,6 @@ public class TileItem extends BaseItem<Tile> {
         }
     }
 
-
-
     /**
      * Update the direction list after a rotation.
      *
