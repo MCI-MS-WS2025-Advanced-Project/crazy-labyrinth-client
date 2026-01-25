@@ -320,7 +320,6 @@ public class GameViewModel extends BaseViewModel implements PlayerConnectedAckLi
      */
     @Override
     public void cleanup() {
-        // todo?
         log.info("Cleanup GameViewModel");
         getSpareTileProperty().removeListener(spareTileListener);
         getCurrentTurnStateProperty().removeListener(turnStateChangeListener);
@@ -543,6 +542,7 @@ public class GameViewModel extends BaseViewModel implements PlayerConnectedAckLi
      * @return remaining turn time in seconds
      */
     public Long getRemainingTurnTimeInSeconds() {
+        if (timerService.getCurrentServerTimeWithGameServerOffset() == null || currentTurnInfoItem.getTurnEndTime() == null) return 0L;
         return Duration.between(
                         timerService.getCurrentServerTimeWithGameServerOffset(),
                         currentTurnInfoItem.getTurnEndTime())

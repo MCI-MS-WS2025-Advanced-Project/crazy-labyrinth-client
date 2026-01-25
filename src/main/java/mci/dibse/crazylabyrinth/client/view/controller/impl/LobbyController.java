@@ -50,7 +50,7 @@ public class LobbyController extends BaseViewCleanup {
     private final NavigationController navigationController;
     public BooleanProperty clientAdmin = new SimpleBooleanProperty(false);
 
-    // todo add results
+
     @FXML public VBox resultsBox;
 
     @FXML public TableView<PlayerInfoItem> playerTable;

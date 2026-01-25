@@ -97,7 +97,7 @@ public class TileItem extends BaseItem<Tile> {
 
     @Override
     protected void disposeItem() {
-        // todo?
+        // nothing to do here
     }
 
     /**
@@ -121,34 +121,7 @@ public class TileItem extends BaseItem<Tile> {
         }
     }
 
-    // todo not needed anymore? rotation is done on server via command
-    /**
-     * Rotate the tile left and update image and directions.
-     */
-    public void onLeftRotation() {
-        Runnable apply =
-                () -> {
-                    Number rotation = this.rotation.get();
-                    this.rotation.set((rotation.intValue() - 90) % 360);
-                    updateDirectionsonRotation(false);
-                    updateImageFromRotation();
-                };
-        runOnFxThread(apply);
-    }
 
-    /**
-     * Rotate the tile right and update image and directions.
-     */
-    public void onRightRotation() {
-        Runnable apply =
-                () -> {
-                    Number rotation = this.rotation.get();
-                    this.rotation.set((rotation.intValue() + 90) % 360);
-                    updateDirectionsonRotation(true);
-                    updateImageFromRotation();
-                };
-        runOnFxThread(apply);
-    }
 
     /**
      * Update the direction list after a rotation.

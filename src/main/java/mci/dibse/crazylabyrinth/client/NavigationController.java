@@ -209,8 +209,8 @@ public class NavigationController {
      * Set minimum and initial stage sizes.
      */
     private void setStageMinMaxSizes() {
-        primaryStage.setMinWidth(screenResolutionProperties.getMinViewWidth());
-        primaryStage.setMinHeight(screenResolutionProperties.getMinViewHeight());
+        primaryStage.setMinWidth(screenResolutionProperties.getWidth());
+        primaryStage.setMinHeight(screenResolutionProperties.getHeight());
 
         if (!startUp) return;
         Rectangle2D bounds = Screen.getPrimary().getBounds(); // full monitor

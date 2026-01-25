@@ -334,7 +334,7 @@ public class GameStateController extends BaseViewCleanup {
      */
     @Override
     public void cleanup() {
-        // todo
+
         playerTurnLabel.textProperty().unbind();
         playerTurnLabel.graphicProperty().unbind();
         idToPlayerLabel.values().forEach(l -> l.textProperty().unbind());
@@ -824,7 +824,6 @@ public class GameStateController extends BaseViewCleanup {
         Ratio screenRation = screenResolutionProperties.getAspectRatio();
         switch (screenRation) {
             case FOUR_THREE -> {
-                System.out.println("FOUR_THREE");
                 leftGameGridColomn.setPercentWidth(18);
                 middleGameGridColomn.setPercentWidth(64);
                 rightGameGridColomn.setPercentWidth(18);
@@ -850,7 +849,7 @@ public class GameStateController extends BaseViewCleanup {
      * @param screenRation the current screen aspect ratio
      */
     private void setupStyleBonusBadge(Ratio screenRation) {
-        System.out.println("setupStyleBonusBadge");
+        log.debug("Setting up bonus badge style for screen ratio {}", screenRation);
         int size = (screenRation == Ratio.FOUR_THREE) ? 14 : 20;
         String styleClass =
                 (screenRation == Ratio.FOUR_THREE) ? "bonus-label-image" : "bonus-label-image-wide";
@@ -1497,7 +1496,6 @@ public class GameStateController extends BaseViewCleanup {
             // Send command to server - animation will be triggered by server response
             gameViewModel.pushTileCommand(data);
         } else {
-            // todo rework error display
             showAlertModal(
                     "Invalid push",
                     "Invalid push",
@@ -1611,12 +1609,6 @@ public class GameStateController extends BaseViewCleanup {
         return bonusBadge;
     }
 
-    /**
-     * Initialize the game counter UI (placeholder).
-     */
-    private void initGameCounter() {
-        // todo how is the set timer send from server?
-    }
 
     /**
      * Initialize bonus UI bindings and listeners.

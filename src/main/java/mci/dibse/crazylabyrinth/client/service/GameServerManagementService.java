@@ -230,7 +230,6 @@ public class GameServerManagementService {
                 UUID id = incoming.getId();
                 toRemove.remove(incoming.getId());
                 GameServer existing = servers.get(id);
-                // TODO what can server change?
                 if (existing != null) {
                     existing.setCurrentPlayerCount(incoming.getCurrentPlayerCount());
                     existing.setStatus(incoming.getStatus());

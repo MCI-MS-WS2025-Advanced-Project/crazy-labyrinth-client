@@ -252,13 +252,6 @@ public class ClientCommandService {
         }
     }
 
-    // todo
-    /*
-        case CommandType.TOGGLE_AI -> mapper.writeValueAsString((ToggleAiCommandPayload) payload);
-           case CommandType.USE_BEAM -> mapper.writeValueAsString((UseBeamCommandPayload) payload);
-           case CommandType.USE_SWAP -> mapper.writeValueAsString((UseSwapCommandPayload) payload);
-           case CommandType.USE_PUSH_TWICE -> mapper.writeValueAsString((UsePushTwiceCommandPayload) payload);
 
-    */
 
 }

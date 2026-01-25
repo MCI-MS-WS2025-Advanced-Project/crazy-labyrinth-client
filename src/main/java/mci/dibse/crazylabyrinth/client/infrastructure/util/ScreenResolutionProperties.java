@@ -106,35 +106,37 @@ public class ScreenResolutionProperties {
      */
     public void initUiScaling(ResolutionProperties props) {
         screenHeight = height;
+       double  screenWidth = width;
 
         if (!primaryStage.isFullScreen() && !borderless) {
             isWindowDecorated = true;
             screenHeight = (int) (height - heightWithRegardsToWindowDecoration());
-            width = (int) (width - widthWithRegardsToWindowDecoration());
+            screenWidth = (int) (width - widthWithRegardsToWindowDecoration());
         } else {
             isWindowDecorated = false;
         }
 
         double finalScreenHeight = screenHeight;
+        double finalScreenWidth = screenWidth;
         Runnable apply =
                 () -> {
 
                     // Center the root inside the StackPane
                     StackPane.setAlignment(props.root, Pos.CENTER);
-                    props.viewport.setPrefWidth(width);
-                    props.root.setPrefWidth(width);
+                    props.viewport.setPrefWidth(finalScreenWidth);
+                    props.root.setPrefWidth(finalScreenWidth);
 
                     double rootHeight =
                             primaryStage.getHeight() - primaryStage.getScene().getHeight();
                     props.viewport.setPrefHeight(rootHeight);
 
                     props.viewport.setMinSize(Region.USE_PREF_SIZE, Region.USE_PREF_SIZE);
-                    props.viewport.setMaxSize(width, finalScreenHeight);
+                    props.viewport.setMaxSize(finalScreenWidth, finalScreenHeight);
 
                     props.root.setPrefHeight(rootHeight);
 
                     props.root.setMinSize(Region.USE_PREF_SIZE, Region.USE_PREF_SIZE);
-                    props.root.setMaxSize(width, finalScreenHeight);
+                    props.root.setMaxSize(finalScreenWidth, finalScreenHeight);
 
                     // Available content area inside the viewport, excluding insets
                     DoubleBinding availableW =
@@ -248,8 +250,11 @@ public class ScreenResolutionProperties {
         props.root.setMaxSize(offsetW, offsetH);
         props.viewport.setMaxSize(offsetW, offsetH);
 
+
+
         double scaleX = availableW.get() / offsetW;
         double scaleY = availableH.get() / offsetH;
+
 
         return new ScaleRatio(scaleX, scaleY, Math.min(scaleX, scaleY));
     }
