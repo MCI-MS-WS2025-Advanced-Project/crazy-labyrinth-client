@@ -47,7 +47,6 @@ public class LobbyViewModel extends BaseViewModel
     @Value("${game.default.treasure.count.per.player:6}")
     private int GAME_DEFAULT_TREASURE_COUNT_PER_PLAYER;
 
-
     @Value("${game.default.board.size:7}")
     private int GAME_DEFAULT_BOARD_SIZE;
 
@@ -453,6 +452,4 @@ public class LobbyViewModel extends BaseViewModel
             ReadOnlyObjectProperty<Comparator<RankingEntry>> comparatorReadOnlyObjectProperty) {
         gameOverItem.bindSortedRankingsComparator(comparatorReadOnlyObjectProperty);
     }
-
-
 }

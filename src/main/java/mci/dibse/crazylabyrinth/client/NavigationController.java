@@ -130,8 +130,6 @@ public class NavigationController {
         screenResolutionProperties.setBorderless(settings.borderless());
         screenResolutionProperties.init();
 
-
-
         primaryStage.setFullScreen(settings.fullscreen());
 
         System.out.println("borderless: " + settings.borderless());

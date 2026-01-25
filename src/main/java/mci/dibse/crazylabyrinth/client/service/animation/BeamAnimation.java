@@ -83,6 +83,5 @@ public class BeamAnimation extends AbstractGameAnimation {
     }
 
     @Override
-    public void onCompleted() {
-    }
+    public void onCompleted() {}
 }

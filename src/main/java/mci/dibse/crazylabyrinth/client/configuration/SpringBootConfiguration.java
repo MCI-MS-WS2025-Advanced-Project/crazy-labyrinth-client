@@ -180,7 +180,8 @@ public class SpringBootConfiguration {
         var cfg = new PropertySourcesPlaceholderConfigurer();
         cfg.setIgnoreResourceNotFound(true);
         cfg.setLocations(
-                new org.springframework.core.io.FileSystemResource("./config/application.properties"),
+                new org.springframework.core.io.FileSystemResource(
+                        "./config/application.properties"),
                 new org.springframework.core.io.FileSystemResource("./application.properties"),
                 new ClassPathResource(APPLICATION_PROPERTIES),
                 new ClassPathResource(APPLICATION_DEV_PROPERTIES));
