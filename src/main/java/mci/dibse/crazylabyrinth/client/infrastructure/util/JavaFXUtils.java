@@ -78,14 +78,15 @@ public class JavaFXUtils {
                     alert.setHeaderText(header);
                     alert.setContentText(content);
 
-                    alert.showAndWait().ifPresent(response -> {
-                        if (response == ButtonType.OK) {
-                            onConfirm.run();
-                        }
-                    });
+                    alert.showAndWait()
+                            .ifPresent(
+                                    response -> {
+                                        if (response == ButtonType.OK) {
+                                            onConfirm.run();
+                                        }
+                                    });
                 });
     }
-
 
     /**
      * Install a clip on a table view to hide partially visible rows.
@@ -96,17 +97,17 @@ public class JavaFXUtils {
      * @param <T> table item type
      */
     public static <T> Runnable setupTableClip(TableView<T> table, Double fixedCellSize) {
-       if (fixedCellSize != null) table.setFixedCellSize(fixedCellSize);
+        if (fixedCellSize != null) table.setFixedCellSize(fixedCellSize);
 
-       log.debug("FixedCellSize {}", table.getFixedCellSize());
+        log.debug("FixedCellSize {}", table.getFixedCellSize());
 
-
-        ChangeListener<Skin<?>> skinListener = (obs, oldSkin, newSkin) -> {
-            if (newSkin == null) {
-                return;
-            }
-            runOnFxThread(() -> installOrUpdateClip(table));
-        };
+        ChangeListener<Skin<?>> skinListener =
+                (obs, oldSkin, newSkin) -> {
+                    if (newSkin == null) {
+                        return;
+                    }
+                    runOnFxThread(() -> installOrUpdateClip(table));
+                };
 
         table.skinProperty().addListener(skinListener);
         if (table.getSkin() != null) {
@@ -116,20 +117,21 @@ public class JavaFXUtils {
         // Disposer: remove listener and cleanup
         return () -> {
             table.skinProperty().removeListener(skinListener);
-            Platform.runLater(() -> {
-                Node flow = table.lookup(".virtual-flow");
-                if (flow != null) {
-                    Node sheet = flow.lookup(".sheet");
-                    if (sheet != null) {
-                        Object clipObj = sheet.getProperties().remove(CLIP_KEY);
-                        if (clipObj instanceof Rectangle clip) {
-                            clip.widthProperty().unbind();
-                            clip.heightProperty().unbind();
-                            sheet.setClip(null);
+            Platform.runLater(
+                    () -> {
+                        Node flow = table.lookup(".virtual-flow");
+                        if (flow != null) {
+                            Node sheet = flow.lookup(".sheet");
+                            if (sheet != null) {
+                                Object clipObj = sheet.getProperties().remove(CLIP_KEY);
+                                if (clipObj instanceof Rectangle clip) {
+                                    clip.widthProperty().unbind();
+                                    clip.heightProperty().unbind();
+                                    sheet.setClip(null);
+                                }
+                            }
                         }
-                    }
-                }
-            });
+                    });
         };
     }
 
@@ -164,16 +166,17 @@ public class JavaFXUtils {
         clip.widthProperty().bind(flow.layoutBoundsProperty().map(Bounds::getWidth));
 
         // Height: floor to an integer number of rows so the last partial row is fully hidden
-        clip.heightProperty().bind(Bindings.createDoubleBinding(
-                () -> {
-                    Bounds b = flow.getLayoutBounds();
-                    double cellSize = table.getFixedCellSize();
-                    if (cellSize <= 0) return Math.max(0.0, b.getHeight());
-                    double h = Math.floor(b.getHeight() / cellSize) * cellSize;
-                    return Math.max(0.0, h);
-                },
-                flow.layoutBoundsProperty(),
-                table.fixedCellSizeProperty()
-        ));
+        clip.heightProperty()
+                .bind(
+                        Bindings.createDoubleBinding(
+                                () -> {
+                                    Bounds b = flow.getLayoutBounds();
+                                    double cellSize = table.getFixedCellSize();
+                                    if (cellSize <= 0) return Math.max(0.0, b.getHeight());
+                                    double h = Math.floor(b.getHeight() / cellSize) * cellSize;
+                                    return Math.max(0.0, h);
+                                },
+                                flow.layoutBoundsProperty(),
+                                table.fixedCellSizeProperty()));
     }
 }
