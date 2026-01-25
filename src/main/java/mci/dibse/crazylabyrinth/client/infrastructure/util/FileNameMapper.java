@@ -17,7 +17,6 @@ public class FileNameMapper {
 
     private static final Map<PlayerColor, String> PLAYER_NAMES = new HashMap<>();
 
-
     private static String UP_DOWN = "I0";
     private static String UP_RIGHT = "L0";
     private static String UP_DOWN_LEFT = "T0";
@@ -229,7 +228,6 @@ public class FileNameMapper {
     public static Theme getTheme() {
         return currentTheme;
     }
-
 
     /**
      * Update tile filename suffixes based on theme id.

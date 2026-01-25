@@ -121,7 +121,13 @@ public class LobbyController extends BaseViewCleanup {
     ChangeListener<Theme> themeChangeListener;
 
     @Autowired
-    public LobbyController(NavigationStateViewModel navState, LobbyViewModel lobbyViewModel, ScreenResolutionProperties screenResolutionProperties, GameViewModel gameViewModel, AchievementService achievementService, NavigationController navigationController) {
+    public LobbyController(
+            NavigationStateViewModel navState,
+            LobbyViewModel lobbyViewModel,
+            ScreenResolutionProperties screenResolutionProperties,
+            GameViewModel gameViewModel,
+            AchievementService achievementService,
+            NavigationController navigationController) {
         super(navState);
         this.lobbyViewModel = lobbyViewModel;
         this.screenResolutionProperties = screenResolutionProperties;
@@ -744,7 +750,6 @@ public class LobbyController extends BaseViewCleanup {
     public void onFullscreenToggleButtonClick(ActionEvent actionEvent) {
         navigationController.toogleFullScreen();
     }
-
 
     /*
     private Node createAchievementGraphicForPlayer(RankingEntry entry) {

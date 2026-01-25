@@ -1,5 +1,7 @@
 package mci.dibse.crazylabyrinth.client.view.controller.impl;
 
+import static labyrinth.contracts.models.CommandType.PUSH_TILE;
+
 import jakarta.annotation.Nullable;
 import java.time.OffsetDateTime;
 import java.util.*;
@@ -49,17 +51,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
-import static labyrinth.contracts.models.CommandType.PUSH_TILE;
-
 @Component
 @Slf4j
 public class GameStateController extends BaseViewCleanup {
 
-    private static final List<String> THEME_STYLE_CLASSES = List.of(
-            "theme-runehaven",
-            "theme-glowing-caves",
-            "theme-stone-catacombs",
-            "theme-emberforge");
+    private static final List<String> THEME_STYLE_CLASSES =
+            List.of(
+                    "theme-runehaven",
+                    "theme-glowing-caves",
+                    "theme-stone-catacombs",
+                    "theme-emberforge");
 
     private final NavigationController navigationController;
     @FXML public StackPane bottomBar;
@@ -266,19 +267,18 @@ public class GameStateController extends BaseViewCleanup {
 
     private void applyThemeStyleClass() {
         Theme theme = FileNameMapper.getTheme();
-        String themeClass = switch (theme) {
-            case RUNEHAVEN_LABYRINTH -> "theme-runehaven";
-            case GLOWING_CAVES -> "theme-glowing-caves";
-            case STONE_CATACOMBS -> "theme-stone-catacombs";
-            case EMBERFORGE_MAZE -> "theme-emberforge";
-        };
+        String themeClass =
+                switch (theme) {
+                    case RUNEHAVEN_LABYRINTH -> "theme-runehaven";
+                    case GLOWING_CAVES -> "theme-glowing-caves";
+                    case STONE_CATACOMBS -> "theme-stone-catacombs";
+                    case EMBERFORGE_MAZE -> "theme-emberforge";
+                };
         viewport.getStyleClass().removeAll(THEME_STYLE_CLASSES);
         if (!viewport.getStyleClass().contains(themeClass)) {
             viewport.getStyleClass().add(themeClass);
         }
     }
-
-
 
     /**
      * Initialize UI scaling based on screen resolution.
@@ -387,9 +387,9 @@ public class GameStateController extends BaseViewCleanup {
     public void handleSendCommandEvent(GameServerSocketService.SendCommand event) {
         CommandType command = event.commandType();
         switch (command) {
-            case PUSH_TILE, USE_PUSH_FIXED ->  {
+            case PUSH_TILE, USE_PUSH_FIXED -> {
                 toggleOrSetBonusButton(BONUS_TYPE.PUSH_FIXED, false);
-                if(PUSH_TILE.equals(command)) {
+                if (PUSH_TILE.equals(command)) {
                     if (gameViewModel.isPushTwiceTileBonusActive()) {
                         toggleOrSetBonusButton(BONUS_TYPE.PUSH_TWICE, false);
                     } else {
@@ -399,9 +399,9 @@ public class GameStateController extends BaseViewCleanup {
             }
             case USE_BEAM -> toggleOrSetBonusButton(BONUS_TYPE.BEAM, false);
             case USE_SWAP -> toggleOrSetBonusButton(BONUS_TYPE.SWAP, false);
-           case USE_PUSH_TWICE -> {
-               pushTwicePendingAction.set(true);
-           }
+            case USE_PUSH_TWICE -> {
+                pushTwicePendingAction.set(true);
+            }
         }
     }
 
@@ -767,12 +767,14 @@ public class GameStateController extends BaseViewCleanup {
 
         extraTileTreasure.setPreserveRatio(true);
 
-        extraTileTreasure.imageProperty().bind(
-                Bindings.createObjectBinding(
-                        () -> currentTile.getTreasureItem().getTreasureImage(),
-                        gameViewModel.getSpareTileProperty()));
+        extraTileTreasure
+                .imageProperty()
+                .bind(
+                        Bindings.createObjectBinding(
+                                () -> currentTile.getTreasureItem().getTreasureImage(),
+                                gameViewModel.getSpareTileProperty()));
 
-          //  ImageViewStyler.applyTreasureStylingToImageView(extraTileTreasure);
+        //  ImageViewStyler.applyTreasureStylingToImageView(extraTileTreasure);
 
         extraTileTreasure.setRotate(currentTile.getRotation().get().doubleValue());
 
@@ -837,27 +839,46 @@ public class GameStateController extends BaseViewCleanup {
     private void setupStyleBonusBadge(Ratio screenRation) {
         System.out.println("setupStyleBonusBadge");
         int size = (screenRation == Ratio.FOUR_THREE) ? 14 : 20;
-        String styleClass = (screenRation == Ratio.FOUR_THREE) ? "bonus-label-image" : "bonus-label-image-wide";
+        String styleClass =
+                (screenRation == Ratio.FOUR_THREE) ? "bonus-label-image" : "bonus-label-image-wide";
 
-        updateBadgeStyle(swapBonusBadge, swapBonusImage, bonusSwapCircle, bonusSwapClip, size, styleClass);
-        updateBadgeStyle(beamBonusBadge, beamBonusImage, bonusBeamCircle, bonusBeamClip, size, styleClass);
-        updateBadgeStyle(pushTwiceBonusBadge, pushTwiceBonusImage, bonusPushTwiceCircle, bonusPushTwiceClip, size, styleClass);
-        updateBadgeStyle(pushFixedBonusBadge, pushFixedBonusImage, bonusPushFixedCircle, bonusPushFixedClip, size, styleClass);
-
+        updateBadgeStyle(
+                swapBonusBadge, swapBonusImage, bonusSwapCircle, bonusSwapClip, size, styleClass);
+        updateBadgeStyle(
+                beamBonusBadge, beamBonusImage, bonusBeamCircle, bonusBeamClip, size, styleClass);
+        updateBadgeStyle(
+                pushTwiceBonusBadge,
+                pushTwiceBonusImage,
+                bonusPushTwiceCircle,
+                bonusPushTwiceClip,
+                size,
+                styleClass);
+        updateBadgeStyle(
+                pushFixedBonusBadge,
+                pushFixedBonusImage,
+                bonusPushFixedCircle,
+                bonusPushFixedClip,
+                size,
+                styleClass);
     }
-
 
     /**
      * Updates a specific bonus badge's dimensions, clipping, and CSS styling.
      */
-    private void updateBadgeStyle(StackPane badge, ImageView image, Circle circle, Circle clip, int size, String styleClass) {
+    private void updateBadgeStyle(
+            StackPane badge,
+            ImageView image,
+            Circle circle,
+            Circle clip,
+            int size,
+            String styleClass) {
         double radius = size / 2.0;
 
         badge.setPrefSize(size, size);
         badge.setMaxSize(size, size);
 
         // Update style classes carefully to avoid duplicates
-       // image.getStyleClass().removeAll("bonus-label-image", "bonus-label-image-wide");
+        // image.getStyleClass().removeAll("bonus-label-image", "bonus-label-image-wide");
         image.getStyleClass().add(styleClass);
 
         // Update background circle
@@ -871,7 +892,6 @@ public class GameStateController extends BaseViewCleanup {
         clip.setRadius(radius);
     }
 
-
     /**
      * Build the game grid UI from the current board state.
      */
@@ -882,8 +902,7 @@ public class GameStateController extends BaseViewCleanup {
         Runnable apply =
                 () -> {
 
-
-                    //change style for 9x9 game board
+                    // change style for 9x9 game board
                     if (rows == 9) {
                         topBar.prefHeight(30);
                         topBar.getStyleClass().add("top-bar-9x9");
@@ -891,8 +910,6 @@ public class GameStateController extends BaseViewCleanup {
                         bottomBar.prefHeight(30);
                         bottomBar.getStyleClass().add("timer-bar-9x9");
                     }
-
-
 
                     boardGrid.getChildren().clear();
                     boardGrid.getColumnConstraints().clear();
@@ -914,7 +931,6 @@ public class GameStateController extends BaseViewCleanup {
 
                         var squareSizeContainer =
                                 Bindings.min(parent.widthProperty(), parent.heightProperty());
-
 
                         gameContainer.prefWidthProperty().bind(squareSizeContainer);
                         gameContainer.minWidthProperty().set(squareSizeContainer.doubleValue());
@@ -1433,7 +1449,9 @@ public class GameStateController extends BaseViewCleanup {
         return isNotMyTurnAndTimeoutAndPushPhase()
                 .or(
                         Bindings.createBooleanBinding(
-                                () -> gameViewModel.isAnyBonusActive(bonusType, pushTwicePendingAction),
+                                () ->
+                                        gameViewModel.isAnyBonusActive(
+                                                bonusType, pushTwicePendingAction),
                                 gameViewModel.getIsPushFixedTileBonusActiveProperty(),
                                 gameViewModel.getIsSwapBonusActiveProperty(),
                                 gameViewModel.getIsBeamTileBonusActiveProperty(),
@@ -1530,18 +1548,24 @@ public class GameStateController extends BaseViewCleanup {
      * Bind the next treasure image to the view model.
      */
     private void initNextTreasure() {
-            nextTreasureImage.imageProperty().bind(Bindings.createObjectBinding(
-                    () -> {
-                          try {
-                            return   gameViewModel.getNextTreasureImageProperty().get();
-                          } catch (NullPointerException e) {
-                              if (! gameViewModel.isNextTreasureMightNotBeAvailableYet())  throw e;
-                              log.warn("Treasure image is not yet available return emtpy Image");
-                              return new javafx.scene.image.WritableImage(1, 1);
-                          }
-                      }, gameViewModel.getNextTreasureItemProperty()
-            ));
-       // ImageViewStyler.applyTreasureStylingToImageView(nextTreasureImage);
+        nextTreasureImage
+                .imageProperty()
+                .bind(
+                        Bindings.createObjectBinding(
+                                () -> {
+                                    try {
+                                        return gameViewModel.getNextTreasureImageProperty().get();
+                                    } catch (NullPointerException e) {
+                                        if (!gameViewModel.isNextTreasureMightNotBeAvailableYet())
+                                            throw e;
+                                        log.warn(
+                                                "Treasure image is not yet available return emtpy"
+                                                        + " Image");
+                                        return new javafx.scene.image.WritableImage(1, 1);
+                                    }
+                                },
+                                gameViewModel.getNextTreasureItemProperty()));
+        // ImageViewStyler.applyTreasureStylingToImageView(nextTreasureImage);
     }
 
     /**
@@ -1706,7 +1730,9 @@ public class GameStateController extends BaseViewCleanup {
                                 },
                                 gameViewModel.getClientPlayerState().getAvailableBonusTypes()));
 
-         bonusPushTwiceButton.disableProperty().bind(shouldBonusButtonBeDisabled(BonusType.PUSH_TWICE));
+        bonusPushTwiceButton
+                .disableProperty()
+                .bind(shouldBonusButtonBeDisabled(BonusType.PUSH_TWICE));
 
         ChangeListener<Boolean> bonusPushTwiceButtonAvailableListener =
                 (ov, oldVal, newVal) -> {
@@ -1760,7 +1786,7 @@ public class GameStateController extends BaseViewCleanup {
 
     private Boolean checkIfPushTwiceBoxShouldBeVisible() {
         return getAvailableBonusCountForTypeAndClient(BonusType.PUSH_TWICE) > 0
-                ||  gameViewModel.isPushTwiceTileBonusActive();
+                || gameViewModel.isPushTwiceTileBonusActive();
     }
 
     /**

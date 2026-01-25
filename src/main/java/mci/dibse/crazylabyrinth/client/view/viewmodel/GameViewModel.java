@@ -272,7 +272,8 @@ public class GameViewModel extends BaseViewModel implements PlayerConnectedAckLi
      * @param pushTwicePendingAction
      * @return true when another bonus is currently active
      */
-    public boolean isAnyBonusActive(BonusType bonusType, SimpleBooleanProperty pushTwicePendingAction) {
+    public boolean isAnyBonusActive(
+            BonusType bonusType, SimpleBooleanProperty pushTwicePendingAction) {
         switch (bonusType) {
             case BonusType.SWAP -> {
                 return isPushFixedTileBonusActive()
@@ -358,8 +359,8 @@ public class GameViewModel extends BaseViewModel implements PlayerConnectedAckLi
                         return;
                     }
                     nextTreasureMightNotBeAvailableYet = false;
-                    if(NavigationStateViewModel.ScreenId.GAMEBOARD.equals(navigationStateViewModel.getCurrentScreenId())) gameUpdated(gameState);
-
+                    if (NavigationStateViewModel.ScreenId.GAMEBOARD.equals(
+                            navigationStateViewModel.getCurrentScreenId())) gameUpdated(gameState);
                 };
         JavaFXUtils.runOnFxThread(task);
     }

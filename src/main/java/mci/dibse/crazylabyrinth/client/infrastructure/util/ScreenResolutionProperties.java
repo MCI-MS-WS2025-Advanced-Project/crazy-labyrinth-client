@@ -28,21 +28,23 @@ public class ScreenResolutionProperties {
 
     private static final Pattern p = Pattern.compile("(\\d+)\\s*[xX×*]\\s*(\\d+)");
 
+    @Value(
+            "${default.app.scale.ratio:#{T(mci.dibse.crazylabyrinth.client.domain.context.ApplicationSettingsRecord).DEFAULT_SCALE_RATIO}}")
+    @Setter
+    private Boolean scaleRatio;
 
-    @Value("${default.app.scale.ratio:#{T(mci.dibse.crazylabyrinth.client.domain.context.ApplicationSettingsRecord).DEFAULT_SCALE_RATIO}}")
-    @Setter private Boolean scaleRatio;
-
-    @Value("${default.game.board.view.resolution:#{T(mci.dibse.crazylabyrinth.client.domain.context.ApplicationSettingsRecord).DEFAULT_RESOLUTION}}")
-    @Setter private String gameBoardResolution;
-
+    @Value(
+            "${default.game.board.view.resolution:#{T(mci.dibse.crazylabyrinth.client.domain.context.ApplicationSettingsRecord).DEFAULT_RESOLUTION}}")
+    @Setter
+    private String gameBoardResolution;
 
     @Getter private int width;
     @Getter private int height;
 
     @Getter private double screenHeight;
 
-    @Getter private  int minViewWidth;
-    @Getter private  int minViewHeight;
+    @Getter private int minViewWidth;
+    @Getter private int minViewHeight;
 
     @Setter private Stage primaryStage;
 
@@ -116,19 +118,19 @@ public class ScreenResolutionProperties {
         Runnable apply =
                 () -> {
 
-            // Center the root inside the StackPane
-            StackPane.setAlignment(props.root, Pos.CENTER);
-            props.viewport.setPrefWidth(width);
-            props.root.setPrefWidth(width);
+                    // Center the root inside the StackPane
+                    StackPane.setAlignment(props.root, Pos.CENTER);
+                    props.viewport.setPrefWidth(width);
+                    props.root.setPrefWidth(width);
 
-            double rootHeight = primaryStage.getHeight() - primaryStage.getScene().getHeight();
-            props.viewport.setPrefHeight(rootHeight);
+                    double rootHeight =
+                            primaryStage.getHeight() - primaryStage.getScene().getHeight();
+                    props.viewport.setPrefHeight(rootHeight);
 
-            props.viewport.setMinSize(Region.USE_PREF_SIZE, Region.USE_PREF_SIZE);
-            props.viewport.setMaxSize(width, finalScreenHeight);
+                    props.viewport.setMinSize(Region.USE_PREF_SIZE, Region.USE_PREF_SIZE);
+                    props.viewport.setMaxSize(width, finalScreenHeight);
 
-
-            props.root.setPrefHeight(rootHeight);
+                    props.root.setPrefHeight(rootHeight);
 
                     props.root.setMinSize(Region.USE_PREF_SIZE, Region.USE_PREF_SIZE);
                     props.root.setMaxSize(width, finalScreenHeight);
@@ -154,33 +156,43 @@ public class ScreenResolutionProperties {
                                     props.viewport.heightProperty(),
                                     props.viewport.insetsProperty());
 
-            // Scale factor based on available area vs. design (root) size
-            DoubleBinding scaleFactorX = Bindings.createDoubleBinding(() -> {
-                ScaleRatio ratio = getScaleRatio(availableW, availableH, props);
-                if(!scaleRatio || primaryStage.isMaximized() || primaryStage.isFullScreen()) {
+                    // Scale factor based on available area vs. design (root) size
+                    DoubleBinding scaleFactorX =
+                            Bindings.createDoubleBinding(
+                                    () -> {
+                                        ScaleRatio ratio =
+                                                getScaleRatio(availableW, availableH, props);
+                                        if (!scaleRatio
+                                                || primaryStage.isMaximized()
+                                                || primaryStage.isFullScreen()) {
 
-                    return ratio.ratioX();
-                }
-                return ratio.min();
-            },primaryStage.heightProperty(),
-                    primaryStage.widthProperty(),
-                    primaryStage.fullScreenProperty(),
-                    primaryStage.maximizedProperty());
+                                            return ratio.ratioX();
+                                        }
+                                        return ratio.min();
+                                    },
+                                    primaryStage.heightProperty(),
+                                    primaryStage.widthProperty(),
+                                    primaryStage.fullScreenProperty(),
+                                    primaryStage.maximizedProperty());
 
-            // Scale factor based on available area vs. design (root) size
-            DoubleBinding scaleFactorY = Bindings.createDoubleBinding(() -> {
-                ScaleRatio ratio = getScaleRatio(availableW, availableH, props);
+                    // Scale factor based on available area vs. design (root) size
+                    DoubleBinding scaleFactorY =
+                            Bindings.createDoubleBinding(
+                                    () -> {
+                                        ScaleRatio ratio =
+                                                getScaleRatio(availableW, availableH, props);
 
-                if(!scaleRatio || primaryStage.isMaximized() || primaryStage.isFullScreen())
-                {
-                    return ratio.ratioY();
-                }
-                return ratio.min();
-            },primaryStage.heightProperty(),
-                    primaryStage.widthProperty(),
-                    primaryStage.fullScreenProperty(),
-                    primaryStage.maximizedProperty());
-
+                                        if (!scaleRatio
+                                                || primaryStage.isMaximized()
+                                                || primaryStage.isFullScreen()) {
+                                            return ratio.ratioY();
+                                        }
+                                        return ratio.min();
+                                    },
+                                    primaryStage.heightProperty(),
+                                    primaryStage.widthProperty(),
+                                    primaryStage.fullScreenProperty(),
+                                    primaryStage.maximizedProperty());
 
                     // Create scale and bind to factor + pivot at center
                     Scale scale = new Scale(1, 1);
@@ -227,7 +239,8 @@ public class ScreenResolutionProperties {
      * @param props
      * @return scale ratio container
      */
-    private ScaleRatio getScaleRatio(DoubleBinding availableW, DoubleBinding availableH, ResolutionProperties props) {
+    private ScaleRatio getScaleRatio(
+            DoubleBinding availableW, DoubleBinding availableH, ResolutionProperties props) {
         double offsetW = width - widthWithRegardsToWindowDecoration();
         double offsetH = height - heightWithRegardsToWindowDecoration();
 
@@ -235,8 +248,7 @@ public class ScreenResolutionProperties {
         props.viewport.setMaxSize(offsetW, offsetH);
 
         double scaleX = availableW.get() / offsetW;
-        double scaleY = availableH.get() /  offsetH;
-
+        double scaleY = availableH.get() / offsetH;
 
         return new ScaleRatio(scaleX, scaleY, Math.min(scaleX, scaleY));
     }
