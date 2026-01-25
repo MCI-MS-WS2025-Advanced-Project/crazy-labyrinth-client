@@ -126,6 +126,7 @@ public class NavigationController {
         screenResolutionProperties.setScaleRatio(settings.scaleRatio());
         screenResolutionProperties.setGameBoardResolution(settings.selectedResolution());
         primaryStage.setFullScreen(settings.fullscreen());
+        if (settings.borderless()) primaryStage.initStyle(StageStyle.UNDECORATED);
         return settings;
     }
 
@@ -202,6 +203,7 @@ public class NavigationController {
 
         if (!startUp) return;
         startUp = false;
+        primaryStage.initStyle(StageStyle.UNDECORATED);
         log.debug(
                 "Setting stage w/h sizes to: {}x{}",
                 screenResolutionProperties.getWidth(),
