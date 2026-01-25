@@ -65,8 +65,8 @@ public class PlayerMoveAnimation extends AbstractGameAnimation {
         double startX = startCell.getBoundsInParent().getCenterX();
         double startY = startCell.getBoundsInParent().getCenterY();
 
-        double widthOffset = playerPawn.getBoundsInParent().getWidth() / 2;
-        double heightOffset = playerPawn.getBoundsInParent().getHeight() / 2;
+        double widthOffset = playerPawn.getFitWidth() / 2;
+        double heightOffset = playerPawn.getFitHeight() / 2;
 
         MoveTo start = new MoveTo(0 + widthOffset, 0 + heightOffset);
         animationPath.getElements().add(start);
