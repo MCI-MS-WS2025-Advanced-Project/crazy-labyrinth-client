@@ -68,8 +68,6 @@ public class BeamAnimation extends AbstractGameAnimation {
                 targetCell.getBoundsInParent().getCenterY()
                         - fromCell.getBoundsInParent().getCenterY();
 
-        log.debug("Beam animation delta: deltaX={}, deltaY={}", deltaX, deltaY);
-
         double duration = animationService.getAnimationConfig().getBeamAnimationDuration();
         TranslateTransition transition =
                 new TranslateTransition(Duration.millis(duration), playerPawn);
@@ -78,7 +76,6 @@ public class BeamAnimation extends AbstractGameAnimation {
         transition.setInterpolator(Interpolator.EASE_OUT);
         transition.setOnFinished(
                 event -> {
-                    log.debug("Beam animation completed from {} to {}", from, to);
                     handleAnimationCompletion();
                 });
 
@@ -87,6 +84,5 @@ public class BeamAnimation extends AbstractGameAnimation {
 
     @Override
     public void onCompleted() {
-        log.debug("Beam animation cleanup completed");
     }
 }
