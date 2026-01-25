@@ -111,7 +111,7 @@
                     <Separator/>
                     <VBox alignment="CENTER">
                         <Button fx:id="startGameButton" onAction="#onStartButtonClick"
-                                text="Start Game"  styleClass="primary-button" maxWidth="150"/>
+                                text="Spiel starten"  styleClass="primary-button" maxWidth="150"/>
                     </VBox>
 
                 </VBox>
@@ -133,8 +133,8 @@
                         <TableView fx:constant="CONSTRAINED_RESIZE_POLICY"/>
                     </columnResizePolicy>
                     <columns>
-                        <TableColumn fx:id="playerNameColumn" prefWidth="100" text="Player"/>
-                        <TableColumn fx:id="colorColumn" prefWidth="100" style="-fx-alignment: CENTER;" text="Color"/>
+                        <TableColumn fx:id="playerNameColumn" prefWidth="100" text="Spieler"/>
+                        <TableColumn fx:id="colorColumn" prefWidth="100" style="-fx-alignment: CENTER;" text="Farbe"/>
                         <TableColumn fx:id="adminColumn" prefWidth="100"  style="-fx-alignment: CENTER;" text="Admin"/>
                     </columns>
                 </TableView>
