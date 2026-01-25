@@ -70,20 +70,20 @@ Stellen Sie sicher, dass Sie sich im `target`-Ordner befinden oder den Pfad zu `
 
 powershell jpackage `--input .` --name CrazyLabyrinth `--main-jar <artifactId>-<version>.jar` --app-version 1.0.0 `--type app-image` --icon 'classes\packaging\app.ico' `--java-options "--enable-native-access=ALL-UNNAMED"` --java-options "-Dspring.profiles.active=prod"
 
-
+Zum Starten die exe Datei im erstellten Root Ordner Ausführen
 #### Linux
 
-bash jpackage
---input .
---name CrazyLabyrinth
---main-jar <artifactId>-<version>.jar
---app-version 1.0.0
---type app-image
---icon 'classes/packaging/app.png'
---java-options "--enable-native-access=ALL-UNNAMED"
+bash jpackage \
+--input . \
+--name "TheAmazingLabyrinth-Grupp5" \
+--main-jar "<artifactId>-<version>.jar" \
+--app-version "1.0.0" \
+--type "app-image" \
+--icon "classes/packaging/app.png" \
+--java-options "--enable-native-access=ALL-UNNAMED" \
 --java-options "-Dspring.profiles.active=prod"
 
-
+Zum Starten die Datei im bin Ordner Ausführen
 #### macOs
 
 bash jpackage
