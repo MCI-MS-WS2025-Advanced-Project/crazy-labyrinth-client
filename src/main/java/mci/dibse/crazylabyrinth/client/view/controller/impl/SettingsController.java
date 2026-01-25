@@ -11,7 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import mci.dibse.crazylabyrinth.client.domain.context.ApplicationSettingsRecord;
 import org.springframework.stereotype.Component;
 
-@Getter // Use Lombok to create getters for the result fields
+@Getter
 @Slf4j
 @Component
 public class SettingsController {
@@ -25,7 +25,7 @@ public class SettingsController {
     @FXML private CheckBox fullscreenCheckBox;
     @FXML private CheckBox borderlessCheckBox;
 
-    // Fields to hold the results
+
     private boolean saved = false;
     private String selectedResolution;
     private boolean scaleRatio;
@@ -39,7 +39,7 @@ public class SettingsController {
 
     @FXML
     void initialize() {
-        System.out.println("SettingsController initialized " + defaultViewResolutionString);
+        log.info("SettingsController initialized with default {}" + defaultViewResolutionString);
         resolutionComboBox.setValue(defaultViewResolutionString);
         scaleToFitRadio.setSelected(defaultScaleRatio);
         fullscreenCheckBox.setSelected(defaultFullscreen);
@@ -48,14 +48,12 @@ public class SettingsController {
 
     @FXML
     private void onSave() {
-        // 1. Capture the values
         this.selectedResolution = resolutionComboBox.getValue().split(" ")[0];
         this.scaleRatio = scaleToFitRadio.isSelected();
         this.fullscreen = fullscreenCheckBox.isSelected();
         this.borderless = borderlessCheckBox.isSelected();
         this.saved = true;
 
-        // 2. Close the window
         closeWindow();
     }
 
@@ -66,7 +64,6 @@ public class SettingsController {
     }
 
     private void closeWindow() {
-        // Get the stage from any UI element and close it
         Stage stage = (Stage) resolutionComboBox.getScene().getWindow();
         stage.close();
     }
