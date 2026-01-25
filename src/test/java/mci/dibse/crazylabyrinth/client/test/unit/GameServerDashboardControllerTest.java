@@ -24,13 +24,6 @@ class GameServerDashboardControllerTest {
         try { com.sun.javafx.application.PlatformImpl.startup(() -> {}); } catch (Exception ignored) {}
     }
 
-    /**
-     * UT-VIEW-05 - GameServerDashboardController initialization path
-     * Musskriterium: C2
-     * Priorität: P1
-     * Severity: High
-     * Testobjekt: GameServerDashboardController
-     */
     @Test
     @DisplayName("UT-VIEW-05 - GameServerDashboardController initialization path")
     void testDashboardInitialization_UT_VIEW_05() throws Exception {
