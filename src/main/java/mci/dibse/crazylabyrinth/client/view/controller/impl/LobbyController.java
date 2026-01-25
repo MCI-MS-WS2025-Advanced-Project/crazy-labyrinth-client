@@ -1,5 +1,6 @@
 package mci.dibse.crazylabyrinth.client.view.controller.impl;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.stream.Collectors;
 import javafx.animation.Animation;
@@ -16,6 +17,7 @@ import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.geometry.Pos;
 import javafx.scene.Group;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
@@ -103,7 +105,7 @@ public class LobbyController extends BaseViewCleanup {
     private static final int MAX_GAME_TIMER_MINUTES = 120;
     private static final int MIN_BONUS_COUNT = 0;
     private static final int MAX_BONUS_COUNT = 20;
-    private static final int DEFAULT_START_GAME_TIMER = 60;
+    private static final int DEFAULT_START_GAME_TIMER = 55;
 
     private final BooleanProperty isStartButtonLocked = new SimpleBooleanProperty(false);
 
@@ -510,10 +512,13 @@ public class LobbyController extends BaseViewCleanup {
      * Stop the countdown and reset timer to the default value.
      */
     private void cancelCountdown() {
-        if (countdownTimeline != null) {
-            countdownTimeline.stop();
-        }
-        remainingTimer.set(DEFAULT_START_GAME_TIMER);
+        Runnable task = () -> {
+            if (countdownTimeline != null) {
+                countdownTimeline.stop();
+            }
+            remainingTimer.set(DEFAULT_START_GAME_TIMER);
+        };
+        JavaFXUtils.runOnFxThread(task);
     }
 
     /**
@@ -556,28 +561,34 @@ public class LobbyController extends BaseViewCleanup {
                             }
                         });
 
-        adminColumn.setCellFactory(
-                column ->
-                        new TableCell<PlayerInfoItem, Boolean>() {
-                            @Override
-                            protected void updateItem(Boolean isAdmin, boolean empty) {
-                                super.updateItem(isAdmin, empty);
-                                if (empty || isAdmin == null) {
-                                    setText(null);
-                                } else {
-                                    if (isAdmin) {
-                                        setText("✔");
-                                        setTextFill(Color.GREEN);
-                                    } else {
-                                        setText("✘");
-                                        setTextFill(Color.RED);
-                                    }
-                                    setStyle(
-                                            "-fx-font-weight: bold; -fx-alignment: CENTER;"
-                                                    + " -fx-font-size: 16px;");
-                                }
-                            }
-                        });
+        adminColumn.setCellFactory(column -> new TableCell<PlayerInfoItem, Boolean>() {
+            private final Label label = new Label();
+
+            {
+                setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
+                setAlignment(Pos.CENTER);
+                // Try several families; the first available with the glyphs will be used
+                label.setStyle(
+                        "-fx-font-weight: bold; -fx-font-size: 16px;" +
+                                "-fx-font-family: 'Noto Sans Symbols', 'DejaVu Sans', 'Segoe UI Symbol';"
+                );
+
+            }
+
+            @Override
+            protected void updateItem(Boolean isAdmin, boolean empty) {
+                super.updateItem(isAdmin, empty);
+                if (empty || isAdmin == null) {
+                    setGraphic(null);
+                    setText(null);
+                } else {
+                    label.setText(isAdmin ? "\u2713" : "\u2718");
+                    label.setTextFill(isAdmin ? Color.GREEN : Color.RED);
+                    setGraphic(label);
+                    setText(null);
+                }
+            }
+        });
 
         colorColumn.setCellFactory(
                 column ->
@@ -792,50 +803,6 @@ public class LobbyController extends BaseViewCleanup {
         navigationController.toogleFullScreen();
     }
 
-    /*
-    private Node createAchievementGraphicForPlayer(RankingEntry entry) {
-        String id = entry.getPlayerId();
-        List<AchievementUnlockedEventPayload> unlocked = achievementService.getAchievementEventsForPLayerId(id);
 
-        if (unlocked == null || unlocked.isEmpty()) {
-            return new Label("");
-        }
-
-        HBox container = new HBox(10);
-        container.setAlignment(Pos.CENTER_LEFT);
-        for (AchievementUnlockedEventPayload event : unlocked) {
-            AchievementType type = event.getAchievement();
-
-            // Badge container: Icon + Text
-            HBox badge = new HBox(4);
-            badge.setAlignment(Pos.CENTER_LEFT);
-
-            Node icon = getIconForAchievementType(type);
-            Label text = new Label(getLabelForAchievementType(type, entry.getStats()));
-
-            badge.getChildren().addAll(icon, text);
-            container.getChildren().add(badge);
-        }
-        return container;
-    }
-
-
-    private Node getIconForAchievementType(AchievementType type) {
-        // You can replace these Shapes with new ImageView(new Image("..."))
-        return switch (type) {
-            case RUNNER ->  new ImageView(new Image("..."))
-            case PUSHER ->  new ImageView(new Image("..."))
-        };
-    }
-
-    private String getLabelForAchievementType(AchievementType type, PlayerGameStats stats) {
-        return switch (type) {
-            case RUNNER -> "Runner (" + stats.getStepsTaken() + ")";
-            case PUSHER -> "Pusher (" + stats.getTilesPushed() + ")";
-            default -> type.name();
-        };
-    }
-
-     */
 
 }
