@@ -23,6 +23,7 @@ import mci.dibse.crazylabyrinth.client.domain.model.ClientPlayer;
 import mci.dibse.crazylabyrinth.client.infrastructure.exceptions.GeneralUiException;
 import mci.dibse.crazylabyrinth.client.infrastructure.util.FileNameMapper;
 import mci.dibse.crazylabyrinth.client.infrastructure.util.JavaFXUtils;
+import mci.dibse.crazylabyrinth.client.infrastructure.util.ResultsPlayerInfoLookupHelper;
 import mci.dibse.crazylabyrinth.client.service.*;
 import mci.dibse.crazylabyrinth.client.view.viewmodel.item.*;
 import mci.dibse.crazylabyrinth.client.view.viewmodel.navigation.NavigationStateViewModel;
@@ -71,19 +72,23 @@ public class GameViewModel extends BaseViewModel implements PlayerConnectedAckLi
     private ChangeListener<TileItem> spareTileListener;
     private ChangeListener<TurnState> turnStateChangeListener;
 
+    private ResultsPlayerInfoLookupHelper resultsPlayerInfoLookupHelper;
+
     @Autowired
     public GameViewModel(
             NavigationStateViewModel vm,
             LobbyService lobbyService,
             GameService gameService,
             ClientCommandService clientCommandService,
-            TimerService timerService) {
+            TimerService timerService,
+            ResultsPlayerInfoLookupHelper resultsPlayerInfoLookupHelper) {
         super(vm);
         this.lobbyService = lobbyService;
         this.gameService = gameService;
         this.clientCommandService = clientCommandService;
         this.timerService = timerService;
         pendingRotationProperty.set(false);
+        this.resultsPlayerInfoLookupHelper = resultsPlayerInfoLookupHelper;
 
         lobbyService.addPlayerListener(this);
     }
@@ -362,6 +367,10 @@ public class GameViewModel extends BaseViewModel implements PlayerConnectedAckLi
                             navigationStateViewModel.getCurrentScreenId())) gameUpdated(gameState);
                 };
         JavaFXUtils.runOnFxThread(task);
+
+        //cache player info for later lookup in lobby
+        resultsPlayerInfoLookupHelper.cachePlayerInfoFromPlayerStates(gameState.getPlayers());
+
     }
 
     /**

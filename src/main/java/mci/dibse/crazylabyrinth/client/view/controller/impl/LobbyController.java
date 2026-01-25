@@ -20,11 +20,15 @@ import javafx.fxml.FXML;
 import javafx.geometry.Pos;
 import javafx.scene.Group;
 import javafx.scene.control.*;
+import javafx.scene.effect.BlurType;
+import javafx.scene.effect.DropShadow;
 import javafx.scene.layout.*;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
+import javafx.scene.text.Text;
+import javafx.scene.text.TextFlow;
 import javafx.util.Duration;
 import labyrinth.contracts.models.*;
 import labyrinth.contracts.models.RankingEntry;
@@ -40,17 +44,13 @@ import mci.dibse.crazylabyrinth.client.view.viewmodel.LobbyViewModel;
 import mci.dibse.crazylabyrinth.client.view.viewmodel.item.PlayerInfoItem;
 import mci.dibse.crazylabyrinth.client.view.viewmodel.navigation.NavigationStateViewModel;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 @Component
 @Slf4j
 public class LobbyController extends BaseViewCleanup {
-
-    private final GameViewModel gameViewModel;
-    private final AchievementService achievementService;
-    private final NavigationController navigationController;
-    public BooleanProperty clientAdmin = new SimpleBooleanProperty(false);
 
 
     @FXML public VBox resultsBox;
@@ -93,6 +93,16 @@ public class LobbyController extends BaseViewCleanup {
     @FXML public Label countdown;
     @FXML public HBox countDownBox;
 
+
+
+    private final GameViewModel gameViewModel;
+    private final AchievementService achievementService;
+    private final NavigationController navigationController;
+    public BooleanProperty clientAdmin = new SimpleBooleanProperty(false);
+
+    @Value("${lobby.start.game.count.down:60}")
+    private int DEFAULT_START_GAME_TIMER;
+
     private static final String ERROR_MODAL_TITLE = "Error";
     private static final String SMALL_GAME_BOARD_SIZE = "Klein (5x5)";
     private static final String MEDIUM_GAME_BOARD_SIZE = "Normal (7x7)";
@@ -105,7 +115,7 @@ public class LobbyController extends BaseViewCleanup {
     private static final int MAX_GAME_TIMER_MINUTES = 120;
     private static final int MIN_BONUS_COUNT = 0;
     private static final int MAX_BONUS_COUNT = 20;
-    private static final int DEFAULT_START_GAME_TIMER = 55;
+
 
     private final BooleanProperty isStartButtonLocked = new SimpleBooleanProperty(false);
 
@@ -284,11 +294,28 @@ public class LobbyController extends BaseViewCleanup {
                                                         setText(null);
                                                         return;
                                                     }
-                                                    String name =
-                                                            lobbyViewModel.getPlayerNameForId(item);
-                                                    if (lobbyViewModel.getWinnerId().equals(item))
-                                                        name += " (Gewinner)";
-                                                    setText(name);
+
+                                                    String name = lobbyViewModel.getPlayerNameForId(item);
+                                                    boolean isWinner = item.equals(lobbyViewModel.getWinnerId());
+                                                    if (isWinner) {
+                                                        Text base = new Text(name);
+                                                        Text winner = new Text("   Gewinner");
+                                                        winner.setStyle("-fx-font-weight: bold; -fx-fill: #bc9610;");
+                                                        DropShadow shadow = new DropShadow(
+                                                                BlurType.GAUSSIAN,
+                                                                Color.web("#d4af37", 0.6), // gold-tinted shadow with some transparency
+                                                                8,   // radius (blur)
+                                                                0.2, // spread
+                                                                0,   // offsetX
+                                                                1    // offsetY
+                                                        );
+                                                        winner.setEffect(shadow);
+                                                        setText(null);
+                                                        setGraphic(new TextFlow(base, winner));
+                                                    } else {
+                                                        setGraphic(null);
+                                                        setText(name);
+                                                    }
                                                 }
                                             };
                                         });

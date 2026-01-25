@@ -18,6 +18,7 @@ import mci.dibse.crazylabyrinth.client.domain.model.ClientPlayer;
 import mci.dibse.crazylabyrinth.client.domain.model.record.GameInfoRecord;
 import mci.dibse.crazylabyrinth.client.domain.model.record.StartGameRecord;
 import mci.dibse.crazylabyrinth.client.infrastructure.exceptions.GeneralUiException;
+import mci.dibse.crazylabyrinth.client.infrastructure.util.ResultsPlayerInfoLookupHelper;
 import mci.dibse.crazylabyrinth.client.service.ClientCommandService;
 import mci.dibse.crazylabyrinth.client.service.LobbyService;
 import mci.dibse.crazylabyrinth.client.service.LobbyStateUpdateListener;
@@ -68,14 +69,19 @@ public class LobbyViewModel extends BaseViewModel
     private GameOverItem gameOverItem = null;
     private ChangeListener<Boolean> resultsListener;
 
+
+    private ResultsPlayerInfoLookupHelper playerInfoLookupMap;
+
     @Autowired
     public LobbyViewModel(
             NavigationStateViewModel navState,
             LobbyService lobbyService,
-            ClientCommandService clientCommandService) {
+            ClientCommandService clientCommandService,
+            ResultsPlayerInfoLookupHelper playerInfoLookupMap) {
         super(navState);
         this.commandService = clientCommandService;
         this.lobbyService = lobbyService;
+        this.playerInfoLookupMap = playerInfoLookupMap;
     }
 
     /**
@@ -275,6 +281,7 @@ public class LobbyViewModel extends BaseViewModel
             return;
         }
         lobbyStateItem.updateFrom(lobbyState);
+
     }
 
     /**
@@ -439,8 +446,16 @@ public class LobbyViewModel extends BaseViewModel
         if (playerOptional.isPresent()) {
             return playerOptional.get().getName();
         }
+       Optional<String> name=  lookUpQueueForPlayerInfo(item);
+       if (name.isPresent()) return name.get();
+
         log.info("Player with id {} not found in lobby", item);
         return item;
+    }
+
+    private Optional<String> lookUpQueueForPlayerInfo(String id) {
+        return playerInfoLookupMap.lookUpCachedPlayerInfo(id);
+
     }
 
     /**
