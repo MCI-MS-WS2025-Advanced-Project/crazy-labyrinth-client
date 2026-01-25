@@ -125,8 +125,19 @@ public class NavigationController {
         ApplicationSettingsRecord settings = controller.getSettings();
         screenResolutionProperties.setScaleRatio(settings.scaleRatio());
         screenResolutionProperties.setGameBoardResolution(settings.selectedResolution());
+        screenResolutionProperties.setBorderless(settings.borderless());
+        screenResolutionProperties.init();
+
+
+
         primaryStage.setFullScreen(settings.fullscreen());
-        if (settings.borderless()) primaryStage.initStyle(StageStyle.UNDECORATED);
+
+        System.out.println("borderless: " + settings.borderless());
+
+        if (settings.borderless()) {
+            System.out.println("UNDECORATED: ");
+            primaryStage.initStyle(StageStyle.UNDECORATED);
+        }
         return settings;
     }
 
@@ -203,7 +214,6 @@ public class NavigationController {
 
         if (!startUp) return;
         startUp = false;
-        primaryStage.initStyle(StageStyle.UNDECORATED);
         log.debug(
                 "Setting stage w/h sizes to: {}x{}",
                 screenResolutionProperties.getWidth(),

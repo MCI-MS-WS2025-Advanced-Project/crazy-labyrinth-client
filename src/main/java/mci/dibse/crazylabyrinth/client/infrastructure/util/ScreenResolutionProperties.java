@@ -24,7 +24,8 @@ public class ScreenResolutionProperties {
 
     // stage size 1600X1200: viewport BoundingBox width:1600.0, height:1172.0,
     public static final double HEIGHT_OFFSET_TO_VIEWPORT_HEIGHT_ON_SCREEN = 28;
-    private boolean isWindowDecorated = true;
+   @Setter private boolean borderless = false;
+   private boolean isWindowDecorated = true;
 
     private static final Pattern p = Pattern.compile("(\\d+)\\s*[xX×*]\\s*(\\d+)");
 
@@ -51,7 +52,7 @@ public class ScreenResolutionProperties {
     /**
      * Initialize the screen resolution settings from properties.
      */
-    @PostConstruct
+  //  @PostConstruct
     public void init() {
         log.info("Initializing game view resolution from properties: {}", gameBoardResolution);
         log.info("Scale Ratio: {}", scaleRatio);
@@ -105,14 +106,18 @@ public class ScreenResolutionProperties {
      * @param props resolution properties container
      */
     public void initUiScaling(ResolutionProperties props) {
-
         screenHeight = height;
-        if (!primaryStage.isFullScreen()) {
+
+
+        if (!primaryStage.isFullScreen() && !borderless) {
             isWindowDecorated = true;
             screenHeight = (int) (height - heightWithRegardsToWindowDecoration());
+            width = (int) (width - widthWithRegardsToWindowDecoration());
         } else {
             isWindowDecorated = false;
         }
+
+
 
         double finalScreenHeight = screenHeight;
         Runnable apply =
