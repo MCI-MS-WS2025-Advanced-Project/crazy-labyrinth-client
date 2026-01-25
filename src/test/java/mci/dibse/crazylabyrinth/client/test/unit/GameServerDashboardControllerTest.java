@@ -5,6 +5,7 @@ import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.transformation.SortedList;
 import javafx.scene.control.*;
+import mci.dibse.crazylabyrinth.client.NavigationController;
 import mci.dibse.crazylabyrinth.client.view.controller.impl.GameServerDashboardController;
 import mci.dibse.crazylabyrinth.client.view.viewmodel.GameServerDashboardViewModel;
 import mci.dibse.crazylabyrinth.client.view.viewmodel.navigation.NavigationStateViewModel;
@@ -31,6 +32,8 @@ class GameServerDashboardControllerTest {
         GameServerDashboardViewModel mockVM = mock(GameServerDashboardViewModel.class);
         NavigationStateViewModel mockNav = mock(NavigationStateViewModel.class);
         ScreenResolutionProperties mockRes = mock(ScreenResolutionProperties.class);
+        NavigationController navigationControllerMock = mock(NavigationController.class);
+        java.util.concurrent.Executor executorMock = mock(java.util.concurrent.Executor.class);
 
         // GIVEN: Properties are set for binding
         when(mockNav.getCurrentScreenProperty()).thenReturn(new SimpleObjectProperty<>());
@@ -41,7 +44,7 @@ class GameServerDashboardControllerTest {
         when(mockVM.getErrorMessage()).thenReturn(new SimpleStringProperty(""));
 
         // WHEN: Controller is initialized
-        GameServerDashboardController controller = new GameServerDashboardController(mockVM, mockNav, mockRes);
+        GameServerDashboardController controller = new GameServerDashboardController(mockVM, mockNav, mockRes, navigationControllerMock, executorMock);
         ReflectionTestUtils.setField(controller, "statusLabel", new Label());
         ReflectionTestUtils.setField(controller, "serversTable", new TableView<>());
         ReflectionTestUtils.setField(controller, "nameCol", new TableColumn<>());

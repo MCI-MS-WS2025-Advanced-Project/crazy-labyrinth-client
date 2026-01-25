@@ -8,6 +8,7 @@ import javafx.scene.control.Label;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.scene.shape.Circle;
+import mci.dibse.crazylabyrinth.client.NavigationController;
 import mci.dibse.crazylabyrinth.client.view.controller.impl.GameStateController;
 import mci.dibse.crazylabyrinth.client.view.viewmodel.GameViewModel;
 import mci.dibse.crazylabyrinth.client.view.viewmodel.navigation.NavigationStateViewModel;
@@ -28,15 +29,12 @@ class GameStateControllerTest {
 
     @BeforeAll
     static void initToolkit() {
-        // Check if we are running in a headless environment (CI)
-        // Most CI runners set 'headless' or 'GITHUB_ACTIONS'
         boolean isCi = System.getenv("GITHUB_ACTIONS") != null;
         if (isCi) {
             System.setProperty("glass.platform", "Monocle");
             System.setProperty("monocle.platform", "Headless");
             System.setProperty("prism.order", "sw");
         }
-
         try {
             com.sun.javafx.application.PlatformImpl.startup(() -> {});
         } catch (IllegalStateException e) {
@@ -47,14 +45,15 @@ class GameStateControllerTest {
     @Test
     @DisplayName("UT-VIEW-03 - GameStateController initialization path")
     void testControllerInitialization_UT_VIEW_03() throws Exception {
-        // GIVEN: Controller dependencies are mocked
+        // GIVEN: Dependencies
         NavigationStateViewModel mockNav = mock(NavigationStateViewModel.class);
         GameViewModel mockVM = mock(GameViewModel.class);
         ScreenResolutionProperties mockRes = mock(ScreenResolutionProperties.class);
         GameBoardItem mockBoardItem = mock(GameBoardItem.class);
         PlayerStateItem mockClientState = mock(PlayerStateItem.class);
+        NavigationController navigationControllerMock = mock(NavigationController.class);
 
-        // GIVEN: Required properties are initialized to avoid NPEs
+        // GIVEN: Mock Properties (Synchronisiert mit GameViewModel.java)
         when(mockNav.getCurrentScreenProperty()).thenReturn(new SimpleObjectProperty<>());
         when(mockVM.getCurrentPlayerIdProperty()).thenReturn(new SimpleStringProperty("p1"));
         when(mockVM.getTurnTimeoutProperty()).thenReturn(new SimpleBooleanProperty(false));
@@ -69,19 +68,19 @@ class GameStateControllerTest {
         when(mockVM.getRemainingTurnTimeInSeconds()).thenReturn(60L);
         when(mockClientState.getAvailableBonusTypes()).thenReturn(new SimpleListProperty<>(FXCollections.observableArrayList()));
 
-        // WHEN: Controller is instantiated with three arguments
-        GameStateController controller = new GameStateController(mockNav, mockVM, mockRes);
+        // WHEN: Controller Instanziierung (4 Parameter erforderlich laut Fehlermeldung)
+        GameStateController controller = new GameStateController(mockNav, mockVM, mockRes, navigationControllerMock);
 
-        // GIVEN: @FXML fields are injected via reflection
+        // GIVEN: FXML Injection
         injectFxmlFields(controller);
 
-        // WHEN: Initialize is called on the FX Thread
+        // WHEN: Initialize
         Platform.runLater(() -> {
             try { controller.initialize(); } catch (Exception ignored) {}
         });
         Thread.sleep(500);
 
-        // THEN: Controller is successfully setup
+        // THEN
         assertNotNull(controller);
         System.out.println("UT-VIEW-03 Result: Initialization path verified.");
     }
@@ -90,7 +89,6 @@ class GameStateControllerTest {
         ReflectionTestUtils.setField(controller, "playerTurnLabel", new Label());
         ReflectionTestUtils.setField(controller, "boardGrid", new GridPane());
         ReflectionTestUtils.setField(controller, "gameContainer", new BorderPane());
-        ReflectionTestUtils.setField(controller, "nextTreasure", new Label());
         ReflectionTestUtils.setField(controller, "topArrowBox", new HBox());
         ReflectionTestUtils.setField(controller, "bottomArrowBox", new HBox());
         ReflectionTestUtils.setField(controller, "leftArrowBox", new VBox());
@@ -101,7 +99,6 @@ class GameStateControllerTest {
         ReflectionTestUtils.setField(controller, "extraTileWrapper", new VBox());
         ReflectionTestUtils.setField(controller, "rotateRightButton", new Button());
 
-        // Correct VBox types for players
         ReflectionTestUtils.setField(controller, "player1Box", new VBox());
         ReflectionTestUtils.setField(controller, "player2Box", new VBox());
         ReflectionTestUtils.setField(controller, "player1Circle", new Circle());
