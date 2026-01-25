@@ -45,8 +45,8 @@ class GameStateControllerTest {
     }
 
     @Test
-    @DisplayName("UT-VIEW-04 - GameStateController initialization path")
-    void testControllerInitialization_UT_VIEW_04() throws Exception {
+    @DisplayName("UT-VIEW-03 - GameStateController initialization path")
+    void testControllerInitialization_UT_VIEW_03() throws Exception {
         // GIVEN: Controller dependencies are mocked
         NavigationStateViewModel mockNav = mock(NavigationStateViewModel.class);
         GameViewModel mockVM = mock(GameViewModel.class);
@@ -83,7 +83,7 @@ class GameStateControllerTest {
 
         // THEN: Controller is successfully setup
         assertNotNull(controller);
-        System.out.println("UT-VIEW-04 Result: Initialization path verified.");
+        System.out.println("UT-VIEW-03 Result: Initialization path verified.");
     }
 
     private void injectFxmlFields(GameStateController controller) {
