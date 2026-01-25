@@ -142,6 +142,38 @@ public class ClientAIExecutor {
     private void sendPush(AiDecision.PushDecision push) {
         Objects.requireNonNull(push, "push");
 
+        int rotations = ((push.getRotations() % 4) + 4) % 4;
+
+        // 1) rotate on server
+        for (int i = 0; i < rotations; i++) {
+            log.debug("AI: send ROTATE_TILE ({}/{})", i + 1, rotations);
+            gameViewModel.onRightRotationOfSpareTile();
+        }
+
+        // 2) push
+        CommandType cmdType = CommandType.PUSH_TILE;
+        if (pending.hasBonus() && pending.getBonus().getBonusType() == BonusType.PUSH_FIXED) {
+            cmdType = CommandType.USE_PUSH_FIXED;
+        }
+
+        PushTileCommandRecord record = new PushTileCommandRecord(
+                push.getPushIndex(),
+                push.getPushDirection(),
+                null,      // payload can’t carry this anyway
+                cmdType
+        );
+
+        log.debug("AI: send push idx={} dir={} rot={}",
+                push.getPushIndex(), push.getPushDirection(), rotations);
+
+        gameViewModel.pushTileCommand(record);
+    }
+
+
+    /*
+    private void sendPush(AiDecision.PushDecision push) {
+        Objects.requireNonNull(push, "push");
+
         GameStateEventPayload gs = gameViewModel.getLastGameState();
         Direction[] baseEntrances = null;
         if (gs != null && gs.getBoard() != null && gs.getBoard().getSpareTile() != null) {
@@ -166,7 +198,7 @@ public class ClientAIExecutor {
                  push.getPushIndex(), push.getPushDirection(), push.getRotations());
 
         gameViewModel.pushTileCommand(record);
-    }
+    }*/
 
     private void sendMove(Coordinates target) {
         if (target == null) return;
