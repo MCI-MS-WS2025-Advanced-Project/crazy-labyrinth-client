@@ -15,10 +15,12 @@
            xmlns:fx="http://javafx.com/fxml"
            fx:controller="mci.dibse.crazylabyrinth.client.view.controller.impl.GameStateController"
            fx:id="viewport"
-           style="-fx-background-color: black;"
            styleClass="viewport">
 
-
+    <stylesheets>
+        <URL value="@/styles/shared.css"/>
+        <URL value="@/styles/game.css"/>
+    </stylesheets>
 
     <clip>
         <Rectangle fx:id="rootClip"/>
@@ -30,10 +32,7 @@
                 styleClass="root">
 
 
-        <stylesheets>
-            <URL value="@/styles/shared.css"/>
-            <URL value="@/styles/game.css"/>
-        </stylesheets>
+
 
         <!-- ================== TOP ================== -->
         <top>

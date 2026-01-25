@@ -4,9 +4,7 @@
 }
 
 /* Top bar and bottom timer formatting */
-.viewport {
-    -fx-background-color: transparent;
-}
+
 
 .topbar { -fx-padding: 6 16; }
 .top-bar-9x9 {-fx-padding: 3 8;}
@@ -294,7 +292,8 @@
 }
 
 /* Theme skins for the game board */
-.theme-runehaven .root {
+.theme-runehaven .root,
+.theme-runehaven.viewport {
     -fx-background-color: linear-gradient(to bottom right, rgba(224, 252, 252, 0.93), #d3eff8);
 }
 .theme-runehaven .board {
@@ -314,7 +313,8 @@
     -fx-background-color: linear-gradient(to bottom, #ffffff, #d6fdfd);
 }
 
-.theme-glowing-caves .root {
+.theme-glowing-caves .root,
+.theme-glowing-caves.viewport {
     -fx-background-color: linear-gradient(to bottom right, #edf7f6, #c7e3f3);
 }
 .theme-glowing-caves .board {
@@ -337,7 +337,8 @@
     -fx-border-color: rgba(6, 182, 212, 0.35);
 }
 
-.theme-stone-catacombs .root {
+.theme-stone-catacombs .root,
+.theme-stone-catacombs.viewport {
     -fx-background-color: linear-gradient(to bottom right, #f3f4f6, #e2e8f0);
 }
 .theme-stone-catacombs .board {
@@ -357,7 +358,8 @@
     -fx-background-color: linear-gradient(to bottom, #ffffff, #e7ecf2);
 }
 
-.theme-emberforge .root {
+.theme-emberforge .root,
+.theme-emberforge.viewport {
     -fx-background-color: linear-gradient(to bottom right, #f7f2eb, #efe4d7);
 }
 .theme-emberforge .board {
