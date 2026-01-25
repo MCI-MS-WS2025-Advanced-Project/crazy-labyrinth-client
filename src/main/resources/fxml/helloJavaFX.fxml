@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.control.Label?>
+
+<StackPane xmlns="http://javafx.com/javafx"
+           xmlns:fx="http://javafx.com/fxml"
+           fx:controller="mci.dibse.crazylabyrinth.client.view.controller.impl.HelloJavaFXController"
+           prefWidth="800" prefHeight="600">
+
+        <VBox fx:id="box" spacing="20" alignment="CENTER" style="-fx-padding: 20;">
+                <Label fx:id="field" text="Welcome to the ViewModel!" style="-fx-font-size: 18px; -fx-text-fill: #333333;" />
+                <Button fx:id="clickButton" text="What does the ViewModel say?" onAction="#onClick" style="-fx-font-size: 14px; -fx-background-color: #4CAF50; -fx-text-fill: white; -fx-padding: 10;" />
+                <Button fx:id="clickButton2" text="Navigate to next view" onAction="#onClick2" style="-fx-font-size: 14px; -fx-background-color: #2196F3; -fx-text-fill: white; -fx-padding: 10;" />
+        </VBox>
+
+</StackPane>

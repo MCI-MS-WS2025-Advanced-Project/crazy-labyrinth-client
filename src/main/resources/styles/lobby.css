@@ -1,0 +1,13 @@
+.server-name {
+    -fx-font-weight: bold;
+}
+
+
+.section-header {
+    -fx-font-weight: bold;
+}
+
+.setting-label {
+    -fx-font-weight: bold;
+    -fx-font-size: 12px;
+}
