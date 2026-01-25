@@ -43,8 +43,8 @@ class LobbyControllerTest {
     }
 
     @Test
-    @DisplayName("UT-VIEW-05 - LobbyController initialization path")
-    void testLobbyInitialization_UT_VIEW_05() {
+    @DisplayName("UT-VIEW-04 - LobbyController initialization path")
+    void testLobbyInitialization_UT_VIEW_04() {
         // GIVEN: Mock dependencies
         NavigationStateViewModel mockNavState = mock(NavigationStateViewModel.class);
         LobbyViewModel mockLobbyVM = mock(LobbyViewModel.class);
@@ -88,12 +88,9 @@ class LobbyControllerTest {
 
         // THEN: Ensure initialize does not throw exceptions
         assertDoesNotThrow(controller::initialize, "Initialization failed. Check field names or missing properties.");
-        System.out.println("UT-VIEW-05 Result: LobbyController successfully initialized. Symbol errors fixed.");
+        System.out.println("UT-VIEW-04 Result: LobbyController successfully initialized. Symbol errors fixed.");
     }
 
-    /**
-     * Manually injects UI components into the controller to simulate FXML loading.
-     */
     private void injectFxmlFields(LobbyController controller) {
         // Player Table and Columns
         ReflectionTestUtils.setField(controller, "playerTable", new TableView<>());
