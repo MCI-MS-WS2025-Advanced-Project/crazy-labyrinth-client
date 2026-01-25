@@ -5,6 +5,8 @@
 <?import javafx.collections.FXCollections?>
 <?import java.lang.String?>
 
+<?import javafx.scene.text.TextFlow?>
+<?import javafx.scene.text.Text?>
 <StackPane xmlns="http://javafx.com/javafx"
            xmlns:fx="http://javafx.com/fxml"
            stylesheets="@/styles/shared.css"
@@ -29,22 +31,42 @@
                         <String fx:value="3840x2160 (16:9)"/>
                     </FXCollections>
                 </items>
+                <tooltip>
+                    <Tooltip text="Wähle die Zielauflösung für das Spielfenster."/>
+                </tooltip>
             </ComboBox>
         </VBox>
 
         <VBox spacing="10" alignment="CENTER_LEFT">
             <Label text="Skalierungsmodus" styleClass="setting-label"/>
-            <RadioButton fx:id="scaleToFitRadio" text="Scale to Fit (Verhältnis beibehalten)" selected="true">
+            <RadioButton fx:id="scaleToFitRadio" text="Einpassen (Seitenverhältnis beibehalten)" selected="true">
                 <toggleGroup>
                     <ToggleGroup fx:id="scaleGroup"/>
                 </toggleGroup>
+                <tooltip>
+                    <Tooltip text="Skaliert den Inhalt so, dass alles sichtbar bleibt und das Seitenverhältnis erhalten wird. Es können Ränder entstehen."/>
+                </tooltip>
             </RadioButton>
-            <RadioButton fx:id="scaleToFillRadio" text="Scale to Fill (Vollflächig)" toggleGroup="$scaleGroup"/>
+            <RadioButton fx:id="scaleToFillRadio" text="Ausfüllen (vollflächig)" toggleGroup="$scaleGroup">
+                <tooltip>
+                    <Tooltip text="Füllt den verfügbaren Bereich vollständig. Es kann zu Beschnitt an den Rändern kommen."/>
+                </tooltip>
+            </RadioButton>
         </VBox>
 
         <HBox spacing="10" alignment="CENTER_LEFT">
-            <CheckBox fx:id="fullscreenCheckBox" text="Vollbildmodus"/>
+            <CheckBox fx:id="fullscreenCheckBox" text="Vollbild beim Start (später umschaltbar)">
+                <tooltip>
+                    <Tooltip text="Die Anwendung startet im Vollbildmodus. Du kannst Vollbild später im Spiel/den Einstellungen wieder deaktivieren."/>
+                </tooltip>
+            </CheckBox>
         </HBox>
+
+        <VBox spacing="2" alignment="CENTER_LEFT" fillWidth="true">
+            <CheckBox fx:id="borderlessCheckBox" text="Rahmenloses Fenster"/>
+            <Label text="Ohne Titelleiste und Fensterrahmen." style="-fx-font-size: 12; -fx-text-fill: #666;"/>
+            <Label text="Verschieben und native Größenänderung sind deaktiviert." style="-fx-font-size: 12; -fx-text-fill: #666;"/>
+        </VBox>
 
         <Region VBox.vgrow="ALWAYS"/>
 

@@ -24,15 +24,17 @@ public class SettingsController {
     @FXML private ComboBox<String> resolutionComboBox;
     @FXML private RadioButton scaleToFitRadio;
     @FXML private CheckBox fullscreenCheckBox;
+    @FXML private CheckBox borderlessCheckBox;
 
     // Fields to hold the results
     private boolean saved = false;
     private String selectedResolution;
     private boolean scaleRatio;
     private boolean fullscreen;
+    private boolean borderless;
 
     public ApplicationSettingsRecord getSettings() {
-        return new ApplicationSettingsRecord(selectedResolution, scaleRatio, fullscreen);
+        return new ApplicationSettingsRecord(selectedResolution, scaleRatio, fullscreen, borderless);
     }
 
     @FXML
@@ -41,6 +43,7 @@ public class SettingsController {
         resolutionComboBox.setValue(defaultViewResolutionString);
         scaleToFitRadio.setSelected(defaultScaleRatio);
         fullscreenCheckBox.setSelected(defaultFullscreen);
+        borderlessCheckBox.setSelected(false);
     }
 
     @FXML
@@ -49,6 +52,7 @@ public class SettingsController {
         this.selectedResolution = resolutionComboBox.getValue().split(" ")[0];
         this.scaleRatio = scaleToFitRadio.isSelected();
         this.fullscreen = fullscreenCheckBox.isSelected();
+        this.borderless = borderlessCheckBox.isSelected();
         this.saved = true;
 
         // 2. Close the window
@@ -58,8 +62,6 @@ public class SettingsController {
     @FXML
     private void onCancel() {
         this.saved = false;
-        closeWindow();
-        Platform.exit();
         System.exit(0);
     }
 
