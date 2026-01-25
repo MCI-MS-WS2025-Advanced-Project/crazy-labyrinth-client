@@ -213,15 +213,17 @@ public class NavigationController {
         primaryStage.setMinHeight(screenResolutionProperties.getMinViewHeight());
 
         if (!startUp) return;
-        Rectangle2D bounds = Screen.getPrimary().getBounds();         // full monitor
-        Rectangle2D visual = Screen.getPrimary().getVisualBounds();   // minus taskbar/dock
+        Rectangle2D bounds = Screen.getPrimary().getBounds(); // full monitor
+        Rectangle2D visual = Screen.getPrimary().getVisualBounds(); // minus taskbar/dock
 
         boolean osBarReservesSpace =
-                bounds.getWidth()  != visual.getWidth() ||
-                        bounds.getHeight() != visual.getHeight();
+                bounds.getWidth() != visual.getWidth() || bounds.getHeight() != visual.getHeight();
 
-        if (osBarReservesSpace && (visual.getWidth() < screenResolutionProperties.getWidth() || visual.getHeight() < screenResolutionProperties.getHeight())) {
-            log.info("available screen is smaller than set Window site, setting stage to maximized");
+        if (osBarReservesSpace
+                && (visual.getWidth() < screenResolutionProperties.getWidth()
+                        || visual.getHeight() < screenResolutionProperties.getHeight())) {
+            log.info(
+                    "available screen is smaller than set Window site, setting stage to maximized");
             primaryStage.setMaximized(true);
         }
         startUp = false;
