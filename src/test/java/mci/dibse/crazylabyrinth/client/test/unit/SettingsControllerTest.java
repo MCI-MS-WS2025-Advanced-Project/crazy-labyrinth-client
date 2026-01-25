@@ -1,6 +1,7 @@
 package mci.dibse.crazylabyrinth.client.test.unit;
 
-import javafx.application.Platform;
+import static org.junit.jupiter.api.Assertions.*;
+
 import javafx.collections.FXCollections;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
@@ -10,8 +11,6 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 class SettingsControllerTest {
 
@@ -45,7 +44,8 @@ class SettingsControllerTest {
         controller.setDefaultFullscreen(false);
 
         // GIVEN: Mock UI components (Individual instances, no Scene/Stage needed)
-        ComboBox<String> resCombo = new ComboBox<>(FXCollections.observableArrayList("1280x720 (16:9)"));
+        ComboBox<String> resCombo =
+                new ComboBox<>(FXCollections.observableArrayList("1280x720 (16:9)"));
         RadioButton scaleRadio = new RadioButton();
         CheckBox fullCheck = new CheckBox();
         CheckBox borderCheck = new CheckBox();
@@ -59,15 +59,21 @@ class SettingsControllerTest {
         // WHEN: Initialize the controller
         // We run this directly on the test thread. Since we only set properties
         // on the controls, JavaFX usually allows this in a Unit Test context.
-        assertDoesNotThrow(() -> {
-            ReflectionTestUtils.invokeMethod(controller, "initialize");
-        });
+        assertDoesNotThrow(
+                () -> {
+                    ReflectionTestUtils.invokeMethod(controller, "initialize");
+                });
 
         // THEN: Verify UI state
-        assertEquals(testRes, resCombo.getValue(), "Resolution should be correctly set from default string");
+        assertEquals(
+                testRes,
+                resCombo.getValue(),
+                "Resolution should be correctly set from default string");
         assertTrue(scaleRadio.isSelected(), "Scale ratio should be selected");
         assertFalse(fullCheck.isSelected(), "Fullscreen should be unselected");
 
-        System.out.println("UT-VIEW-05 Result: SettingsController initialized successfully in CI environment.");
+        System.out.println(
+                "UT-VIEW-05 Result: SettingsController initialized successfully in CI"
+                        + " environment.");
     }
 }

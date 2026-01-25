@@ -1,5 +1,7 @@
 package mci.dibse.crazylabyrinth.client.test.unit;
 
+import static org.mockito.Mockito.*;
+
 import labyrinth.contracts.models.ConnectAckEventPayload;
 import labyrinth.contracts.models.LobbyStateEventPayload;
 import mci.dibse.crazylabyrinth.client.service.LobbyService;
@@ -9,7 +11,6 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import static org.mockito.Mockito.*;
 
 class LobbyServiceTest {
 
@@ -19,6 +20,7 @@ class LobbyServiceTest {
     void setUp() {
         lobbyService = new LobbyService();
     }
+
     @BeforeAll
     static void initToolkit() {
         // Check if we are running in a headless environment (CI)
@@ -58,7 +60,8 @@ class LobbyServiceTest {
         lobbyService.handleLobbyState(payload);
         verify(mockListener, times(1)).onLobbyStateUpdated(payload); // Count remains 1
 
-        System.out.println("Result: Lobby listener logic verified (100% method coverage for these parts).");
+        System.out.println(
+                "Result: Lobby listener logic verified (100% method coverage for these parts).");
     }
 
     @Test
@@ -78,10 +81,13 @@ class LobbyServiceTest {
         lobbyService.handleConnectAck(payload);
 
         // THEN: Verify the listener received the correctly mapped ClientPlayer
-        verify(mockListener).onPlayerConnected(argThat(player ->
-                player.getId().equals("player-456") &&
-                        player.getIdentifierToken().equals("token-123")
-        ));
+        verify(mockListener)
+                .onPlayerConnected(
+                        argThat(
+                                player ->
+                                        player.getId().equals("player-456")
+                                                && player.getIdentifierToken()
+                                                        .equals("token-123")));
 
         System.out.println("Result: Player connection mapping and notification verified.");
     }

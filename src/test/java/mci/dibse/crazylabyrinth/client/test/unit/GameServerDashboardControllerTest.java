@@ -1,28 +1,31 @@
 package mci.dibse.crazylabyrinth.client.test.unit;
 
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.Mockito.*;
+
 import javafx.application.Platform;
 import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.transformation.SortedList;
 import javafx.scene.control.*;
 import mci.dibse.crazylabyrinth.client.NavigationController;
+import mci.dibse.crazylabyrinth.client.infrastructure.util.ScreenResolutionProperties;
 import mci.dibse.crazylabyrinth.client.view.controller.impl.GameServerDashboardController;
 import mci.dibse.crazylabyrinth.client.view.viewmodel.GameServerDashboardViewModel;
 import mci.dibse.crazylabyrinth.client.view.viewmodel.navigation.NavigationStateViewModel;
-import mci.dibse.crazylabyrinth.client.infrastructure.util.ScreenResolutionProperties;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.mockito.Mockito.*;
-
 class GameServerDashboardControllerTest {
 
     @BeforeAll
     static void initToolkit() {
-        try { com.sun.javafx.application.PlatformImpl.startup(() -> {}); } catch (Exception ignored) {}
+        try {
+            com.sun.javafx.application.PlatformImpl.startup(() -> {});
+        } catch (Exception ignored) {
+        }
     }
 
     @Test
@@ -44,7 +47,9 @@ class GameServerDashboardControllerTest {
         when(mockVM.getErrorMessage()).thenReturn(new SimpleStringProperty(""));
 
         // WHEN: Controller is initialized
-        GameServerDashboardController controller = new GameServerDashboardController(mockVM, mockNav, mockRes, navigationControllerMock, executorMock);
+        GameServerDashboardController controller =
+                new GameServerDashboardController(
+                        mockVM, mockNav, mockRes, navigationControllerMock, executorMock);
         ReflectionTestUtils.setField(controller, "statusLabel", new Label());
         ReflectionTestUtils.setField(controller, "serversTable", new TableView<>());
         ReflectionTestUtils.setField(controller, "nameCol", new TableColumn<>());
@@ -56,9 +61,13 @@ class GameServerDashboardControllerTest {
         ReflectionTestUtils.setField(controller, "showOnlyJoinable", new CheckBox());
         ReflectionTestUtils.setField(controller, "serverCountLabel", new Label());
 
-        Platform.runLater(() -> {
-            try { controller.initialize(); } catch (Exception ignored) {}
-        });
+        Platform.runLater(
+                () -> {
+                    try {
+                        controller.initialize();
+                    } catch (Exception ignored) {
+                    }
+                });
         Thread.sleep(400);
 
         // THEN: Successful path coverage

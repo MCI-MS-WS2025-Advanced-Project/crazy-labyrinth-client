@@ -1,12 +1,12 @@
 package mci.dibse.crazylabyrinth.client.test.unit;
 
+import static org.junit.jupiter.api.Assertions.*;
+
+import java.time.OffsetDateTime;
 import mci.dibse.crazylabyrinth.client.service.TimerService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import java.time.OffsetDateTime;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 class TimerServiceTest {
 

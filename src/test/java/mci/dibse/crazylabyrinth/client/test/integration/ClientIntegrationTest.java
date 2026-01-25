@@ -1,16 +1,15 @@
 package mci.dibse.crazylabyrinth.client.test.integration;
 
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+import java.time.OffsetDateTime;
+import java.util.UUID;
 import mci.dibse.crazylabyrinth.client.domain.model.record.StartGameRecord;
 import mci.dibse.crazylabyrinth.client.infrastructure.management.ManagementServerClient;
 import mci.dibse.crazylabyrinth.client.service.*;
 import org.junit.jupiter.api.*;
 import org.springframework.context.ApplicationEventPublisher;
-
-import java.time.OffsetDateTime;
-import java.util.UUID;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
 
 class ClientIntegrationTest {
 
@@ -30,7 +29,8 @@ class ClientIntegrationTest {
     static void initJavaFX() {
         try {
             com.sun.javafx.application.PlatformImpl.startup(() -> {});
-        } catch (Exception ignored) {}
+        } catch (Exception ignored) {
+        }
     }
 
     @BeforeEach
@@ -44,22 +44,33 @@ class ClientIntegrationTest {
         achievementServiceMock = mock(AchievementService.class);
 
         managementService = new GameServerManagementService(mgmtClientMock);
-        eventService = new ServerEventService(lobbyServiceMock, gameServiceMock, eventPublisherMock, timerServiceMock, achievementServiceMock);
+        eventService =
+                new ServerEventService(
+                        lobbyServiceMock,
+                        gameServiceMock,
+                        eventPublisherMock,
+                        timerServiceMock,
+                        achievementServiceMock);
         commandService = new ClientCommandService(socketServiceMock, eventPublisherMock);
     }
 
     @Test
     @DisplayName("IT-MGMT-01: Query and display server list")
     void testServerList_IT_MGMT_01() throws Exception {
-        String json = "[{" +
-                "\"id\":\"" + UUID.randomUUID() + "\", " +
-                "\"name\":\"IntegrationServer\", " +
-                "\"status\":\"LOBBY\", " +
-                "\"uri\":\"ws://localhost\", " +
-                "\"lastSeen\":\"" + OffsetDateTime.now() + "\", " +
-                "\"maxPlayers\":4, " +
-                "\"currentPlayerCount\":1" +
-                "}]";
+        String json =
+                "[{"
+                        + "\"id\":\""
+                        + UUID.randomUUID()
+                        + "\", "
+                        + "\"name\":\"IntegrationServer\", "
+                        + "\"status\":\"LOBBY\", "
+                        + "\"uri\":\"ws://localhost\", "
+                        + "\"lastSeen\":\""
+                        + OffsetDateTime.now()
+                        + "\", "
+                        + "\"maxPlayers\":4, "
+                        + "\"currentPlayerCount\":1"
+                        + "}]";
         when(mgmtClientMock.getGameServers()).thenReturn(json);
         managementService.refreshGameServerList();
         assertFalse(managementService.getServers().isEmpty());
@@ -89,14 +100,17 @@ class ClientIntegrationTest {
     void testInvalidMove_IT_MOVE_001() {
         String errorJson = "{\"type\":\"ACTION_ERROR\", \"message\":\"Field occupied\"}";
         eventService.handleEvent(errorJson);
-        verify(eventPublisherMock, atLeastOnce()).publishEvent(isA(labyrinth.contracts.models.ActionErrorEventPayload.class));
+        verify(eventPublisherMock, atLeastOnce())
+                .publishEvent(isA(labyrinth.contracts.models.ActionErrorEventPayload.class));
         System.out.println("IT-MOVE-001: Invalid move (field occupied) - PASSED");
     }
 
     @Test
     @DisplayName("IT-BONUS-01: Use bonus 'Teleport'")
     void testBeam_IT_BONUS_01() {
-        String update = "{\"type\":\"GAME_STATE_UPDATE\", \"players\":[{\"playerName\":\"P1\", \"position\":{\"rows\":1,\"cols\":1}}]}";
+        String update =
+                "{\"type\":\"GAME_STATE_UPDATE\", \"players\":[{\"playerName\":\"P1\","
+                        + " \"position\":{\"rows\":1,\"cols\":1}}]}";
         assertDoesNotThrow(() -> eventService.handleEvent(update));
         System.out.println("IT-BONUS-01: Use bonus 'Teleport' - PASSED");
     }
@@ -105,7 +119,8 @@ class ClientIntegrationTest {
     @DisplayName("IT-DISCONNECT-01: Client logout and disconnection")
     void testLogout_IT_DISCONNECT_01() {
         commandService.sendDisconnectCommand();
-        // FIX: Verify that any command is sent, accommodating the null parameter in current implementation
+        // FIX: Verify that any command is sent, accommodating the null parameter in current
+        // implementation
         verify(socketServiceMock, atLeastOnce()).sendCommand(contains("DISCONNECT"), any());
         System.out.println("IT-DISCONNECT-01: Client logout and disconnection - PASSED");
     }
@@ -113,7 +128,9 @@ class ClientIntegrationTest {
     @Test
     @DisplayName("IT-TIME-01: Timeout event and AI takeover")
     void testTimeoutAI_IT_TIME_01() {
-        String aiJson = "{\"type\":\"LOBBY_STATE\", \"players\":[{\"id\":\"P1\", \"isAiControlled\":true}]}";
+        String aiJson =
+                "{\"type\":\"LOBBY_STATE\", \"players\":[{\"id\":\"P1\","
+                        + " \"isAiControlled\":true}]}";
         eventService.handleEvent(aiJson);
         verify(lobbyServiceMock, atLeastOnce()).handleLobbyState(any());
         System.out.println("IT-TIME-01: Timeout event and AI takeover - PASSED");

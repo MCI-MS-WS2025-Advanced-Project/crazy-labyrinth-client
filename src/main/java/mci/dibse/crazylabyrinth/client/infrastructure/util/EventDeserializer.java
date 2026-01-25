@@ -28,7 +28,6 @@ public class EventDeserializer extends JsonDeserializer<Object> {
         String type = node.get("type").asText();
         EventType eventType = EventType.valueOf(type);
 
-
         return switch (eventType) {
             case EventType.SERVER_INFO -> mapper.treeToValue(node, ServerInfoPayload.class);
             case EventType.CONNECT_ACK -> mapper.treeToValue(node, ConnectAckEventPayload.class);

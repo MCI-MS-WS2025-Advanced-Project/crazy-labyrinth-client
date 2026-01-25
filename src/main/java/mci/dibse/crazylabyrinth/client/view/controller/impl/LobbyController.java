@@ -1,6 +1,5 @@
 package mci.dibse.crazylabyrinth.client.view.controller.impl;
 
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.stream.Collectors;
 import javafx.animation.Animation;
@@ -52,7 +51,6 @@ import org.springframework.stereotype.Component;
 @Slf4j
 public class LobbyController extends BaseViewCleanup {
 
-
     @FXML public VBox resultsBox;
 
     @FXML public TableView<PlayerInfoItem> playerTable;
@@ -93,8 +91,6 @@ public class LobbyController extends BaseViewCleanup {
     @FXML public Label countdown;
     @FXML public HBox countDownBox;
 
-
-
     private final GameViewModel gameViewModel;
     private final AchievementService achievementService;
     private final NavigationController navigationController;
@@ -115,7 +111,6 @@ public class LobbyController extends BaseViewCleanup {
     private static final int MAX_GAME_TIMER_MINUTES = 120;
     private static final int MIN_BONUS_COUNT = 0;
     private static final int MAX_BONUS_COUNT = 20;
-
 
     private final BooleanProperty isStartButtonLocked = new SimpleBooleanProperty(false);
 
@@ -295,20 +290,31 @@ public class LobbyController extends BaseViewCleanup {
                                                         return;
                                                     }
 
-                                                    String name = lobbyViewModel.getPlayerNameForId(item);
-                                                    boolean isWinner = item.equals(lobbyViewModel.getWinnerId());
+                                                    String name =
+                                                            lobbyViewModel.getPlayerNameForId(item);
+                                                    boolean isWinner =
+                                                            item.equals(
+                                                                    lobbyViewModel.getWinnerId());
                                                     if (isWinner) {
                                                         Text base = new Text(name);
                                                         Text winner = new Text("   Gewinner");
-                                                        winner.setStyle("-fx-font-weight: bold; -fx-fill: #bc9610;");
-                                                        DropShadow shadow = new DropShadow(
-                                                                BlurType.GAUSSIAN,
-                                                                Color.web("#d4af37", 0.6), // gold-tinted shadow with some transparency
-                                                                8,   // radius (blur)
-                                                                0.2, // spread
-                                                                0,   // offsetX
-                                                                1    // offsetY
-                                                        );
+                                                        winner.setStyle(
+                                                                "-fx-font-weight: bold; -fx-fill:"
+                                                                        + " #bc9610;");
+                                                        DropShadow shadow =
+                                                                new DropShadow(
+                                                                        BlurType.GAUSSIAN,
+                                                                        Color.web(
+                                                                                "#d4af37",
+                                                                                0.6), // gold-tinted
+                                                                        // shadow with
+                                                                        // some
+                                                                        // transparency
+                                                                        8, // radius (blur)
+                                                                        0.2, // spread
+                                                                        0, // offsetX
+                                                                        1 // offsetY
+                                                                        );
                                                         winner.setEffect(shadow);
                                                         setText(null);
                                                         setGraphic(new TextFlow(base, winner));
@@ -539,12 +545,13 @@ public class LobbyController extends BaseViewCleanup {
      * Stop the countdown and reset timer to the default value.
      */
     private void cancelCountdown() {
-        Runnable task = () -> {
-            if (countdownTimeline != null) {
-                countdownTimeline.stop();
-            }
-            remainingTimer.set(DEFAULT_START_GAME_TIMER);
-        };
+        Runnable task =
+                () -> {
+                    if (countdownTimeline != null) {
+                        countdownTimeline.stop();
+                    }
+                    remainingTimer.set(DEFAULT_START_GAME_TIMER);
+                };
         JavaFXUtils.runOnFxThread(task);
     }
 
@@ -588,34 +595,36 @@ public class LobbyController extends BaseViewCleanup {
                             }
                         });
 
-        adminColumn.setCellFactory(column -> new TableCell<PlayerInfoItem, Boolean>() {
-            private final Label label = new Label();
+        adminColumn.setCellFactory(
+                column ->
+                        new TableCell<PlayerInfoItem, Boolean>() {
+                            private final Label label = new Label();
 
-            {
-                setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
-                setAlignment(Pos.CENTER);
-                // Try several families; the first available with the glyphs will be used
-                label.setStyle(
-                        "-fx-font-weight: bold; -fx-font-size: 16px;" +
-                                "-fx-font-family: 'Noto Sans Symbols', 'DejaVu Sans', 'Segoe UI Symbol';"
-                );
+                            {
+                                setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
+                                setAlignment(Pos.CENTER);
+                                // Try several families; the first available with the glyphs will be
+                                // used
+                                label.setStyle(
+                                        "-fx-font-weight: bold; -fx-font-size:"
+                                            + " 16px;-fx-font-family: 'Noto Sans Symbols', 'DejaVu"
+                                            + " Sans', 'Segoe UI Symbol';");
+                            }
 
-            }
-
-            @Override
-            protected void updateItem(Boolean isAdmin, boolean empty) {
-                super.updateItem(isAdmin, empty);
-                if (empty || isAdmin == null) {
-                    setGraphic(null);
-                    setText(null);
-                } else {
-                    label.setText(isAdmin ? "\u2713" : "\u2718");
-                    label.setTextFill(isAdmin ? Color.GREEN : Color.RED);
-                    setGraphic(label);
-                    setText(null);
-                }
-            }
-        });
+                            @Override
+                            protected void updateItem(Boolean isAdmin, boolean empty) {
+                                super.updateItem(isAdmin, empty);
+                                if (empty || isAdmin == null) {
+                                    setGraphic(null);
+                                    setText(null);
+                                } else {
+                                    label.setText(isAdmin ? "\u2713" : "\u2718");
+                                    label.setTextFill(isAdmin ? Color.GREEN : Color.RED);
+                                    setGraphic(label);
+                                    setText(null);
+                                }
+                            }
+                        });
 
         colorColumn.setCellFactory(
                 column ->
@@ -829,7 +838,4 @@ public class LobbyController extends BaseViewCleanup {
     public void onFullscreenToggleButtonClick(ActionEvent actionEvent) {
         navigationController.toogleFullScreen();
     }
-
-
-
 }
