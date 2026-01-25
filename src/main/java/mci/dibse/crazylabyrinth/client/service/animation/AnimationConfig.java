@@ -1,20 +1,19 @@
 package mci.dibse.crazylabyrinth.client.service.animation;
 
+import lombok.Getter;
+
 /**
  * Centralized configuration for animation parameters.
  * Provides configurable animation durations and settings.
  */
 public class AnimationConfig {
 
-    // Default animation durations in milliseconds
     private double playerAnimationDuration = 500.0;
     private double tilePushAnimationDuration = 600.0;
     private double beamAnimationDuration = 600.0;
 
-    // Animation speed multipliers
-    private double globalSpeedMultiplier = 1.0;
+    @Getter private double globalSpeedMultiplier = 1.0;
 
-    // Minimum and maximum duration constraints
     private static final double MIN_DURATION = 100.0;
     private static final double MAX_DURATION = 2000.0;
 
@@ -70,15 +69,6 @@ public class AnimationConfig {
      */
     public void setBeamAnimationDuration(double duration) {
         this.beamAnimationDuration = constrainDuration(duration);
-    }
-
-    /**
-     * Get the global speed multiplier for all animations.
-     *
-     * @return global speed multiplier
-     */
-    public double getGlobalSpeedMultiplier() {
-        return globalSpeedMultiplier;
     }
 
     /**

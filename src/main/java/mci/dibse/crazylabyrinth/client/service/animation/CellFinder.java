@@ -4,24 +4,15 @@ import javafx.scene.Node;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.StackPane;
 import lombok.NonNull;
+import lombok.Setter;
 
 /**
  * Utility class for finding cells in a grid.
  * Can use either direct search or cached lookup for better performance.
  */
+@Setter
 public class CellFinder {
-
     private GridCellCache cellCache = null;
-
-    /**
-     * Set a grid cell cache to use for optimized lookups.
-     * If no cache is set, will fall back to linear search.
-     *
-     * @param cellCache the cache to use, or null to disable caching
-     */
-    public void setCellCache(GridCellCache cellCache) {
-        this.cellCache = cellCache;
-    }
 
     /**
      * Locate the stack pane cell at the given grid position.
@@ -33,12 +24,10 @@ public class CellFinder {
      * @return matching cell container or null when not found
      */
     public StackPane findCellAtGridPosition(int row, int col, @NonNull GridPane boardGrid) {
-        // Try cached lookup first if available
         if (cellCache != null) {
             return cellCache.findCellAtGridPosition(row, col);
         }
 
-        // Fall back to linear search
         return findCellAtGridPositionLinear(row, col, boardGrid);
     }
 

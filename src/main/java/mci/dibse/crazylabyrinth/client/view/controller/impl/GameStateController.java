@@ -2046,13 +2046,6 @@ public class GameStateController extends BaseViewCleanup {
                             if (newPush != null && !Objects.equals(oldPush, newPush)) {
                                 int index = newPush.getRowOrColIndex();
                                 Direction direction = newPush.getDirection();
-
-                                log.debug(
-                                        "Triggering tile push animation for all clients: index={},"
-                                                + " direction={}",
-                                        index,
-                                        direction);
-
                                 animationService.animateTilePush(index, direction, boardGrid);
                             }
                         });
@@ -2070,13 +2063,6 @@ public class GameStateController extends BaseViewCleanup {
                                     .getCurrentPosition()
                                     .addListener(
                                             (obs, oldPos, newPos) -> {
-                                                if (animationService.isTilePushAnimationActive()) {
-                                                    log.debug(
-                                                            "Skipping player movement animation"
-                                                                    + " during tile push");
-                                                    return;
-                                                }
-
                                                 if (gameViewModel
                                                         .getCurrentTurnState()
                                                         .equals(TurnState.WAITING_FOR_MOVE)) {

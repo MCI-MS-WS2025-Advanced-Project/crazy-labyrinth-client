@@ -47,11 +47,7 @@ public class PlayerMoveAnimation extends AbstractGameAnimation {
      */
     @Override
     protected boolean preAnimationValidation() {
-        if (from.equals(to)) {
-            log.debug("No movement for player as from and to positions are the same");
-            return false;
-        }
-        return true;
+        return !from.equals(to);
     }
 
     /**
@@ -99,7 +95,6 @@ public class PlayerMoveAnimation extends AbstractGameAnimation {
 
         transition.setOnFinished(
                 event -> {
-                    log.debug("Movement animation completed for player");
                     handleAnimationCompletion();
                 });
 
@@ -107,12 +102,10 @@ public class PlayerMoveAnimation extends AbstractGameAnimation {
     }
 
     /**
-     * Callback for animation completion; no cleanup currently required.
+     * Callback for animation completion
      */
     @Override
-    public void onCompleted() {
-        // Cleanup if needed
-    }
+    public void onCompleted() {}
 
     /**
      * Calculate animation duration based on path length.

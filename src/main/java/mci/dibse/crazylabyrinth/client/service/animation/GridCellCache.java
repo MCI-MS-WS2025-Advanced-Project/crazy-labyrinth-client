@@ -2,6 +2,7 @@ package mci.dibse.crazylabyrinth.client.service.animation;
 
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.StackPane;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -13,9 +14,9 @@ public class GridCellCache {
 
     private final GridPane boardGrid;
     private StackPane[][] cellCache;
-    private int gridRows = -1;
-    private int gridColumns = -1;
-    private boolean cacheValid = false;
+    @Getter private int gridRows = -1;
+    @Getter private int gridColumns = -1;
+    @Getter private boolean cacheValid = false;
 
     /**
      * Constructor for GridCellCache.
@@ -35,12 +36,10 @@ public class GridCellCache {
      * @return the cell at the specified position, or null if not found
      */
     public StackPane findCellAtGridPosition(int row, int col) {
-        // Check if cache needs to be rebuilt
         if (!cacheValid || hasGridChanged()) {
             rebuildCache();
         }
 
-        // Check bounds
         if (row < 0 || row >= gridRows || col < 0 || col >= gridColumns) {
             return null;
         }
@@ -65,15 +64,11 @@ public class GridCellCache {
      * This is an O(n) operation but only needs to be done when the grid changes.
      */
     private synchronized void rebuildCache() {
-        log.debug("Rebuilding grid cell cache");
-
         int currentRows = boardGrid.getRowConstraints().size();
         int currentCols = boardGrid.getColumnConstraints().size();
 
-        // Initialize new cache
         StackPane[][] newCache = new StackPane[currentRows][currentCols];
 
-        // Populate cache by scanning all children
         for (var node : boardGrid.getChildren()) {
             if (node instanceof StackPane cellContainer) {
                 Integer cellRow = GridPane.getRowIndex(cellContainer);
@@ -90,13 +85,10 @@ public class GridCellCache {
             }
         }
 
-        // Update cache and metadata
         cellCache = newCache;
         gridRows = currentRows;
         gridColumns = currentCols;
         cacheValid = true;
-
-        log.debug("Grid cell cache rebuilt: {}x{} cells", gridRows, gridColumns);
     }
 
     /**
@@ -105,33 +97,5 @@ public class GridCellCache {
      */
     public void invalidateCache() {
         cacheValid = false;
-        log.debug("Grid cell cache invalidated");
-    }
-
-    /**
-     * Get the number of rows in the cached grid.
-     *
-     * @return number of rows, or -1 if cache is not built
-     */
-    public int getGridRows() {
-        return gridRows;
-    }
-
-    /**
-     * Get the number of columns in the cached grid.
-     *
-     * @return number of columns, or -1 if cache is not built
-     */
-    public int getGridColumns() {
-        return gridColumns;
-    }
-
-    /**
-     * Check if the cache is currently valid.
-     *
-     * @return true if cache is valid, false otherwise
-     */
-    public boolean isCacheValid() {
-        return cacheValid;
     }
 }

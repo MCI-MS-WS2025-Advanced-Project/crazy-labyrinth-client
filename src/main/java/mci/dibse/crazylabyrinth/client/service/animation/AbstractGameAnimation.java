@@ -36,13 +36,11 @@ public abstract class AbstractGameAnimation implements GameAnimation {
             isRunning = true;
             log.debug("Starting animation: {}", getClass().getSimpleName());
 
-            // Pre-animation validation
             if (!preAnimationValidation()) {
                 handleAnimationCompletion();
                 return;
             }
 
-            // Execute the concrete animation
             executeAnimation();
 
         } catch (Exception e) {
@@ -104,7 +102,6 @@ public abstract class AbstractGameAnimation implements GameAnimation {
      */
     @Override
     public void onCompleted() {
-        // Default implementation - can be overridden by subclasses
         log.debug("Animation completed: {}", getClass().getSimpleName());
     }
 

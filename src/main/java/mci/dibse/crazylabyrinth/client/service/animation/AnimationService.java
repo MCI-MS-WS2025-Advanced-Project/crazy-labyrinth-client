@@ -3,6 +3,8 @@ package mci.dibse.crazylabyrinth.client.service.animation;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.GridPane;
 import labyrinth.contracts.models.Direction;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import mci.dibse.crazylabyrinth.client.view.viewmodel.item.CoordinatesItem;
 import mci.dibse.crazylabyrinth.client.view.viewmodel.item.GameBoardItem;
@@ -16,8 +18,7 @@ public class AnimationService {
     private final Object animationLock = new Object();
     private GameAnimation currentAnimation = null;
     private GameAnimation pendingAnimation = null;
-    private AnimationConfig animationConfig;
-    private boolean isTilePushAnimationActive = false;
+    @Getter @Setter private AnimationConfig animationConfig;
 
     /**
      * Constructor for AnimationService with custom configuration.
@@ -45,30 +46,6 @@ public class AnimationService {
     }
 
     /**
-     * Get the current animation configuration.
-     * @return the animation configuration
-     */
-    public AnimationConfig getAnimationConfig() {
-        return animationConfig;
-    }
-
-    /**
-     * Check if a tile push animation is currently active.
-     * @return true if a tile push animation is running, false otherwise
-     */
-    public boolean isTilePushAnimationActive() {
-        return isTilePushAnimationActive;
-    }
-
-    /**
-     * Set a new animation configuration.
-     * @param animationConfig the new animation configuration
-     */
-    public void setAnimationConfig(AnimationConfig animationConfig) {
-        this.animationConfig = animationConfig;
-    }
-
-    /**
      * Animate player movement from one position to another.
      * @param board the game board
      * @param playerPawn the player pawn to animate
@@ -92,7 +69,6 @@ public class AnimationService {
      * @param boardGrid the UI grid pane
      */
     public void animateTilePush(int rowOrColIndex, Direction pushDirection, GridPane boardGrid) {
-        isTilePushAnimationActive = true;
         scheduleAnimation(new TilePushAnimation(this, rowOrColIndex, pushDirection, boardGrid));
     }
 
@@ -108,14 +84,11 @@ public class AnimationService {
     private void scheduleAnimation(GameAnimation animation) {
         synchronized (animationLock) {
             if (currentAnimation != null && currentAnimation.isRunning()) {
-                log.debug("Animation already in progress, queueing new animation");
                 pendingAnimation = animation;
                 return;
             }
             currentAnimation = animation;
         }
-
-        log.debug("Starting new animation: {}", animation.getClass().getSimpleName());
 
         animation.animate();
     }
@@ -127,21 +100,11 @@ public class AnimationService {
     public void onAnimationCompleted(GameAnimation completedAnimation) {
         synchronized (animationLock) {
             if (currentAnimation == completedAnimation) {
-                log.debug("Animation completed: {}", completedAnimation.getClass().getSimpleName());
-
-                // Reset tile push flag if this was a tile push animation
-                if (completedAnimation instanceof TilePushAnimation) {
-                    isTilePushAnimationActive = false;
-                }
-
                 currentAnimation = null;
 
                 if (pendingAnimation != null) {
                     GameAnimation nextAnimation = pendingAnimation;
                     pendingAnimation = null;
-                    log.debug(
-                            "Starting pending animation: {}",
-                            nextAnimation.getClass().getSimpleName());
                     scheduleAnimation(nextAnimation);
                 }
             }
