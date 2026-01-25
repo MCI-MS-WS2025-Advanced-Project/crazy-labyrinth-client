@@ -51,7 +51,7 @@ public class FileNameMapper {
     private static final String HOME_RED = "Haus_red";
     private static final String HOME_BLUE = "Haus_blue";
     private static final String HOME_GREEN = "Haus_gruen";
-    private static final String HOME_YELLOW = "Haus_gelb";
+    private static final String HOME_YELLOW = "Haus_yellow";
 
     private static final String PLAYER_RED = "player_red";
     private static final String PLAYER_BLUE = "player_blue";
