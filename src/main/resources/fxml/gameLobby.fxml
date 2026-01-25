@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.*?>
+<?import java.util.*?>
+<?import javafx.scene.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<?import javafx.collections.FXCollections?>
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            stylesheets="@/styles/lobby.css"
+            prefHeight="400" prefWidth="800"
+            fx:controller="mci.dibse.crazylabyrinth.client.view.controller.impl.LobbyController">
+
+    <top>
+        <Label fx:id="gameNameLabel" styleClass="server-name" alignment="CENTER" BorderPane.alignment="CENTER"/>
+    </top>
+
+    <left>
+        <!-- Admin Settings  managed="${controller.isAdmin}"-->
+        <VBox fx:id="adminSettings" spacing="10" >
+            <Label text="Spieleinstellungen" styleClass="section-header"/>
+
+            <!-- Bonus Feature Toggle -->
+            <VBox spacing="5">
+                <Label text="Bonus Feature:" styleClass="setting-label"/>
+                <CheckBox fx:id="bonusEnabledCheck" text="Bonus aktivieren (TODO)"/>
+            </VBox>
+
+            <!-- Board Size Selection -->
+            <VBox spacing="5">
+                <Label text="Spielfeldgröße" styleClass="setting-label"/>
+                <ComboBox fx:id="boardSizeCombo" promptText="Select Board Size">
+                    <items>
+                        <FXCollections fx:factory="observableArrayList">
+                            <String fx:value="Klein (5x5)"/>
+                            <String fx:value="Normal (7x7)"/>
+                            <String fx:value="Groß (9x9)"/>
+                        </FXCollections>
+                    </items>
+                </ComboBox>
+            </VBox>
+
+            <!-- Treasure Cards Count -->
+            <VBox spacing="5">
+                <Label text="Schatzkarten" styleClass="setting-label"/>
+                <HBox>
+                    <Spinner fx:id="treasureCardsSpinner" min="1" max="6" initialValue="6" maxWidth="50" editable="true"/>
+                    <Label text="pro Spieler"/>
+                </HBox>
+            </VBox>
+
+            <!-- Game Timer -->
+            <VBox spacing="5">
+                <Label text="Timer" styleClass="setting-label"/>
+                <CheckBox fx:id="timerEnabledCheck" text="Timer anpassen"/>
+                <HBox fx:id="timerSettings">
+                    <Label text="Spieldauer (Minuten)" styleClass="setting-label"/>
+                    <Spinner fx:id="gameTimerSpinner" min="1" max="120" initialValue="30" maxWidth="80" editable="true"/>
+                </HBox>
+
+            </VBox>
+
+
+
+            <!--Spinner fx:id="gameCountSpinner"/-->
+            <Button fx:id="startGameButton" onAction="#onStartButtonClick" text="Start Game"/>
+        </VBox>
+    </left>
+
+    <center>
+        <TableView fx:id="playerTable">
+            <columns>
+                <TableColumn fx:id="playerNameColumn" text="Player"/>
+                <TableColumn fx:id="colorColumn" text="Color"/>
+                <TableColumn fx:id="adminColumn" text="Admin"/>
+            </columns>
+        </TableView>
+    </center>
+
+    <right>
+        <VBox spacing="10">
+            <Label text="Game Statistics" styleClass="section-header"/>
+            <HBox>
+                <Label  text="Max Players: "/>
+                <Label fx:id="maxPlayers" />
+            </HBox>
+            <HBox>
+                <Label text="Connected: "/>
+                <Label fx:id="connectedPlayers"/>
+            </HBox>
+            <HBox>
+                <Label text="Starting in: "/>
+                <Label fx:id="countdown"/>
+            </HBox>
+            <Button fx:id="leaveLobby" onAction="#onleaveLobbyButtonClick" text="Lobby verlassen"/>
+        </VBox>
+    </right>
+
+</BorderPane>
