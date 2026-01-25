@@ -189,6 +189,8 @@ public class GameStateController extends BaseViewCleanup {
     private final AnimationService animationService;
     private AnimationInitializerService animationInitializerService;
 
+
+
     @Autowired
     public GameStateController(
             NavigationStateViewModel vm,
@@ -200,6 +202,7 @@ public class GameStateController extends BaseViewCleanup {
         this.screenResolutionProperties = screenResolutionProperties;
         this.animationService = new AnimationService();
         this.navigationController = navigationController;
+
     }
 
     /**
