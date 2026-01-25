@@ -133,8 +133,8 @@
 
 .sidebar-left { -fx-padding: 45 0 60 10; }
 .sidebar-left-wide { -fx-padding: 45 0 60 30; }
-.sidebar-right { -fx-padding: 45 10 60 0; }
-.sidebar-right-wide { -fx-padding: 45 30 60 0; }
+.sidebar-right { /* -fx-padding: 45 10 60 0; */}
+.sidebar-right-wide { /*-fx-padding: 45 30 60 0; */}
 
 .game-container {
      -fx-padding: 8;

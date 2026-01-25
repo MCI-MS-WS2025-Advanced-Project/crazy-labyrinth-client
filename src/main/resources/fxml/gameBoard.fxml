@@ -194,6 +194,7 @@
 
                 <!-- RIGHT SIDEBAR -->
                 <VBox fx:id="rightSidebar" alignment="TOP_CENTER"   GridPane.columnIndex="2">
+                    <Region VBox.vgrow="SOMETIMES"/>
                     <VBox fx:id="playerLabelsWrapper" alignment="TOP_CENTER" spacing="10" styleClass="card">
                         <Label text="Spieler" styleClass="section-header" />
                         <VBox spacing="8" alignment="CENTER_LEFT">
@@ -240,9 +241,9 @@
                         </VBox>
                     </VBox>
 
-                    <Region VBox.vgrow="ALWAYS"/>
+                    <Region VBox.vgrow="SOMETIMES"/>
 
-                    <VBox fx:id="extraTileWrapper" fillWidth="false" alignment="CENTER" spacing="12" styleClass="card">
+                    <VBox fx:id="extraTileWrapper" fillWidth="false" alignment="CENTER" spacing="12" styleClass="card" >
                         <Label text="Gang Karte" styleClass="section-header"/>
                         <StackPane fx:id="extraTileContainer" styleClass="card,image-card">
                             <ImageView fx:id="extraTile" fitWidth="110" fitHeight="110"/> <!-- fitWidth="110" fitHeight="110" -->
@@ -275,6 +276,7 @@
                             <Button fx:id="rotateRightButton" text="⟳" prefWidth="44" styleClass="round-button,secondary-button"/>
                         </HBox>
                     </VBox>
+                    <Region VBox.vgrow="SOMETIMES"/>
                 </VBox>
 
             </GridPane>
