@@ -28,7 +28,6 @@ public class AsyncConfig {
         return executor;
     }
 
-
     @Bean("commandExecutor")
     public Executor commandExecutor() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();

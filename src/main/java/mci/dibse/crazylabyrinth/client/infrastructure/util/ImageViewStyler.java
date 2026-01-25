@@ -24,7 +24,6 @@ public class ImageViewStyler {
         glow.setLevel(0.65); // High level for "flashy" look
         glow.setInput(baseAdjust);
 
-
         DropShadow outline = new DropShadow();
         outline.setRadius(2.0);
         outline.setSpread(0.2);
@@ -36,11 +35,6 @@ public class ImageViewStyler {
 
         aura.setInput(outline);
         treasureImage.setEffect(aura);
-
-
-
-
-
     }
 
     /**
@@ -65,7 +59,6 @@ public class ImageViewStyler {
         glow.setLevel(0.65); // High level for "flashy" look
         glow.setInput(baseAdjust);
 
-
         DropShadow outline = new DropShadow();
         outline.setRadius(2.0);
         outline.setSpread(0.2);
@@ -77,9 +70,6 @@ public class ImageViewStyler {
 
         aura.setInput(outline);
 
-
         playerImage.setEffect(aura);
-
-
     }
 }

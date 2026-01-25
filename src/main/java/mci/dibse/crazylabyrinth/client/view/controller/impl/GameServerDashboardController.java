@@ -5,7 +5,6 @@ import static mci.dibse.crazylabyrinth.client.infrastructure.util.JavaFXUtils.ru
 import java.time.Instant;
 import java.util.Optional;
 import java.util.concurrent.Executor;
-
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.value.ObservableValue;
@@ -68,14 +67,16 @@ public class GameServerDashboardController extends BaseViewCleanup {
 
     private ScreenResolutionProperties screenResolutionProperties;
 
-
-
     @Qualifier("commandExecutor")
     private Executor commandExecutor;
 
     @Autowired
     public GameServerDashboardController(
-            GameServerDashboardViewModel vm, NavigationStateViewModel navState, ScreenResolutionProperties screenResolutionProperties, NavigationController navigationController, Executor commandExecutor) {
+            GameServerDashboardViewModel vm,
+            NavigationStateViewModel navState,
+            ScreenResolutionProperties screenResolutionProperties,
+            NavigationController navigationController,
+            Executor commandExecutor) {
         super(navState);
         this.viewModel = vm;
         this.screenResolutionProperties = screenResolutionProperties;
@@ -411,29 +412,26 @@ public class GameServerDashboardController extends BaseViewCleanup {
                                                 String.valueOf(
                                                         serverItem.getMaxPlayers().getValue()));
 
-
                                 executeJoinCommand(gameInfo);
-
                             });
                 };
         runOnFxThread(dialogTask);
     }
 
-
     private void executeJoinCommand(GameInfoRecord gameInfo) {
         progressJoining.setVisible(true);
         progressJoining.setManaged(true);
-        commandExecutor.execute(() ->  {
-            try {
-                viewModel.joinSelectedServer(gameInfo);
-            } finally {
-                JavaFXUtils.runOnFxThread( () -> {
-                    progressJoining.setVisible(false);
-                    progressJoining.setManaged(false);
+        commandExecutor.execute(
+                () -> {
+                    try {
+                        viewModel.joinSelectedServer(gameInfo);
+                    } finally {
+                        JavaFXUtils.runOnFxThread(
+                                () -> {
+                                    progressJoining.setVisible(false);
+                                    progressJoining.setManaged(false);
+                                });
+                    }
                 });
-            }
-        });
     }
-
-
 }

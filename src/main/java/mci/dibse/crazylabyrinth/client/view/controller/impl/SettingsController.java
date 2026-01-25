@@ -18,10 +18,8 @@ import org.springframework.stereotype.Component;
 public class SettingsController {
 
     private String defaultViewResolutionString;
-    @Setter
-    private boolean defaultScaleRatio;
-    @Setter
-    private boolean defaultFullscreen ;
+    @Setter private boolean defaultScaleRatio;
+    @Setter private boolean defaultFullscreen;
 
     @FXML private ComboBox<String> resolutionComboBox;
     @FXML private RadioButton scaleToFitRadio;
@@ -32,7 +30,6 @@ public class SettingsController {
     private String selectedResolution;
     private boolean scaleRatio;
     private boolean fullscreen;
-
 
     public ApplicationSettingsRecord getSettings() {
         return new ApplicationSettingsRecord(selectedResolution, scaleRatio, fullscreen);
@@ -72,10 +69,7 @@ public class SettingsController {
         stage.close();
     }
 
-
     public void setDefaultResolutionString(String defaultViewResolutionString) {
         this.defaultViewResolutionString = defaultViewResolutionString;
     }
-
-
 }

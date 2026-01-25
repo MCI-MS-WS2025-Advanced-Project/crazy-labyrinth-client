@@ -2,8 +2,6 @@ package mci.dibse.crazylabyrinth.client;
 
 import jakarta.annotation.PostConstruct;
 import java.io.IOException;
-
-import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -44,18 +42,17 @@ public class NavigationController {
     private static final String LOBBY_VIEW = "gameLobby.fxml";
     private static final String GAMEBOARD_VIEW = "gameBoard.fxml";
 
-
-    @Value("${default.game.board.view.resolution:#{T(mci.dibse.crazylabyrinth.client.domain.context.ApplicationSettingsRecord).DEFAULT_RESOLUTION}}")
+    @Value(
+            "${default.game.board.view.resolution:#{T(mci.dibse.crazylabyrinth.client.domain.context.ApplicationSettingsRecord).DEFAULT_RESOLUTION}}")
     private String defaultViewResolution;
 
-
-    @Value("${default.app.scale.ratio:#{T(mci.dibse.crazylabyrinth.client.domain.context.ApplicationSettingsRecord).DEFAULT_SCALE_RATIO}}")
+    @Value(
+            "${default.app.scale.ratio:#{T(mci.dibse.crazylabyrinth.client.domain.context.ApplicationSettingsRecord).DEFAULT_SCALE_RATIO}}")
     private boolean defaultScaleRatio;
 
-
-    @Value("${default.app.fullscreen:#{T(mci.dibse.crazylabyrinth.client.domain.context.ApplicationSettingsRecord).DEFAULT_FULLSCREEN}}")
+    @Value(
+            "${default.app.fullscreen:#{T(mci.dibse.crazylabyrinth.client.domain.context.ApplicationSettingsRecord).DEFAULT_FULLSCREEN}}")
     private boolean defaultFullscreen;
-
 
     private final NavigationStateViewModel navState;
     private final ViewLoader viewLoader;
@@ -90,22 +87,22 @@ public class NavigationController {
     /**
      * Show the main screen and initialize stage sizing.
      */
-    public void showMainScreen()  {
+    public void showMainScreen() {
         log.debug("Showing main screen...");
         ApplicationSettingsRecord settings = null;
         try {
             showSettingsScreenAndSetValues();
         } catch (Exception e) {
-             log.error("Error while showing settings screen", e);
+            log.error("Error while showing settings screen", e);
         }
         screenResolutionProperties.setPrimaryStage(primaryStage);
         setStageMinMaxSizes();
         showScreen(NavigationStateViewModel.ScreenId.MAIN);
-
     }
 
     private ApplicationSettingsRecord showSettingsScreenAndSetValues() throws IOException {
-        FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/settings.fxml"));;
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/settings.fxml"));
+        ;
         SettingsController controller = new SettingsController();
         controller.setDefaultResolutionString(defaultViewResolution);
         controller.setDefaultScaleRatio(defaultScaleRatio);
@@ -113,7 +110,6 @@ public class NavigationController {
 
         loader.setController(controller);
         Parent settingsRoot = loader.load();
-
 
         Stage settingsStage = new Stage();
         Scene scene = new Scene(settingsRoot);
@@ -130,12 +126,10 @@ public class NavigationController {
         return settings;
     }
 
-
     public void toogleFullScreen() {
         if (primaryStage != null) {
             primaryStage.setFullScreen(!primaryStage.isFullScreen());
         }
-
     }
 
     /**

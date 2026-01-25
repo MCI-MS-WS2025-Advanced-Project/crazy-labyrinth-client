@@ -167,42 +167,44 @@ public class JavaFXUtils {
 
         javafx.beans.Observable[] dependencies;
         if (table.getItems() != null) {
-            dependencies = new javafx.beans.Observable[]{
-                    flow.layoutBoundsProperty(),
-                    table.fixedCellSizeProperty(),
-                    Bindings.size(table.getItems())
-            };
+            dependencies =
+                    new javafx.beans.Observable[] {
+                        flow.layoutBoundsProperty(),
+                        table.fixedCellSizeProperty(),
+                        Bindings.size(table.getItems())
+                    };
         } else {
-            dependencies = new javafx.beans.Observable[]{
-                    flow.layoutBoundsProperty(),
-                    table.fixedCellSizeProperty()
-            };
+            dependencies =
+                    new javafx.beans.Observable[] {
+                        flow.layoutBoundsProperty(), table.fixedCellSizeProperty()
+                    };
         }
 
-
         // Height: floor to an integer number of rows so the last partial row is fully hidden
-        clip.heightProperty().bind(Bindings.createDoubleBinding(
-                () -> {
-                    Bounds b = flow.getLayoutBounds();
-                    double cellSize = table.getFixedCellSize();
-                    double flowHeight = b.getHeight();
+        clip.heightProperty()
+                .bind(
+                        Bindings.createDoubleBinding(
+                                () -> {
+                                    Bounds b = flow.getLayoutBounds();
+                                    double cellSize = table.getFixedCellSize();
+                                    double flowHeight = b.getHeight();
 
-                    if (cellSize <= 0) return Math.max(0.0, flowHeight);
+                                    if (cellSize <= 0) return Math.max(0.0, flowHeight);
 
-                    double snappedHeight = Math.floor(flowHeight / cellSize) * cellSize;
+                                    double snappedHeight =
+                                            Math.floor(flowHeight / cellSize) * cellSize;
 
-                    if (table.getItems() != null) {
-                        double contentHeight = table.getItems().size() * cellSize;
-                        // If content extends beyond the snapped height, the partial row contains data.
-                        if (contentHeight > snappedHeight) {
-                            return Math.max(0.0, flowHeight);
-                        }
-                    }
+                                    if (table.getItems() != null) {
+                                        double contentHeight = table.getItems().size() * cellSize;
+                                        // If content extends beyond the snapped height, the partial
+                                        // row contains data.
+                                        if (contentHeight > snappedHeight) {
+                                            return Math.max(0.0, flowHeight);
+                                        }
+                                    }
 
-                    return Math.max(0.0, snappedHeight);
-                },
-                dependencies
-        ));
-
+                                    return Math.max(0.0, snappedHeight);
+                                },
+                                dependencies));
     }
 }

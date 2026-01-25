@@ -171,8 +171,6 @@ public class PlayerStateItem extends BaseItem<PlayerState> {
 
         this.remainingTreasureCount.set(source.getRemainingTreasureCount());
 
-
-
         List<AchievementType> achievements = processAchievementList(source);
         this.achievementTypes.set(FXCollections.observableArrayList(achievements));
 
@@ -200,10 +198,12 @@ public class PlayerStateItem extends BaseItem<PlayerState> {
         homePosition.unbind();
     }
 
-    //"Wir hatten ausgemacht, dass die Achievements erst am Schluss mittels achievementUnlockEvent (Broadcast) "verteilt" werden und nicht während dem Spiel"
+    // "Wir hatten ausgemacht, dass die Achievements erst am Schluss mittels achievementUnlockEvent
+    // (Broadcast) "verteilt" werden und nicht während dem Spiel"
     private List<AchievementType> processAchievementList(PlayerState source) {
         List<AchievementType> achievements;
-        if (source.getAchievements() != null) achievements = Arrays.stream(source.getAchievements()).toList();
+        if (source.getAchievements() != null)
+            achievements = Arrays.stream(source.getAchievements()).toList();
         else achievements = new java.util.ArrayList<>();
         return achievements;
     }
