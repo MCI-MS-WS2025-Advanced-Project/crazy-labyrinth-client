@@ -200,6 +200,7 @@ public class GameStateController extends BaseViewCleanup {
     private boolean aiRunning = false;
     private ClientAIExecutor clientAIExecutor;
     private ChangeListener<TurnState> aiTurnStateListener;
+    ChangeListener<TreasureItem> homeTreasureChangeListener;
 
     @Autowired
     public GameStateController(
@@ -342,7 +343,15 @@ public class GameStateController extends BaseViewCleanup {
                                         });
                             }
                         });
+
+        //home treasure
+         homeTreasureChangeListener = (obs, old, newVal) -> {
+            nextTreasureImage.imageProperty().unbind();
+            nextTreasureImage.setImage(newVal.getTreasureImage());
+        };
+        gameViewModel.getHomeTreasureItemProperty().addListener(homeTreasureChangeListener);
     }
+
 
     private void applyThemeStyleClass() {
         Theme theme = FileNameMapper.getTheme();
@@ -548,6 +557,8 @@ public class GameStateController extends BaseViewCleanup {
         aiTakeoverButton.textProperty().unbind();
         if (turnTimeline != null) turnTimeline.stop();
         if (gameTimeline != null) gameTimeline.stop();
+
+        gameViewModel.getHomeTreasureItemProperty().addListener(homeTreasureChangeListener);
     }
 
     /**
