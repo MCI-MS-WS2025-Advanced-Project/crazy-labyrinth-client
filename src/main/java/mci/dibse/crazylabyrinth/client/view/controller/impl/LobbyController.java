@@ -99,12 +99,10 @@ public class LobbyController extends BaseViewCleanup {
     private static final int MIN_PLAYERS_FOR_GAME_START = 1;
     private static final int MIN_TREASURE_PER_PLAYER = 1;
     private static final int MAX_TREASURE_PER_PLAYER = 6;
-    private static final int DEFAULT_TREASURE_PER_PLAYER = 6;
     private static final int MIN_GAME_TIMER_MINUTES = 1;
     private static final int MAX_GAME_TIMER_MINUTES = 120;
     private static final int MIN_BONUS_COUNT = 0;
     private static final int MAX_BONUS_COUNT = 20;
-    private static final int DEFAULT_BONUS_COUNT = 0;
     private static final int DEFAULT_START_GAME_TIMER = 60;
 
     private final BooleanProperty isStartButtonLocked = new SimpleBooleanProperty(false);
@@ -142,6 +140,9 @@ public class LobbyController extends BaseViewCleanup {
     @FXML
     public void initialize() {
 
+        int DEFAULT_BONUS_COUNT = lobbyViewModel.getGameDefaultBonusCount();
+        int DEFAULT_TREASURE_PER_PLAYER = lobbyViewModel.getGameDefaultTreasureCountPerPlayer();
+
         initViewToRatio();
 
         playerTable.setItems(lobbyViewModel.getPlayersListProperty());
@@ -177,7 +178,7 @@ public class LobbyController extends BaseViewCleanup {
                         DEFAULT_TREASURE_PER_PLAYER);
         treasureCardsSpinner.setValueFactory(valueFactory);
 
-        // TODO min max??
+
         timerEnabledCheck.selectedProperty().set(lobbyViewModel.isDefaultTimerEnabled());
         timerSettings.visibleProperty().bind(timerEnabledCheck.selectedProperty());
         timerSettings.managedProperty().bind(timerEnabledCheck.selectedProperty());
@@ -188,6 +189,7 @@ public class LobbyController extends BaseViewCleanup {
                         MIN_GAME_TIMER_MINUTES, MAX_GAME_TIMER_MINUTES, defaultTimerInMinutes);
         gameTimerSpinner.setValueFactory(timerFactory);
 
+        bonusEnabledCheck.selectedProperty().set(lobbyViewModel.isDefaultBonusEnabled());
         bonusSetting.visibleProperty().bind(bonusEnabledCheck.selectedProperty());
         bonusSetting.managedProperty().bind(bonusEnabledCheck.selectedProperty());
 
@@ -195,6 +197,7 @@ public class LobbyController extends BaseViewCleanup {
                 new SpinnerValueFactory.IntegerSpinnerValueFactory(
                         MIN_BONUS_COUNT, MAX_BONUS_COUNT, DEFAULT_BONUS_COUNT);
         bonusCountSpinner.setValueFactory(bonusFactory);
+
 
         setupCountDownTimer();
 
@@ -208,13 +211,13 @@ public class LobbyController extends BaseViewCleanup {
                 .addListener(
                         (obs, oldScene, newScene) -> {
                             if (newScene != null) {
-                                // First pulse: attach
+                                // wait a few pulses
                                 Platform.runLater(
                                         () -> {
                                             root.applyCss();
-                                            root.layout(); // ensures layoutBounds valid now
-                                            initUiScaling(); // sets up bindings only (no pref in
-                                            // lambdas)
+                                            root.layout();
+                                            initUiScaling();
+
                                         });
                             }
                         });
