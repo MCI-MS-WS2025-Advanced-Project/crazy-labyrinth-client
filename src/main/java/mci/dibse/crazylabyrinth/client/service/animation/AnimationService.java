@@ -78,6 +78,24 @@ public class AnimationService {
     }
 
     /**
+     * Animate two players swapping positions.
+     * @param playerPawn1 the first player pawn to animate
+     * @param playerPawn2 the second player pawn to animate
+     * @param position1 starting position of first player / target position of second player
+     * @param position2 starting position of second player / target position of first player
+     * @param boardGrid the UI grid pane
+     */
+    public void animateSwap(
+            ImageView playerPawn1,
+            ImageView playerPawn2,
+            CoordinatesItem position1,
+            CoordinatesItem position2,
+            GridPane boardGrid) {
+        scheduleAnimation(
+                new SwapAnimation(this, playerPawn1, playerPawn2, position1, position2, boardGrid));
+    }
+
+    /**
      * Schedule an animation for execution.
      * @param animation the animation to schedule
      */
