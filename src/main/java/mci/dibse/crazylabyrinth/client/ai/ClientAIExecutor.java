@@ -68,6 +68,13 @@ public class ClientAIExecutor {
     public void executeDecision(AiDecision decision) {
         if (decision == null) return;
 
+        // prevent resetting execution if a decision is already in progress
+        if (this.pending != null) {
+            log.debug("AI: executeDecision ignored - decision already pending (pushesSent={}, moveSent={}, bonusSent={})",
+                    pushesSent, moveSent, bonusSent);
+            return;
+        }
+
         this.pending = decision;
         this.bonusSent = false;
         this.pushesSent = 0;
@@ -79,6 +86,7 @@ public class ClientAIExecutor {
             onTurnStateChanged(current);
         }
     }
+
 
 
     /**
