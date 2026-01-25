@@ -49,8 +49,8 @@ class ClientIntegrationTest {
     }
 
     @Test
-    @DisplayName("IT-MGMT-003: Query and display server list")
-    void testServerList_IT_MGMT_003() throws Exception {
+    @DisplayName("IT-MGMT-01: Query and display server list")
+    void testServerList_IT_MGMT_01() throws Exception {
         String json = "[{" +
                 "\"id\":\"" + UUID.randomUUID() + "\", " +
                 "\"name\":\"IntegrationServer\", " +
@@ -63,25 +63,25 @@ class ClientIntegrationTest {
         when(mgmtClientMock.getGameServers()).thenReturn(json);
         managementService.refreshGameServerList();
         assertFalse(managementService.getServers().isEmpty());
-        System.out.println("IT-MGMT-003: Query and display server list - PASSED");
+        System.out.println("IT-MGMT-01: Query and display server list - PASSED");
     }
 
     @Test
-    @DisplayName("IT-ADMIN-001: Game start by administrator")
-    void testAdminStart_IT_ADMIN_001() {
+    @DisplayName("IT-ADMIN-01: Game start by administrator")
+    void testAdminStart_IT_ADMIN_01() {
         StartGameRecord start = new StartGameRecord(12, 5, 600, 7);
         commandService.sendStartGameCommand(start);
         verify(socketServiceMock, atLeastOnce()).sendCommand(anyString(), any());
-        System.out.println("IT-ADMIN-001: Game start by administrator - PASSED");
+        System.out.println("IT-ADMIN-01: Game start by administrator - PASSED");
     }
 
     @Test
-    @DisplayName("IT-ADMIN-003: Configuration of game parameters")
-    void testConfig_IT_ADMIN_003() {
+    @DisplayName("IT-ADMIN-02: Configuration of game parameters")
+    void testConfig_IT_ADMIN_02() {
         StartGameRecord config = new StartGameRecord(24, 0, 600, 9);
         commandService.sendStartGameCommand(config);
         verify(socketServiceMock).sendCommand(contains("\"rows\":9"), any());
-        System.out.println("IT-ADMIN-003: Configuration of game parameters - PASSED");
+        System.out.println("IT-ADMIN-02: Configuration of game parameters - PASSED");
     }
 
     @Test
@@ -94,44 +94,44 @@ class ClientIntegrationTest {
     }
 
     @Test
-    @DisplayName("IT-BONUS-001: Use bonus 'Teleport'")
-    void testBeam_IT_BONUS_001() {
+    @DisplayName("IT-BONUS-01: Use bonus 'Teleport'")
+    void testBeam_IT_BONUS_01() {
         String update = "{\"type\":\"GAME_STATE_UPDATE\", \"players\":[{\"playerName\":\"P1\", \"position\":{\"rows\":1,\"cols\":1}}]}";
         assertDoesNotThrow(() -> eventService.handleEvent(update));
-        System.out.println("IT-BONUS-001: Use bonus 'Teleport' - PASSED");
+        System.out.println("IT-BONUS-01: Use bonus 'Teleport' - PASSED");
     }
 
     @Test
-    @DisplayName("IT-DISCONNECT-001: Client logout and disconnection")
-    void testLogout_IT_DISCONNECT_001() {
+    @DisplayName("IT-DISCONNECT-01: Client logout and disconnection")
+    void testLogout_IT_DISCONNECT_01() {
         commandService.sendDisconnectCommand();
         // FIX: Verify that any command is sent, accommodating the null parameter in current implementation
         verify(socketServiceMock, atLeastOnce()).sendCommand(contains("DISCONNECT"), any());
-        System.out.println("IT-DISCONNECT-001: Client logout and disconnection - PASSED");
+        System.out.println("IT-DISCONNECT-01: Client logout and disconnection - PASSED");
     }
 
     @Test
-    @DisplayName("IT-TIME-001: Timeout event and AI takeover")
-    void testTimeoutAI_IT_TIME_001() {
+    @DisplayName("IT-TIME-01: Timeout event and AI takeover")
+    void testTimeoutAI_IT_TIME_01() {
         String aiJson = "{\"type\":\"LOBBY_STATE\", \"players\":[{\"id\":\"P1\", \"isAiControlled\":true}]}";
         eventService.handleEvent(aiJson);
         verify(lobbyServiceMock, atLeastOnce()).handleLobbyState(any());
-        System.out.println("IT-TIME-001: Timeout event and AI takeover - PASSED");
+        System.out.println("IT-TIME-01: Timeout event and AI takeover - PASSED");
     }
 
     @Test
-    @DisplayName("IT-ROBUST-001: Server receives faulty command message")
-    void testRobustness_IT_ROBUST_001() {
+    @DisplayName("IT-ROBUST-01: Server receives faulty command message")
+    void testRobustness_IT_ROBUST_01() {
         String errorJson = "{\"type\":\"ACTION_ERROR\", \"message\":\"Malformed command\"}";
         assertDoesNotThrow(() -> eventService.handleEvent(errorJson));
-        System.out.println("IT-ROBUST-001: Server receives faulty command message - PASSED");
+        System.out.println("IT-ROBUST-01: Server receives faulty command message - PASSED");
     }
 
     @Test
-    @DisplayName("IT-ROBUST-0023: Command message outside valid phase")
-    void testPhaseRobustness_IT_ROBUST_0023() {
+    @DisplayName("IT-ROBUST-02: Command message outside valid phase")
+    void testPhaseRobustness_IT_ROBUST_02() {
         String phaseError = "{\"type\":\"ACTION_ERROR\", \"message\":\"Invalid Phase\"}";
         assertDoesNotThrow(() -> eventService.handleEvent(phaseError));
-        System.out.println("IT-ROBUST-0023: Command message outside valid phase - PASSED");
+        System.out.println("IT-ROBUST-02: Command message outside valid phase - PASSED");
     }
 }
