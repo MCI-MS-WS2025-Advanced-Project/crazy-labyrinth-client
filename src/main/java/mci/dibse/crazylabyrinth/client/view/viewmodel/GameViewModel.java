@@ -62,6 +62,9 @@ public class GameViewModel extends BaseViewModel implements PlayerConnectedAckLi
     @Getter
     private final SimpleObjectProperty<TreasureItem> nextTreasureItemProperty =
             new SimpleObjectProperty<>();
+    @Getter
+    private final SimpleObjectProperty<TreasureItem> homeTreasureItemProperty =
+            new SimpleObjectProperty<>();
 
     @Getter final SimpleBooleanProperty pendingRotationProperty = new SimpleBooleanProperty();
     @Getter final SimpleBooleanProperty turnTimeoutProperty = new SimpleBooleanProperty();
@@ -582,7 +585,6 @@ public class GameViewModel extends BaseViewModel implements PlayerConnectedAckLi
     public Treasure getCurrentTargetTreasureForAi() {
         TreasureItem item = nextTreasureItemProperty.get();
         if (item == null) return null;
-
         Treasure t = new Treasure();
         t.setId(item.getId());
         t.setName(item.getName());
@@ -684,7 +686,9 @@ public class GameViewModel extends BaseViewModel implements PlayerConnectedAckLi
         t.setId(id);
         t.setName("Zurück zum Start");
         TreasureItem backToHome = new TreasureItem(t);
-        nextTreasureItemProperty.set(backToHome);
+        homeTreasureItemProperty.set(backToHome);
+
+      //  nextTreasureItemProperty.set(backToHome);
     }
 
     /**
