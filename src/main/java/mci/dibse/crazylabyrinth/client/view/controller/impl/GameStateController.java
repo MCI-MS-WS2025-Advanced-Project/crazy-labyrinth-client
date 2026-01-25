@@ -34,6 +34,7 @@ import labyrinth.contracts.models.*;
 import lombok.extern.slf4j.Slf4j;
 import mci.dibse.crazylabyrinth.client.ai.AiDecision;
 import mci.dibse.crazylabyrinth.client.ai.AiStrategySelector;
+import mci.dibse.crazylabyrinth.client.ai.BoardSimulationHelper;
 import mci.dibse.crazylabyrinth.client.ai.ClientAIExecutor;
 import mci.dibse.crazylabyrinth.client.NavigationController;
 import mci.dibse.crazylabyrinth.client.domain.context.PushTileCommandRecord;
@@ -227,7 +228,10 @@ public class GameStateController extends BaseViewCleanup {
         initGameTimer();
 
         initViewToRatio();
-        clientAIExecutor = new ClientAIExecutor(gameViewModel);
+
+        clientAIExecutor = new ClientAIExecutor(gameViewModel, new BoardSimulationHelper());
+
+        // clientAIExecutor = new ClientAIExecutor(gameViewModel);
 
         // AI Can only be activated or deactivated when it's not the current user turn
         isMyTurnBinding = Bindings.createBooleanBinding(
@@ -316,6 +320,8 @@ public class GameStateController extends BaseViewCleanup {
                         });
     }
 
+
+
     /**
      * Initialize UI scaling based on screen resolution.
      */
@@ -333,9 +339,13 @@ public class GameStateController extends BaseViewCleanup {
             if (gs == null) return;
 
             String myId = gameViewModel.getClientPlayer().getId();
-            var target = gameViewModel.getCurrentTargetTreasureForAi(); // Treasure (id==0 -> Home)
 
-            AiDecision decision = aiStrategySelector.calculateFullTurn(gs, myId, target);
+            Integer targetId = null;
+            var target = gameViewModel.getCurrentTargetTreasureForAi(); // Treasure (id==0 -> Home)
+            if (target != null) targetId = target.getId();
+
+            AiDecision decision = aiStrategySelector.calculateFullTurn(gs, myId, targetId);
+
 
             String pushInfo = (decision.getPushCount() > 0)
                     ? ("#1 idx=" + decision.getPushes().get(0).getPushIndex()

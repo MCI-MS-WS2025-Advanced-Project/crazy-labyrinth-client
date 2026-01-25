@@ -1,36 +1,31 @@
 package mci.dibse.crazylabyrinth.client.ai;
 
 import java.util.*;
-//import mci.dibse.crazylabyrinth.gameserver.domain.model.Board;
 
-import labyrinth.contracts.models.GameStateEventPayload;
-import labyrinth.contracts.models.PlayerState;
-import labyrinth.contracts.models.PlayerInfo;
-import labyrinth.contracts.models.TurnState;
 import labyrinth.contracts.models.GameBoard;
 import labyrinth.contracts.models.Coordinates;
 import labyrinth.contracts.models.Direction;
-import labyrinth.contracts.models.BonusType;
+
 import labyrinth.contracts.models.Tile;
 
-// TODO: JAVA DOC überarbeiten
 /**
- * Domain service for pathfinding operations on the game board.
+ * Pathfinding service for the client-side AI on a {@link GameBoard}.
  * <p>
- * Uses the A* algorithm to determine if a valid path exists between two coordinates,
- * considering tile entrances as constraints. The Manhattan distance heuristic provides
- * efficient pathfinding on typical game board sizes.
+ * Provides A* based path search between two coordinates while respecting tile entrances.
+ * In addition to normal pathfinding, the service supports path search on <em>virtual</em> board states
+ * created by simulated pushes (including two consecutive pushes).
  * </p>
+ *
  * <p>
- * This is a pure domain service with no external dependencies, instantiated directly by
- * the GameFactory to keep all game logic concerns within the domain layer.
+ * The service is self-contained (no external dependencies) and does not modify the given board.
+ * Virtual operations are implemented by resolving tiles through coordinate mapping rather than mutating data.
  * </p>
  */
 public class AiPathFindingService {
 
     /**
-     * Internal node class for the A* pathfinding algorithm.
-     * Represents a board position with associated cost values used by the algorithm.
+     * Internal node representation used by the A* algorithm.
+     * Stores the coordinate as well as the gScore (cost from start) and fScore (gScore + heuristic).
      */
     private static class Node {
         /**
@@ -49,10 +44,11 @@ public class AiPathFindingService {
         int fScore;
 
         /**
-         * Constructs a Node with the specified coordinates and cost values.
-         * @param coordinates the board position
-         * @param gScore the actual cost from start
-         * @param fScore the estimated total cost
+         * Creates a new A* node.
+         *
+         * @param coordinates board coordinate of this node
+         * @param gScore movement cost from start to this node
+         * @param fScore total estimated cost from start to target through this node
          */
         Node(Coordinates coordinates, int gScore, int fScore) {
             this.coordinates = coordinates;
@@ -61,43 +57,23 @@ public class AiPathFindingService {
         }
     }
 
-    /**
-     * Checks if a valid path exists between two board coordinates.
-     * <p>
-     * Returns immediately if the start and target are the same position.
-     * Validates that both positions are within board bounds.
-     * </p>
-     * @param board the game board to search
-     * @param start the starting coordinates
-     * @param target the target coordinates
-     * @return true if a valid path exists from start to target, false otherwise
-     */
-    public boolean isPathValid(GameBoard board, Coordinates start, Coordinates target) {
-        if (board == null || start == null || target == null) {
-            return false;
-        }
-        if (start.equals(target)) {
-            return true;
-        }
-        Tile[][] tiles = board.getTiles();
-        int rows = board.getRows();
-        int cols = board.getCols();
-        if (isValidPosition(start, rows, cols) || isValidPosition(target, rows, cols)) {
-            return false;
-        }
-        return aStar(tiles, start, target, rows, cols) != null;
-    }
 
     /**
-     * Finds the shortest path between two board coordinates.
+     * Finds a shortest path between {@code start} and {@code target} on the current board.
      * <p>
-     * Returns a list of coordinates representing the path from start to target,
-     * or an empty list if no path exists. Returns a single-element list if start equals target.
+     * Movement is only allowed if the current tile has an entrance towards the neighbor and the neighbor tile
+     * has the reciprocal entrance back.
      * </p>
-     * @param board the game board to search
-     * @param start the starting coordinates
-     * @param target the target coordinates
-     * @return a list of coordinates representing the path, or an empty list if no path exists
+     *
+     * <p>
+     * Returns an empty list on invalid input or if no path exists. If {@code start.equals(target)},
+     * a single-element list is returned.
+     * </p>
+     *
+     * @param board the board to search on
+     * @param start starting coordinate
+     * @param target target coordinate
+     * @return list of coordinates from start to target (inclusive), or an empty list if unreachable
      */
     public List<Coordinates> findPath(GameBoard board, Coordinates start, Coordinates target) {
         if (board == null || start == null || target == null) {
@@ -117,17 +93,18 @@ public class AiPathFindingService {
     }
 
     /**
-     * Implements the A* pathfinding algorithm for finding the shortest path on the board.
+     * A* search implementation for the current board state.
      * <p>
-     * Uses Manhattan distance as the heuristic function for efficiency.
-     * Considers tile entrances when determining valid moves between adjacent tiles.
+     * Uses Manhattan distance as heuristic and treats each move as unit cost.
+     * Neighbor expansion respects tile entrances.
      * </p>
-     * @param tiles the board tiles
-     * @param start the starting coordinates
-     * @param target the goal coordinates
-     * @param rows the number of rows on the board
-     * @param cols the number of columns on the board
-     * @return a list of coordinates representing the path, or null if no path exists
+     *
+     * @param tiles the board tile matrix
+     * @param start starting coordinate
+     * @param target target coordinate
+     * @param rows number of board rows
+     * @param cols number of board columns
+     * @return path from start to target, or {@code null} if no path exists
      */
     private List<Coordinates> aStar(
             Tile[][] tiles, Coordinates start, Coordinates target, int rows, int cols) {
@@ -168,10 +145,11 @@ public class AiPathFindingService {
     }
 
     /**
-     * Reconstructs the path from the cameFrom map.
-     * @param cameFrom map of coordinates and their predecessors
-     * @param target the target coordinates
-     * @return list of coordinates representing the path
+     * Reconstructs the path by following the predecessor links stored in {@code cameFrom}.
+     *
+     * @param cameFrom mapping of each visited coordinate to its predecessor
+     * @param target the goal coordinate
+     * @return reconstructed path from start to target (inclusive)
      */
     private List<Coordinates> reconstructPath(
             Map<Coordinates, Coordinates> cameFrom, Coordinates target) {
@@ -186,13 +164,16 @@ public class AiPathFindingService {
     }
 
     /**
-     * Gets all valid neighboring coordinates that can be reached from the current position.
-     * Considers tile entrances to determine if movement is possible.
-     * @param tiles the board tiles
-     * @param current the current coordinates
-     * @param rows number of rows in the board
-     * @param cols number of columns in the board
-     * @return list of valid neighboring coordinates
+     * Computes all reachable neighbor coordinates from {@code current} on the current board.
+     * <p>
+     * A neighbor is valid if entrances are reciprocal between the two adjacent tiles.
+     * </p>
+     *
+     * @param tiles the board tile matrix
+     * @param current current coordinate
+     * @param rows number of board rows
+     * @param cols number of board columns
+     * @return list of valid neighbor coordinates (may be empty)
      */
     private List<Coordinates> getValidNeighbors(
             Tile[][] tiles, Coordinates current, int rows, int cols) {
@@ -235,11 +216,12 @@ public class AiPathFindingService {
     }
 
     /**
-     * Checks if coordinates are within board bounds.
-     * @param coordinates the coordinates to check
-     * @param rows number of rows in the board
-     * @param cols number of columns in the board
-     * @return true if out of bounds, false otherwise
+     * Checks whether the given coordinate is outside the board bounds.
+     *
+     * @param coordinates coordinate to check
+     * @param rows number of board rows
+     * @param cols number of board columns
+     * @return {@code true} if the coordinate is out of bounds, otherwise {@code false}
      */
     private boolean isValidPosition(Coordinates coordinates, int rows, int cols) {
         return coordinates.getColumn() < 0
@@ -249,10 +231,11 @@ public class AiPathFindingService {
     }
 
     /**
-     * Calculates the Manhattan distance between two coordinates.
+     * Computes the Manhattan distance between two coordinates.
+     *
      * @param a first coordinate
      * @param b second coordinate
-     * @return Manhattan distance (sum of absolute differences in x and y)
+     * @return {@code |dx| + |dy|}
      */
     private int manhattanDistance(Coordinates a, Coordinates b) {
         return Math.abs(a.getColumn() - b.getColumn()) + Math.abs(a.getRow() - b.getRow());
@@ -260,8 +243,19 @@ public class AiPathFindingService {
 
 
     /**
-     * Finds path after virtual push with a complete virtual spare tile.
-     * Use this when you already have the rotated spare tile constructed.
+     * Finds a path after applying a <em>virtual</em> push, using a fully constructed virtual spare tile.
+     * <p>
+     * This method does not modify {@link GameBoard}. Instead, it resolves the tile layout on-the-fly by treating
+     * {@code virtualSpareTile} as inserted at {@code pushIndex}/{@code pushDirection}.
+     * </p>
+     *
+     * @param board the original board state (not modified)
+     * @param pushIndex the push index (row for LEFT/RIGHT, column for UP/DOWN)
+     * @param pushDirection the push direction
+     * @param virtualSpareTile the spare tile instance used for the virtual insertion
+     * @param start start coordinate in the virtual post-push state
+     * @param target target coordinate in the virtual post-push state
+     * @return path from {@code start} to {@code target} in the virtual post-push state, or empty list if unreachable
      */
     public List<Coordinates> findPathAfterVirtualPushWithTile(
             GameBoard board,
@@ -281,10 +275,20 @@ public class AiPathFindingService {
         return aStarVirtual(board, pushIndex, pushDirection, virtualSpareTile, start, target);
     }
 
-
     /**
-     * Finds path on a virtual board state after a simulated push.
-     * Does not modify the actual board.
+     * Finds a path after applying a <em>virtual</em> push, constructing the virtual spare tile from entrances.
+     * <p>
+     * The virtual spare tile copies treasure and bonus from the real spare tile, but uses the given entrances and
+     * is marked as non-fixed. The actual board is not modified.
+     * </p>
+     *
+     * @param board the original board state (not modified)
+     * @param pushIndex the push index (row for LEFT/RIGHT, column for UP/DOWN)
+     * @param pushDirection the push direction
+     * @param spareTileEntrances entrances of the virtual spare tile (already rotated)
+     * @param start start coordinate in the virtual post-push state
+     * @param target target coordinate in the virtual post-push state
+     * @return path from {@code start} to {@code target} in the virtual post-push state, or empty list if unreachable
      */
     public List<Coordinates> findPathAfterVirtualPush(
             GameBoard board,
@@ -314,6 +318,22 @@ public class AiPathFindingService {
         return aStarVirtual(board, pushIndex, pushDirection, virtualSpareTile, start, target);
     }
 
+
+    /**
+     * A* search on a virtual board state created by a simulated push.
+     * <p>
+     * Tile access is performed via {@link #getVirtualTileAt(GameBoard, int, Direction, Tile, int, int)}
+     * rather than modifying the board.
+     * </p>
+     *
+     * @param board the original board state (not modified)
+     * @param pushIndex the virtual push index
+     * @param pushDirection the virtual push direction
+     * @param rotatedSpareTile the spare tile inserted into the virtual state (already rotated)
+     * @param start start coordinate after the virtual push
+     * @param target target coordinate after the virtual push
+     * @return path from start to target in the virtual state, or empty list if unreachable
+     */
     private List<Coordinates> aStarVirtual(
             GameBoard board,
             int pushIndex,
@@ -371,6 +391,23 @@ public class AiPathFindingService {
         return Collections.emptyList();
     }
 
+
+    /**
+     * Computes valid neighbors from {@code current} in the virtual post-push state.
+     * <p>
+     * Neighbor validity requires reciprocal entrances between adjacent tiles.
+     * All tile lookups are resolved via {@link #getVirtualTileAt(GameBoard, int, Direction, Tile, int, int)}.
+     * </p>
+     *
+     * @param board the original board
+     * @param pushIndex the virtual push index
+     * @param pushDirection the virtual push direction
+     * @param rotatedSpareTile the inserted spare tile (already rotated)
+     * @param current current coordinate
+     * @param rows number of board rows
+     * @param cols number of board columns
+     * @return list of reachable neighbor coordinates (may be empty)
+     */
     private List<Coordinates> getValidNeighborsVirtual(
             GameBoard board,
             int pushIndex,
@@ -425,6 +462,22 @@ public class AiPathFindingService {
     }
 
 
+    /**
+     * Resolves the tile at {@code (row, column)} as it would appear after a single virtual push.
+     * <p>
+     * On the affected row/column, positions are mapped to their source positions in the original board,
+     * except for the insertion point which returns {@code rotatedSpareTile}.
+     * Unaffected positions return the original tile at the same coordinate.
+     * </p>
+     *
+     * @param board the original board
+     * @param pushIndex the virtual push index
+     * @param pushDirection the virtual push direction
+     * @param rotatedSpareTile spare tile inserted into the virtual state (already rotated)
+     * @param row requested row
+     * @param column requested column
+     * @return the tile at {@code (row, column)} in the virtual post-push state (may be {@code null})
+     */
     private Tile getVirtualTileAt(
             GameBoard board,
             int pushIndex,
@@ -466,20 +519,25 @@ public class AiPathFindingService {
         return AiContractUtil.tileAt(board, row, column);
     }
 
+
     /**
-     * Finds path after TWO consecutive virtual pushes.
-     * Simulates: Push1 → Board state changes → Push2 → Board state changes → Find path
+     * Finds a path after two consecutive <em>virtual</em> pushes.
+     * <p>
+     * Simulates push #1 (with rotations on the current spare tile), derives the new spare tile
+     * (the tile pushed out), applies rotations for push #2, and then performs A* search on the resulting
+     * virtual board state. The original board is not modified.
+     * </p>
      *
-     * @param board the original board state
+     * @param board the original board state (not modified)
      * @param push1Index first push index
      * @param push1Direction first push direction
-     * @param push1Rotations number of 90-degree clockwise rotations for first push (0-3)
+     * @param push1Rotations number of clockwise 90° rotations for the spare tile of push #1 (0..3)
      * @param push2Index second push index
      * @param push2Direction second push direction
-     * @param push2Rotations number of 90-degree clockwise rotations for second push (0-3)
-     * @param start starting position for pathfinding (after both pushes)
-     * @param target goal position
-     * @return path from start to target after both pushes, or empty list if no path exists
+     * @param push2Rotations number of clockwise 90° rotations for the spare tile of push #2 (0..3)
+     * @param start start coordinate after both pushes
+     * @param target target coordinate after both pushes
+     * @return path from start to target after both pushes, or empty list if unreachable
      */
     public List<Coordinates> findPathAfterTwoPushes(
             GameBoard board,
@@ -522,7 +580,22 @@ public class AiPathFindingService {
         );
     }
 
-    // TODO: JAVADOC
+
+    /**
+     * Computes all coordinates reachable from {@code start} after a single <em>virtual</em> push.
+     * <p>
+     * This method performs a BFS on the virtual post-push board state and returns the visited set.
+     * The virtual spare tile is constructed from the current spare tile while applying {@code spareTileEntrances}.
+     * The original board is not modified.
+     * </p>
+     *
+     * @param board the original board state (not modified)
+     * @param pushIndex the virtual push index
+     * @param pushDirection the virtual push direction
+     * @param spareTileEntrances entrances of the virtual spare tile (already rotated)
+     * @param start start coordinate in the virtual post-push state
+     * @return set of all reachable coordinates (empty set on invalid input)
+     */
     public Set<Coordinates> getReachablePositionsAfterVirtualPush(
             GameBoard board,
             int pushIndex,
@@ -614,8 +687,16 @@ public class AiPathFindingService {
     }
 
     /**
-     * Gets the tile that will be pushed out of the board during a push operation.
-     * This tile becomes the new spare tile.
+     * Returns the tile that would be pushed out of the board by the given push operation.
+     * <p>
+     * This tile becomes the next spare tile after executing the push.
+     * </p>
+     *
+     * @param board the board
+     * @param pushIndex the push index (row for LEFT/RIGHT, column for UP/DOWN)
+     * @param pushDirection the push direction
+     * @return the tile that would be pushed out
+     * @throws IllegalArgumentException if {@code pushDirection} is invalid
      */
     private Tile getTilePushedOut(GameBoard board, int pushIndex, Direction pushDirection) {
         Tile[][] tiles = board.getTiles();
@@ -640,8 +721,24 @@ public class AiPathFindingService {
         }
     }
 
+
     /**
-     * A* algorithm that considers TWO virtual pushes.
+     * A* search on a virtual board state created by applying two simulated pushes.
+     * <p>
+     * Tile lookups are resolved via {@link #getVirtualTileAfterTwoPushes(GameBoard, int, Direction, Tile, int, Direction, Tile, int, int)}
+     * which maps coordinates back to the original board or one of the virtual spare tiles.
+     * </p>
+     *
+     * @param board the original board
+     * @param push1Index first push index
+     * @param push1Direction first push direction
+     * @param virtualSpareTile1 virtual spare tile inserted by push #1
+     * @param push2Index second push index
+     * @param push2Direction second push direction
+     * @param virtualSpareTile2 virtual spare tile inserted by push #2
+     * @param start start coordinate after both pushes
+     * @param target target coordinate after both pushes
+     * @return path from start to target, or empty list if unreachable
      */
     private List<Coordinates> aStarAfterTwoPushes(
             GameBoard board,
@@ -707,8 +804,25 @@ public class AiPathFindingService {
         return Collections.emptyList();
     }
 
+
     /**
-     * Gets valid neighbors considering TWO virtual pushes.
+     * Computes valid neighbors from {@code current} in the virtual state after two pushes.
+     * <p>
+     * Neighbor validity requires reciprocal entrances between adjacent tiles, resolved via
+     * {@link #getVirtualTileAfterTwoPushes(GameBoard, int, Direction, Tile, int, Direction, Tile, int, int)}.
+     * </p>
+     *
+     * @param board the original board
+     * @param push1Index first push index
+     * @param push1Direction first push direction
+     * @param virtualSpareTile1 virtual spare tile inserted by push #1
+     * @param push2Index second push index
+     * @param push2Direction second push direction
+     * @param virtualSpareTile2 virtual spare tile inserted by push #2
+     * @param current current coordinate
+     * @param rows number of board rows
+     * @param cols number of board columns
+     * @return list of reachable neighbor coordinates (may be empty)
      */
     private List<Coordinates> getValidNeighborsAfterTwoPushes(
             GameBoard board,
@@ -794,7 +908,30 @@ public class AiPathFindingService {
     }
 
 
-    //TODO: JAVA DOC
+    /**
+     * Resolves the tile at {@code (row, column)} as it would appear after two consecutive virtual pushes.
+     * <p>
+     * The method applies inverse coordinate mapping:
+     * <ol>
+     *   <li>handle insertion point of push #2 (returns {@code virtualSpareTile2})</li>
+     *   <li>map {@code (row, column)} back to the board state before push #2 if affected</li>
+     *   <li>handle insertion point of push #1 on the mapped coordinate (returns {@code virtualSpareTile1})</li>
+     *   <li>map the coordinate back to the original board state before push #1 if affected</li>
+     * </ol>
+     * Finally, it returns the tile from the original board at the computed source coordinate.
+     * </p>
+     *
+     * @param board the original board
+     * @param push1Index first push index
+     * @param push1Direction first push direction
+     * @param virtualSpareTile1 virtual spare tile inserted by push #1
+     * @param push2Index second push index
+     * @param push2Direction second push direction
+     * @param virtualSpareTile2 virtual spare tile inserted by push #2
+     * @param row requested row after both pushes
+     * @param column requested column after both pushes
+     * @return tile at the given coordinate after both pushes (may be {@code null})
+     */
     private Tile getVirtualTileAfterTwoPushes(
             GameBoard board,
             int push1Index,
@@ -907,6 +1044,5 @@ public class AiPathFindingService {
         }
         return AiContractUtil.coord(row, column);
     }
-
 
 }

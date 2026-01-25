@@ -8,16 +8,22 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 
-
-import java.util.List;
 import java.util.Set;
 
 /**
- * Main AI strategy orchestrator.
- * Implements the 3-priority decision logic:
- * 1. WINNING: Can AI win? → Go home
- * 2. DEFENSE: Can opponent win? → Block them
- * 3. OFFENSE: Normal play → Collect treasures / Get Bonus
+ * Selects an {@link AiDecision} for a full AI turn based on the current {@link GameStateEventPayload}.
+ *
+ * <p>This component orchestrates the decision by delegating to collaborating helpers/calculators.
+ * The implementation evaluates (in order):
+ * <ul>
+ *   <li>home/winning logic when the current target represents the home target,</li>
+ *   <li>defensive logic when the opponent is detected as able to win next turn,</li>
+ *   <li>otherwise offensive logic to pursue the current treasure target.</li>
+ * </ul>
+ *
+ * <p>Decision building and board-related checks are delegated to
+ * {@link BoardSimulationHelper}, {@link OpponentThreatDetector},
+ * {@link DefensiveMoveCalculator}, {@link OffensiveMoveCalculator}, and {@link AiContractUtil}.
  */
 @Component
 public class AiStrategySelector {
@@ -27,6 +33,7 @@ public class AiStrategySelector {
     private final DefensiveMoveCalculator defensiveMoveCalculator;
     private final OffensiveMoveCalculator offensiveMoveCalculator;
     private final Logger log = LoggerFactory.getLogger(AiStrategySelector.class);
+
 
     public AiStrategySelector(
             BoardSimulationHelper boardSimulationHelper,
@@ -40,7 +47,18 @@ public class AiStrategySelector {
         this.offensiveMoveCalculator = offensiveMoveCalculator;
     }
 
-    public AiDecision calculateFullTurn(GameStateEventPayload gameState, String myPlayerId, Treasure myCurrentTreasure) {
+
+    /**
+     * Calculates the AI's decision for a full turn (push and move, and potentially bonus usage)
+     * for the given game state and AI player id.
+     *
+     * @param gameState the current game state payload received from the client contracts; may be {@code null}
+     * @param myPlayerId the id of the AI player; may be {@code null}
+     * @param myCurrentTreasure the current target identifier as provided to the AI; may be {@code null}
+     * @return the computed {@link AiDecision}, or {@code null} if required inputs are missing
+     *         (e.g., {@code gameState}, {@code myPlayerId}, board/player position), or if the player cannot be resolved
+     */
+    public AiDecision calculateFullTurn(GameStateEventPayload gameState, String myPlayerId, Integer myCurrentTreasure) {
         if (gameState == null || myPlayerId == null) return null;
 
         GameBoard board = gameState.getBoard();
@@ -48,10 +66,8 @@ public class AiStrategySelector {
         Coordinates myHomePosition = me.getHomePosition();
         Set<BonusType> availableBonuses = AiContractUtil.toBonusSet(me.getAvailableBonuses());
         Coordinates currentPos = me.getCurrentPosition();
-        log.warn("AI input: myPos={}", currentPos.getRow() + "," + currentPos.getColumn());
-        log.warn("AI TREASURE: " + myCurrentTreasure);
+        log.info("AI TREASURE: " + myCurrentTreasure);
         Coordinates treasurePos = boardSimulationHelper.findTreasurePosition(board, myCurrentTreasure);
-        log.warn("AI input: treasurePos={}", treasurePos);
 
 
         if (board == null || me == null) return null;
@@ -65,27 +81,24 @@ public class AiStrategySelector {
         Coordinates myPos = me.getCurrentPosition();
         if (myPos == null) return null;
 
-        // 1) WINNING / HOME
-        Treasure target = myCurrentTreasure;
 
-        if (AiContractUtil.isHomeTarget(target)) {
-            log.debug("AI USED calculateMoveToHome");
+        // 1) WINNING / HOME
+        if (AiContractUtil.isHomeTarget(myCurrentTreasure)) {
+            log.info("Bot tries to get home!");
             return offensiveMoveCalculator.calculateMoveToHome(gameState, myPlayerId, availableBonuses, myPos, myHomePosition);
         }
 
         // 2) DEFENSE
         if (opponentThreatDetector.canOpponentWinNextTurn(gameState, board, myPlayerId)) {
-            log.debug("AI USED calculateDefensiveMove");
+            log.info("Bot tries to defend the opponent!");
             AiDecision def = defensiveMoveCalculator.calculateDefensiveMove(gameState, board, myPlayerId, availableBonuses, myPos, myHomePosition, myCurrentTreasure);
             if (def != null) return def;
         }
 
         // 3) OFFENSE: Treasure sammeln
-
-
         if (treasurePos == null) {
             if (offensiveMoveCalculator.isTreasureOnSpareTile(board, myCurrentTreasure)) {
-                log.debug("AI USED calculateMoveTreasureOnSpareTile");
+                log.info("Bot tries to hunt a treasure!");
                 return offensiveMoveCalculator.calculateMoveTreasureOnSpareTile(gameState, board, myPlayerId, myPos);
             }
 
@@ -98,6 +111,14 @@ public class AiStrategySelector {
         return offensiveMoveCalculator.calculateOffensiveMove(gameState, board, myPlayerId, availableBonuses, myPos, treasurePos);
     }
 
+
+    /**
+     * Finds the {@link PlayerState} with the given player id in the provided array.
+     *
+     * @param players array of player states; may be {@code null}
+     * @param id the player id to search for; may be {@code null}
+     * @return the matching {@link PlayerState}, or {@code null} if not found or if inputs are {@code null}
+     */
     private PlayerState findPlayer(PlayerState[] players, String id) {
         if (players == null) return null;
         for (PlayerState p : players) {
@@ -108,6 +129,21 @@ public class AiStrategySelector {
         return null;
     }
 
+
+    /**
+     * Returns an arbitrary legal push decision for the given board.
+     *
+     * <p>The method iterates over indices and the four cardinal {@link Direction}s and returns the first push that:
+     * <ul>
+     *   <li>is allowed by {@link AiContractUtil#canShift(GameBoard, int, Direction)}, and</li>
+     *   <li>is not considered a reverse push according to {@link BoardSimulationHelper#isReversePush(GameBoard, int, Direction)}.</li>
+     * </ul>
+     *
+     * <p>If no push is found during the scan, a fixed fallback decision is returned.
+     *
+     * @param board the current {@link GameBoard}
+     * @return a push decision that is legal according to the checks above, or a fixed fallback push decision
+     */
     private AiDecision.PushDecision findAnyLegalPush(GameBoard board) {
         log.warn("AI USED findAnyLegalPush");
         Direction[] dirs = {Direction.UP, Direction.DOWN, Direction.LEFT, Direction.RIGHT};
@@ -126,6 +162,7 @@ public class AiStrategySelector {
 
         return new AiDecision.PushDecision(1, Direction.DOWN, 0);
     }
+
 }
 
 
