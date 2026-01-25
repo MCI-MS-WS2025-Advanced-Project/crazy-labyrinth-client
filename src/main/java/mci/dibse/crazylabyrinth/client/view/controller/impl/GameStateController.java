@@ -2076,6 +2076,9 @@ public class GameStateController extends BaseViewCleanup {
                                                             oldPos,
                                                             newPos,
                                                             boardGrid);
+                                                } else {
+                                                    checkForSwapAnimation(
+                                                            playerStateItem, oldPos, newPos);
                                                 }
                                             });
                         });
@@ -2105,5 +2108,44 @@ public class GameStateController extends BaseViewCleanup {
                                                                 boardGrid);
                                                     }
                                                 }));
+    }
+
+    /**
+     * Check if a position change represents a swap between two players.
+     * @param movedPlayer the player that moved
+     * @param oldPosition the old position of the moved player
+     * @param newPosition the new position of the moved player
+     */
+    private void checkForSwapAnimation(
+            PlayerStateItem movedPlayer, CoordinatesItem oldPosition, CoordinatesItem newPosition) {
+        gameViewModel.getPlayerStatesSorted().stream()
+                .filter(
+                        otherPlayer ->
+                                !otherPlayer
+                                        .getPlayerIdAsString()
+                                        .equals(movedPlayer.getPlayerIdAsString()))
+                .filter(otherPlayer -> otherPlayer.getPreviousPosition().get() != null)
+                .filter(
+                        otherPlayer ->
+                                otherPlayer.getCurrentPosition().get() != null
+                                        && otherPlayer
+                                                .getCurrentPosition()
+                                                .get()
+                                                .equals(oldPosition)
+                                        && otherPlayer
+                                                .getPreviousPosition()
+                                                .get()
+                                                .equals(newPosition))
+                .findFirst()
+                .ifPresent(
+                        swapPartner -> {
+                            ImageView pawn1 = idToPlayerPawn.get(movedPlayer.getPlayerIdAsString());
+                            ImageView pawn2 = idToPlayerPawn.get(swapPartner.getPlayerIdAsString());
+
+                            if (pawn1 != null && pawn2 != null) {
+                                animationService.animateSwap(
+                                        pawn1, pawn2, oldPosition, newPosition, boardGrid);
+                            }
+                        });
     }
 }

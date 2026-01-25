@@ -11,6 +11,7 @@ public class AnimationConfig {
     private double playerAnimationDuration = 500.0;
     private double tilePushAnimationDuration = 600.0;
     private double beamAnimationDuration = 600.0;
+    private double swapAnimationDuration = 800.0;
 
     @Getter private double globalSpeedMultiplier = 1.0;
 
@@ -72,6 +73,24 @@ public class AnimationConfig {
     }
 
     /**
+     * Get the duration for swap animations.
+     *
+     * @return swap animation duration in milliseconds
+     */
+    public double getSwapAnimationDuration() {
+        return constrainDuration(swapAnimationDuration * globalSpeedMultiplier);
+    }
+
+    /**
+     * Set the duration for swap animations.
+     *
+     * @param duration swap animation duration in milliseconds
+     */
+    public void setSwapAnimationDuration(double duration) {
+        this.swapAnimationDuration = constrainDuration(duration);
+    }
+
+    /**
      * Set the global speed multiplier for all animations.
      * Values < 1.0 make animations faster, values > 1.0 make them slower.
      *
@@ -90,6 +109,7 @@ public class AnimationConfig {
         this.playerAnimationDuration = 500.0;
         this.tilePushAnimationDuration = 600.0;
         this.beamAnimationDuration = 600.0;
+        this.swapAnimationDuration = 800.0;
         this.globalSpeedMultiplier = 1.0;
     }
 
