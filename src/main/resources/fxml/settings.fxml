@@ -29,6 +29,9 @@
                         <String fx:value="1920x1080 (16:9)"/>
                         <String fx:value="2560x1440 (16:9)"/>
                         <String fx:value="3840x2160 (16:9)"/>
+                        <String fx:value="1280x800 (16:10)"/>
+                        <String fx:value="1680x1050 (16:10)"/>
+                        <String fx:value="1920x1200 (16:10)"/>
                     </FXCollections>
                 </items>
                 <tooltip>
