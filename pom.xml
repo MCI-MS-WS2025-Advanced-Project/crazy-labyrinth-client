@@ -33,7 +33,7 @@
 		<javafx.version>25.0.1</javafx.version>
 		<maven.failsafe.version>3.5.4</maven.failsafe.version>
 		<maven.javadoc.version>3.6.3</maven.javadoc.version>
-		<shared.model.version>1.0.0</shared.model.version>
+		<shared.model.version>0.0.9</shared.model.version>
 		<mockito.version>5.17.0</mockito.version>
         <jakarta.validation.version>3.1.1</jakarta.validation.version>
         <hibernate.validation.version>8.0.3.Final</hibernate.validation.version>
@@ -110,10 +110,10 @@
 		</dependency>
 		<!-- install jar in local repo
      mvn install:install-file \
-        -Dfile=/path/to/shared-model-1.0.0.jar \
+        -Dfile=/path/to/shared-model-0.0.9.jar \
         -DgroupId=mci.dibse.crazylabyrinth \
         -DartifactId=shared-model \
-        -Dversion=1.0.0 \
+        -Dversion=0.0.9 \
         -Dpackaging=jar
  	-->
 
