@@ -4,12 +4,14 @@ import jakarta.annotation.PostConstruct;
 import java.io.IOException;
 import javafx.beans.value.ChangeListener;
 import javafx.fxml.FXMLLoader;
+import javafx.geometry.Rectangle2D;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.KeyEvent;
 import javafx.stage.Modality;
+import javafx.stage.Screen;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import lombok.Getter;
@@ -213,6 +215,17 @@ public class NavigationController {
         primaryStage.setMinHeight(screenResolutionProperties.getMinViewHeight());
 
         if (!startUp) return;
+        Rectangle2D bounds = Screen.getPrimary().getBounds();         // full monitor
+        Rectangle2D visual = Screen.getPrimary().getVisualBounds();   // minus taskbar/dock
+
+        boolean osBarReservesSpace =
+                bounds.getWidth()  != visual.getWidth() ||
+                        bounds.getHeight() != visual.getHeight();
+
+        if (osBarReservesSpace && (visual.getWidth() < screenResolutionProperties.getWidth() || visual.getHeight() < screenResolutionProperties.getHeight())) {
+            log.info("available screen is smaller than set Window site, setting stage to maximized");
+            primaryStage.setMaximized(true);
+        }
         startUp = false;
         log.debug(
                 "Setting stage w/h sizes to: {}x{}",
