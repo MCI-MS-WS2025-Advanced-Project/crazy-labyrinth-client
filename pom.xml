@@ -273,16 +273,15 @@
                             <systemPropertyVariables>
                                 <prism.order>sw</prism.order>
                                 <testfx.headless>true</testfx.headless>
-                                <glass.platform>gtk</glass.platform>
+                                <testfx.robot>glass</testfx.robot>
+                                <glass.platform>Monocle</glass.platform>
+                                <monocle.platform>Headless</monocle.platform>
                             </systemPropertyVariables>
-                            <environmentVariables>
-                                <DISPLAY>:99</DISPLAY>
-                            </environmentVariables>
                         </configuration>
                     </plugin>
                 </plugins>
             </build>
         </profile>
-	</profiles>
+    </profiles>
 
 </project>
