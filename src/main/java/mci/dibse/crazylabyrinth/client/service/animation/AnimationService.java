@@ -1,11 +1,11 @@
 package mci.dibse.crazylabyrinth.client.service.animation;
 
+import javafx.scene.image.ImageView;
+import javafx.scene.layout.GridPane;
 import labyrinth.contracts.models.Direction;
 import lombok.extern.slf4j.Slf4j;
 import mci.dibse.crazylabyrinth.client.view.viewmodel.item.CoordinatesItem;
 import mci.dibse.crazylabyrinth.client.view.viewmodel.item.GameBoardItem;
-import javafx.scene.image.ImageView;
-import javafx.scene.layout.GridPane;
 
 /**
  * Coordinator service for managing game animations.
@@ -16,6 +16,23 @@ public class AnimationService {
     private final Object animationLock = new Object();
     private GameAnimation currentAnimation = null;
     private GameAnimation pendingAnimation = null;
+    private AnimationConfig animationConfig;
+    private boolean isTilePushAnimationActive = false;
+
+    /**
+     * Constructor for AnimationService with custom configuration.
+     * @param animationConfig the animation configuration to use
+     */
+    public AnimationService(AnimationConfig animationConfig) {
+        this.animationConfig = animationConfig;
+    }
+
+    /**
+     * Constructor for AnimationService with default configuration.
+     */
+    public AnimationService() {
+        this(AnimationConfig.createDefault());
+    }
 
     /**
      * Check if any animation is currently in progress.
@@ -25,6 +42,30 @@ public class AnimationService {
         synchronized (animationLock) {
             return currentAnimation != null && currentAnimation.isRunning();
         }
+    }
+
+    /**
+     * Get the current animation configuration.
+     * @return the animation configuration
+     */
+    public AnimationConfig getAnimationConfig() {
+        return animationConfig;
+    }
+
+    /**
+     * Check if a tile push animation is currently active.
+     * @return true if a tile push animation is running, false otherwise
+     */
+    public boolean isTilePushAnimationActive() {
+        return isTilePushAnimationActive;
+    }
+
+    /**
+     * Set a new animation configuration.
+     * @param animationConfig the new animation configuration
+     */
+    public void setAnimationConfig(AnimationConfig animationConfig) {
+        this.animationConfig = animationConfig;
     }
 
     /**
@@ -51,7 +92,13 @@ public class AnimationService {
      * @param boardGrid the UI grid pane
      */
     public void animateTilePush(int rowOrColIndex, Direction pushDirection, GridPane boardGrid) {
+        isTilePushAnimationActive = true;
         scheduleAnimation(new TilePushAnimation(this, rowOrColIndex, pushDirection, boardGrid));
+    }
+
+    public void animateBeam(
+            ImageView playerPawn, CoordinatesItem from, CoordinatesItem to, GridPane boardGrid) {
+        scheduleAnimation(new BeamAnimation(this, playerPawn, from, to, boardGrid));
     }
 
     /**
@@ -69,7 +116,7 @@ public class AnimationService {
         }
 
         log.debug("Starting new animation: {}", animation.getClass().getSimpleName());
-        
+
         animation.animate();
     }
 
@@ -81,12 +128,20 @@ public class AnimationService {
         synchronized (animationLock) {
             if (currentAnimation == completedAnimation) {
                 log.debug("Animation completed: {}", completedAnimation.getClass().getSimpleName());
+
+                // Reset tile push flag if this was a tile push animation
+                if (completedAnimation instanceof TilePushAnimation) {
+                    isTilePushAnimationActive = false;
+                }
+
                 currentAnimation = null;
-                
+
                 if (pendingAnimation != null) {
                     GameAnimation nextAnimation = pendingAnimation;
                     pendingAnimation = null;
-                    log.debug("Starting pending animation: {}", nextAnimation.getClass().getSimpleName());
+                    log.debug(
+                            "Starting pending animation: {}",
+                            nextAnimation.getClass().getSimpleName());
                     scheduleAnimation(nextAnimation);
                 }
             }

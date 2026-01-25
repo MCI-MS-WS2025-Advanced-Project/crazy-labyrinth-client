@@ -1,5 +1,8 @@
 package mci.dibse.crazylabyrinth.client.test.unit;
 
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
 import labyrinth.contracts.models.*;
 import labyrinth.contracts.models.LobbyStateEventPayload;
 import labyrinth.contracts.models.NextTreasureCardEventPayload;
@@ -8,9 +11,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.ApplicationEventPublisher;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
 
 class ServerEventServiceTest {
 
@@ -30,14 +30,13 @@ class ServerEventServiceTest {
         timerServiceMock = mock(TimerService.class);
         achievementService = mock(AchievementService.class);
 
-        eventService = new ServerEventService(
-                lobbyServiceMock,
-                gameServiceMock,
-                eventPublisherMock,
-                timerServiceMock,
-                achievementService
-
-        );
+        eventService =
+                new ServerEventService(
+                        lobbyServiceMock,
+                        gameServiceMock,
+                        eventPublisherMock,
+                        timerServiceMock,
+                        achievementService);
     }
 
     @Test
@@ -64,7 +63,8 @@ class ServerEventServiceTest {
 
         // THEN: Verify that the event was delegated to the LobbyService
         verify(lobbyServiceMock).handleLobbyState(any(LobbyStateEventPayload.class));
-        System.out.println("UT-EVENT-03 Result: LobbyStateEvent successfully delegated to LobbyService.");
+        System.out.println(
+                "UT-EVENT-03 Result: LobbyStateEvent successfully delegated to LobbyService.");
     }
 
     @Test
@@ -78,7 +78,8 @@ class ServerEventServiceTest {
 
         // THEN: Verify that the event was delegated to the GameService
         verify(gameServiceMock).handleGameEvent(any(NextTreasureCardEventPayload.class));
-        System.out.println("UT-EVENT-04 Result: Treasure event successfully delegated to GameService.");
+        System.out.println(
+                "UT-EVENT-04 Result: Treasure event successfully delegated to GameService.");
     }
 
     @Test
@@ -92,6 +93,8 @@ class ServerEventServiceTest {
 
         // Ensure no delegation to services occurred due to parsing failure
         verifyNoInteractions(lobbyServiceMock, gameServiceMock);
-        System.out.println("UT-EVENT-05 Result: Malformed JSON handled via catch-block; client remains stable.");
+        System.out.println(
+                "UT-EVENT-05 Result: Malformed JSON handled via catch-block; client remains"
+                        + " stable.");
     }
 }
