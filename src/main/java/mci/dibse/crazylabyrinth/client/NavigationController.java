@@ -11,6 +11,7 @@ import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.KeyEvent;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import javafx.stage.StageStyle;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -102,7 +103,7 @@ public class NavigationController {
 
     private ApplicationSettingsRecord showSettingsScreenAndSetValues() throws IOException {
         FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/settings.fxml"));
-        ;
+
         SettingsController controller = new SettingsController();
         controller.setDefaultResolutionString(defaultViewResolution);
         controller.setDefaultScaleRatio(defaultScaleRatio);
@@ -114,9 +115,11 @@ public class NavigationController {
         Stage settingsStage = new Stage();
         Scene scene = new Scene(settingsRoot);
 
-        settingsStage.setTitle("The Amazing Labyrinth - Settings");
+        settingsStage.setTitle("The Amazing Labyrinth - Launcher");
         settingsStage.initModality(Modality.APPLICATION_MODAL);
         settingsStage.setScene(scene);
+
+        settingsStage.initStyle(StageStyle.UNDECORATED);
         settingsStage.showAndWait();
 
         ApplicationSettingsRecord settings = controller.getSettings();
