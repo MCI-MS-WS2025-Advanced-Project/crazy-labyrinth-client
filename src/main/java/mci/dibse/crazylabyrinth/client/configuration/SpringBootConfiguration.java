@@ -12,6 +12,7 @@ import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.*;
 import org.springframework.context.support.GenericApplicationContext;
 import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
+import org.springframework.core.env.MutablePropertySources;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.support.ResourcePropertySource;
 
@@ -38,6 +39,12 @@ public class SpringBootConfiguration {
     private static final String MODE_DEFAULT = "minimal";
     private static final String MODE_PROPERTY_NAME = "app.spring.mode";
 
+    /**
+     * Initialize Spring based on application properties.
+     *
+     * @param app JavaFX application instance
+     * @return configured application context
+     */
     public static ConfigurableApplicationContext initSpringBasedOnProperties(
             JavaFXClientApplication app) {
         try {
@@ -47,11 +54,17 @@ public class SpringBootConfiguration {
         }
     }
 
+    /**
+     * Determine the Spring mode and initialize the appropriate context.
+     *
+     * @param app JavaFX application instance
+     * @return configured application context
+     * @throws IOException when property loading fails
+     */
     private static ConfigurableApplicationContext checkSpringModeInProperties(
             JavaFXClientApplication app) throws IOException {
 
         String mode = loadApplicationProperty();
-        System.out.println("DEBUG MODE: " + mode);
         if (SpringBootConfiguration.Mode.FULL.getValue().equalsIgnoreCase(mode)) {
             log.debug("init via full Spring Boot setup");
             return fullSpringBootSetup(app);
@@ -63,6 +76,11 @@ public class SpringBootConfiguration {
         }
     }
 
+    /**
+     * Load the Spring mode property from system properties or application properties.
+     *
+     * @return configured Spring mode
+     */
     private static String loadApplicationProperty() {
         String v = System.getProperty(MODE_PROPERTY_NAME);
         if (v != null) return v;
@@ -78,6 +96,13 @@ public class SpringBootConfiguration {
         return props.getProperty(MODE_PROPERTY_NAME, MODE_DEFAULT);
     }
 
+    /**
+     * Initialize a minimal Spring container for the JavaFX client.
+     *
+     * @param app JavaFX application instance
+     * @return configured application context
+     * @throws IOException when property loading fails
+     */
     private static ConfigurableApplicationContext minimalSpringContainerSetup(
             JavaFXClientApplication app) throws IOException {
         log.debug("Minimal Spring Container setup");
@@ -94,6 +119,12 @@ public class SpringBootConfiguration {
         return ctx;
     }
 
+    /**
+     * Initialize a full Spring Boot application context.
+     *
+     * @param app JavaFX application instance
+     * @return configured application context
+     */
     private static ConfigurableApplicationContext fullSpringBootSetup(JavaFXClientApplication app) {
         log.debug("Full Spring Boot setup");
         return new SpringApplicationBuilder()
@@ -102,17 +133,55 @@ public class SpringBootConfiguration {
                 .run(app.getParameters().getRaw().toArray(new String[0]));
     }
 
-    private static void setupEnvironmentForMinimalSetup(ConfigurableApplicationContext ctx)
-            throws IOException {
-        var env = ctx.getEnvironment();
-        var sources = env.getPropertySources();
-        sources.addLast(new ResourcePropertySource("classpath:" + APPLICATION_PROPERTIES));
-        sources.addLast(new ResourcePropertySource("classpath:" + APPLICATION_DEV_PROPERTIES));
+    /**
+     * Add property sources for the minimal Spring setup.
+     *
+     * @param ctx application context
+     * @throws IOException when properties fail to load
+     */
+    private static void setupEnvironmentForMinimalSetup(ConfigurableApplicationContext ctx) {
+        var sources = ctx.getEnvironment().getPropertySources();
+
+        // Higher precedence: external files (override)
+        addFirstIfExists(sources, "file:./config/application.properties");
+        addFirstIfExists(sources, "file:./application.properties");
+
+        // Lower precedence: classpath defaults (inside JAR)
+        addLastIfExists(sources, "classpath:application.properties");
+        addLastIfExists(sources, "classpath:application-dev.properties");
     }
 
+    private static void addFirstIfExists(MutablePropertySources sources, String location) {
+        try {
+            var rps = new ResourcePropertySource(location);
+            rps.getPropertyNames();
+            sources.addFirst(rps);
+        } catch (Exception ignored) {
+            log.info("Property file {} not found: skip", location);
+        }
+    }
+
+    private static void addLastIfExists(MutablePropertySources sources, String location) {
+        try {
+            var rps = new ResourcePropertySource(location);
+            rps.getPropertyNames();
+            sources.addLast(rps);
+        } catch (Exception ignored) {
+            log.info("Property file {} not found: skip", location);
+        }
+    }
+
+    /**
+     * Configure placeholder configurer for property resolution.
+     *
+     * @return property sources placeholder configurer
+     */
     private static PropertySourcesPlaceholderConfigurer setupResourcesForMinimalSetup() {
         var cfg = new PropertySourcesPlaceholderConfigurer();
+        cfg.setIgnoreResourceNotFound(true);
         cfg.setLocations(
+                new org.springframework.core.io.FileSystemResource("./config/application.properties"),
+                new org.springframework.core.io.FileSystemResource("./application.properties"),
                 new ClassPathResource(APPLICATION_PROPERTIES),
                 new ClassPathResource(APPLICATION_DEV_PROPERTIES));
         return cfg;

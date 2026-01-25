@@ -1,5 +1,7 @@
 package mci.dibse.crazylabyrinth.client.view.controller.impl;
 
+import static labyrinth.contracts.models.CommandType.PUSH_TILE;
+
 import jakarta.annotation.Nullable;
 import java.time.OffsetDateTime;
 import java.util.*;
@@ -9,41 +11,41 @@ import javafx.animation.Timeline;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
-import javafx.beans.binding.DoubleBinding;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.css.PseudoClass;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.Cursor;
 import javafx.scene.Group;
-import javafx.scene.Parent;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.shape.StrokeType;
-import javafx.scene.transform.Scale;
 import javafx.util.Duration;
 import labyrinth.contracts.models.*;
 import lombok.extern.slf4j.Slf4j;
+import mci.dibse.crazylabyrinth.client.NavigationController;
 import mci.dibse.crazylabyrinth.client.domain.context.PushTileCommandRecord;
+import mci.dibse.crazylabyrinth.client.domain.model.enums.Theme;
+import mci.dibse.crazylabyrinth.client.infrastructure.util.*;
 import mci.dibse.crazylabyrinth.client.infrastructure.util.JavaFXUtils;
 import mci.dibse.crazylabyrinth.client.infrastructure.util.PlayerPawnUtils;
-import mci.dibse.crazylabyrinth.client.infrastructure.util.ScreenResolutionProperties;
 import mci.dibse.crazylabyrinth.client.service.GameServerSocketService;
+import mci.dibse.crazylabyrinth.client.service.animation.AnimationService;
 import mci.dibse.crazylabyrinth.client.view.viewmodel.GameViewModel;
-import mci.dibse.crazylabyrinth.client.view.viewmodel.item.GameBoardItem;
-import mci.dibse.crazylabyrinth.client.view.viewmodel.item.PlayerStateItem;
-import mci.dibse.crazylabyrinth.client.view.viewmodel.item.TileItem;
-import mci.dibse.crazylabyrinth.client.view.viewmodel.item.TreasureItem;
+import mci.dibse.crazylabyrinth.client.view.viewmodel.item.*;
 import mci.dibse.crazylabyrinth.client.view.viewmodel.navigation.NavigationStateViewModel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.EventListener;
@@ -53,6 +55,16 @@ import org.springframework.stereotype.Component;
 @Slf4j
 public class GameStateController extends BaseViewCleanup {
 
+    private static final List<String> THEME_STYLE_CLASSES =
+            List.of(
+                    "theme-runehaven",
+                    "theme-glowing-caves",
+                    "theme-stone-catacombs",
+                    "theme-emberforge");
+
+    private final NavigationController navigationController;
+    @FXML public StackPane bottomBar;
+    @FXML public StackPane topBar;
     @FXML public BorderPane gameContainer;
     @FXML public GridPane boardGrid;
     @FXML public HBox topArrowBox;
@@ -60,17 +72,17 @@ public class GameStateController extends BaseViewCleanup {
     @FXML public VBox leftArrowBox;
     @FXML public HBox bottomArrowBox;
 
-    @FXML public StackPane nextTreasurePane;
-    // todo rework
-    // @FXML public ImageView nextTreasure;
-    @FXML public Label nextTreasure;
+    @FXML public VBox nextTreasurePaneWrapper;
+    @FXML public ImageView nextTreasureImage;
 
     @FXML public StackPane extraTileContainer;
     @FXML public Label extraTileTreasureLabel;
     @FXML public Label extraTileBonusLabel;
     @FXML public VBox extraTileWrapper;
     @FXML public ImageView extraTile;
-    // @FXML public Button rotateLeftButton;
+    @FXML public ImageView extraTileTreasure;
+    @FXML public ImageView extraTileBonusImage;
+    @FXML public StackPane bonusBadge;
     @FXML public Button rotateRightButton;
 
     @FXML public VBox bonusBox;
@@ -86,6 +98,23 @@ public class GameStateController extends BaseViewCleanup {
     @FXML public HBox bonusPushFixedBox;
     @FXML public Label bonusPushFixedCount;
     @FXML public Button bonusPushFixedButton;
+    @FXML public StackPane swapBonusBadge;
+    @FXML public ImageView swapBonusImage;
+    @FXML public StackPane beamBonusBadge;
+    @FXML public ImageView beamBonusImage;
+    @FXML public StackPane pushTwiceBonusBadge;
+    @FXML public ImageView pushTwiceBonusImage;
+    @FXML public StackPane pushFixedBonusBadge;
+    @FXML public ImageView pushFixedBonusImage;
+
+    @FXML public Circle bonusSwapCircle;
+    @FXML public Circle bonusSwapClip;
+    @FXML public Circle bonusBeamCircle;
+    @FXML public Circle bonusBeamClip;
+    @FXML public Circle bonusPushTwiceCircle;
+    @FXML public Circle bonusPushTwiceClip;
+    @FXML public Circle bonusPushFixedCircle;
+    @FXML public Circle bonusPushFixedClip;
 
     @FXML public Label playerTurnLabel;
 
@@ -121,7 +150,9 @@ public class GameStateController extends BaseViewCleanup {
     @FXML public StackPane viewport;
     @FXML public Group contentGroup;
     @FXML public GridPane mainLayoutGrid;
-
+    @FXML public ColumnConstraints leftGameGridColomn;
+    @FXML public ColumnConstraints middleGameGridColomn;
+    @FXML public ColumnConstraints rightGameGridColomn;
 
     private static final int GAP_BETWEEN_TILES = 2;
     private static final int MAX_PLAYERS = 4;
@@ -132,18 +163,17 @@ public class GameStateController extends BaseViewCleanup {
     private static final PseudoClass AVAILABLE_BONUS_BUTTON_PSEUDO_CLASS =
             PseudoClass.getPseudoClass("bonus-available");
 
-
-    private static final String QUIT_GAME_MODAL_TITLE   = "Beenden";
-    private static final String QUIT_GAME_MODAL_HEADER  = "Spiel wirklich beenden?";
-    private static final String QUIT_GAME_MODAL_CONTENT = "Das laufende Spiel wird beendet und Sie kehren zur Serverübersicht zurück";
-
+    private static final String QUIT_GAME_MODAL_TITLE = "Beenden";
+    private static final String QUIT_GAME_MODAL_HEADER = "Spiel wirklich beenden?";
+    private static final String QUIT_GAME_MODAL_CONTENT =
+            "Das laufende Spiel wird beendet und Sie kehren zur Serverübersicht zurück";
 
     private final GameViewModel gameViewModel;
     private final Map<String, Label> idToPlayerLabel = new HashMap<>();
     private final Map<String, Label> idToPlayerStatusLabel = new HashMap<>();
 
-
     private Map<BonusType, ChangeListener<Boolean>> bonusAvailableListeners = new HashMap<>();
+    private SimpleBooleanProperty pushTwicePendingAction = new SimpleBooleanProperty(false);
 
     private IntegerProperty remainingGameTimer = new SimpleIntegerProperty();
     private Timeline gameTimeline;
@@ -153,17 +183,29 @@ public class GameStateController extends BaseViewCleanup {
     private ChangeListener<OffsetDateTime> turnTimeChangeListener;
 
     private ScreenResolutionProperties screenResolutionProperties;
+    private final Map<String, ImageView> idToPlayerPawn = new HashMap<>();
+
+    private final AnimationService animationService;
 
     @Autowired
-    public GameStateController(NavigationStateViewModel vm, GameViewModel gameViewModel, ScreenResolutionProperties screenResolutionProperties) {
+    public GameStateController(
+            NavigationStateViewModel vm,
+            GameViewModel gameViewModel,
+            ScreenResolutionProperties screenResolutionProperties,
+            NavigationController navigationController) {
         super(vm);
         this.gameViewModel = gameViewModel;
         this.screenResolutionProperties = screenResolutionProperties;
+        this.animationService = new AnimationService();
+        this.navigationController = navigationController;
     }
 
-
+    /**
+     * Initialize bindings, listeners, and UI elements for the game screen.
+     */
     @FXML
     public void initialize() {
+        applyThemeStyleClass();
 
         initPlayerTurnLabel();
 
@@ -171,17 +213,21 @@ public class GameStateController extends BaseViewCleanup {
 
         initSpareTile();
 
-        initGameGrid();
-
         ChangeListener<TurnState> turnStateChangeListener =
                 (observable, oldValue, newValue) -> {
-                    initGameGrid();
+                    if (animationService.isAnimationInProgress()) {
+                        Platform.runLater(this::waitForAnimationsAndRecreateGrid);
+                    } else {
+                        initGameGrid();
+                    }
                 };
         gameViewModel.addListenerToCurrentTurnStateProperty(turnStateChangeListener);
 
-        initPushTileButtons();
+        initPlayerMovementListener();
 
-        initNextTreasure();
+        initTilePushListener();
+
+        initPushTileButtons();
 
         initBoni();
 
@@ -189,18 +235,78 @@ public class GameStateController extends BaseViewCleanup {
 
         initGameTimer();
 
-        initUiScaling();
+        initNextTreasure();
+
+        initViewToRatio();
+        // delay init of scaling & gamegrid until several pulse runs
+        viewport.sceneProperty()
+                .addListener(
+                        (obs, oldScene, newScene) -> {
+                            if (newScene != null) {
+                                Platform.runLater(
+                                        () -> {
+                                            root.applyCss();
+                                            root.setMaxSize(
+                                                    screenResolutionProperties.getWidth(),
+                                                    screenResolutionProperties.getScreenHeight());
+                                            root.setPrefSize(
+                                                    screenResolutionProperties.getWidth(),
+                                                    screenResolutionProperties.getScreenHeight());
+                                            root.layout();
+                                            viewport.layout();
+                                            centerStackPane.layout();
+                                            Platform.runLater(
+                                                    () -> {
+                                                        initUiScaling();
+                                                        initGameGrid();
+                                                    });
+                                        });
+                            }
+                        });
     }
 
-    private void initUiScaling() {
-            ScreenResolutionProperties.ResolutionProperties props = new ScreenResolutionProperties.ResolutionProperties(root,
-                    viewport);
-            screenResolutionProperties.initUiScaling(props);
+    private void applyThemeStyleClass() {
+        Theme theme = FileNameMapper.getTheme();
+        String themeClass =
+                switch (theme) {
+                    case RUNEHAVEN_LABYRINTH -> "theme-runehaven";
+                    case GLOWING_CAVES -> "theme-glowing-caves";
+                    case STONE_CATACOMBS -> "theme-stone-catacombs";
+                    case EMBERFORGE_MAZE -> "theme-emberforge";
+                };
+        viewport.getStyleClass().removeAll(THEME_STYLE_CLASSES);
+        if (!viewport.getStyleClass().contains(themeClass)) {
+            viewport.getStyleClass().add(themeClass);
         }
+    }
 
+    /**
+     * Initialize UI scaling based on screen resolution.
+     */
+    private void initUiScaling() {
+        ScreenResolutionProperties.ResolutionProperties props =
+                new ScreenResolutionProperties.ResolutionProperties(root, viewport);
+        screenResolutionProperties.initUiScaling(props);
+    }
 
+    /**
+     * Wait for running animations to finish, then rebuild the game grid.
+     */
+    private void waitForAnimationsAndRecreateGrid() {
+        if (animationService.isAnimationInProgress()) {
+            Platform.runLater(this::waitForAnimationsAndRecreateGrid);
+        } else {
+            initGameGrid();
+        }
+    }
 
-
+    /**
+     * Decide whether cleanup should run when leaving the game screen.
+     *
+     * @param oldValue previous screen
+     * @param newValue new screen
+     * @return true when cleanup should run
+     */
     @Override
     protected boolean customCleanupCheckpoint(
             NavigationStateViewModel.ScreenId oldValue,
@@ -210,19 +316,24 @@ public class GameStateController extends BaseViewCleanup {
                 && !NavigationStateViewModel.ScreenId.GAMEBOARD.equals(newValue);
     }
 
+    /**
+     * Clear bindings, listeners, and timers on view exit.
+     */
     @Override
     public void cleanup() {
         // todo
         playerTurnLabel.textProperty().unbind();
         playerTurnLabel.graphicProperty().unbind();
         idToPlayerLabel.values().forEach(l -> l.textProperty().unbind());
-        extraTileTreasureLabel.textProperty().unbind();
         extraTile.imageProperty().unbind();
         extraTile.rotateProperty().unbind();
+        extraTile.fitWidthProperty().unbind();
         rotateRightButton.visibleProperty().unbind();
 
-        nextTreasure.textProperty().unbind();
-
+        nextTreasureImage.imageProperty().unbind();
+        extraTileTreasure.fitWidthProperty().unbind();
+        extraTileTreasure.imageProperty().unbind();
+        extraTile.fitHeightProperty().unbind();
         bonusBox.visibleProperty().unbind();
         bonusBox.managedProperty().unbind();
 
@@ -259,18 +370,47 @@ public class GameStateController extends BaseViewCleanup {
                 .removeListener(bonusAvailableListeners.get(BonusType.PUSH_FIXED));
 
         gameCounterLabel.textProperty().unbind();
+
+        gameTimeline.stop();
+        gameTimeline = null;
+
+        turnTimeline.stop();
+        turnTimeline = null;
     }
 
+    /**
+     * Handle locally published command events to reset bonus button states.
+     *
+     * @param event send command event
+     */
     @EventListener
     public void handleSendCommandEvent(GameServerSocketService.SendCommand event) {
-        switch (event.commandType()) {
-            case PUSH_TILE, USE_PUSH_FIXED -> toggleOrSetBonusButton(BONUS_TYPE.PUSH_FIXED, false);
+        CommandType command = event.commandType();
+        switch (command) {
+            case PUSH_TILE, USE_PUSH_FIXED -> {
+                toggleOrSetBonusButton(BONUS_TYPE.PUSH_FIXED, false);
+                if (PUSH_TILE.equals(command)) {
+                    if (gameViewModel.isPushTwiceTileBonusActive()) {
+                        toggleOrSetBonusButton(BONUS_TYPE.PUSH_TWICE, false);
+                    } else {
+                        pushTwicePendingAction.set(false);
+                    }
+                }
+            }
             case USE_BEAM -> toggleOrSetBonusButton(BONUS_TYPE.BEAM, false);
             case USE_SWAP -> toggleOrSetBonusButton(BONUS_TYPE.SWAP, false);
-            case USE_PUSH_TWICE -> toggleOrSetBonusButton(BONUS_TYPE.PUSH_TWICE, false);
+            case USE_PUSH_TWICE -> {
+                pushTwicePendingAction.set(true);
+            }
         }
     }
 
+    /**
+     * Resolve the player name label by index.
+     *
+     * @param index player index
+     * @return label for the player slot
+     */
     private Label getPlayerLabelByIndex(int index) {
         return switch (index) {
             case 0 -> player1;
@@ -281,6 +421,12 @@ public class GameStateController extends BaseViewCleanup {
         };
     }
 
+    /**
+     * Resolve the player indicator circle by index.
+     *
+     * @param index player index
+     * @return circle for the player slot
+     */
     private Circle getPlayerCircleByIndex(int index) {
         return switch (index) {
             case 0 -> player1Circle;
@@ -291,6 +437,12 @@ public class GameStateController extends BaseViewCleanup {
         };
     }
 
+    /**
+     * Resolve the player status label by index.
+     *
+     * @param index player index
+     * @return status label for the player slot
+     */
     private Label getPlayerStatusLabelByIndex(int index) {
         return switch (index) {
             case 0 -> player1Status;
@@ -301,6 +453,9 @@ public class GameStateController extends BaseViewCleanup {
         };
     }
 
+    /**
+     * Initialize the player turn label and icon bindings.
+     */
     private void initPlayerTurnLabel() {
 
         playerTurnLabel
@@ -367,6 +522,9 @@ public class GameStateController extends BaseViewCleanup {
         initTurnCounter();
     }
 
+    /**
+     * Initialize the turn countdown display and listener.
+     */
     private void initTurnCounter() {
 
         initTurnCounterTimeline();
@@ -393,6 +551,9 @@ public class GameStateController extends BaseViewCleanup {
         if (gameViewModel.isCurrentTurnTimeSet()) turnTimeChangeListener.changed(null, null, null);
     }
 
+    /**
+     * Initialize the turn timer timeline.
+     */
     private void initTurnCounterTimeline() {
         turnTimeline =
                 new Timeline(
@@ -408,6 +569,9 @@ public class GameStateController extends BaseViewCleanup {
         turnTimeline.setCycleCount(Animation.INDEFINITE);
     }
 
+    /**
+     * Initialize player labels, colors, and bindings.
+     */
     private void initPlayerLabels() {
 
         player1Box.setVisible(false);
@@ -434,7 +598,8 @@ public class GameStateController extends BaseViewCleanup {
                             PlayerPawnUtils.mapPlayerColorToFxColor(
                                     playerStateItem.getPlayerColor()));
             idToPlayerLabel.put(playerStateItem.getPlayerIdAsString(), getPlayerLabelByIndex(i));
-            idToPlayerStatusLabel.put(playerStateItem.getPlayerIdAsString(), getPlayerStatusLabelByIndex(i));
+            idToPlayerStatusLabel.put(
+                    playerStateItem.getPlayerIdAsString(), getPlayerStatusLabelByIndex(i));
         }
 
         // clientPlayer always first
@@ -450,34 +615,50 @@ public class GameStateController extends BaseViewCleanup {
                         playerState -> {
                             Label playerLabel =
                                     idToPlayerLabel.get(playerState.getPlayerIdAsString());
-                            Label playerStatusLabel = idToPlayerStatusLabel.get(playerState.getPlayerIdAsString());
+                            Label playerStatusLabel =
+                                    idToPlayerStatusLabel.get(playerState.getPlayerIdAsString());
                             bindPlayerLabel(playerLabel, playerState, false);
                             bindPlayerStatusLabel(playerStatusLabel, playerState);
                         });
     }
 
+    /**
+     * Bind the player status label to treasure counts and AI state.
+     *
+     * @param statusLabel label to bind
+     * @param playerState player state item
+     */
     private void bindPlayerStatusLabel(Label statusLabel, PlayerStateItem playerState) {
         String maxAvailableTreasurePerPlayer =
                 String.valueOf(playerState.getRemainingTreasureCountAsInt());
-        int found = playerState.getTreasuresFound().size();
 
         statusLabel.textProperty().unbind();
-        statusLabel.textProperty().bind(
-                Bindings.createStringBinding(
-                        () -> {
-                            String playerStatusLabelString =
-                                    "Schätze ("
-                                            + found
-                                            + " / "
-                                            + maxAvailableTreasurePerPlayer
-                                            + ")";
-                            if (playerState.isPlayerAiControlled()) playerStatusLabelString += " - (AI)";
-                            return playerStatusLabelString;
-                        },        playerState.getPlayerInfo().get().isAiControlledProperty(),
-                        playerState.getTreasuresFound()));
-
+        statusLabel
+                .textProperty()
+                .bind(
+                        Bindings.createStringBinding(
+                                () -> {
+                                    String playerStatusLabelString =
+                                            "Schätze ("
+                                                    + playerState.getTreasuresFoundAsInt()
+                                                    + " / "
+                                                    + maxAvailableTreasurePerPlayer
+                                                    + ")";
+                                    if (playerState.isPlayerAiControlled())
+                                        playerStatusLabelString += " - (AI)";
+                                    return playerStatusLabelString;
+                                },
+                                playerState.getPlayerInfo().get().isAiControlledProperty(),
+                                playerState.getTreasuresFound()));
     }
 
+    /**
+     * Bind the player label to the player name with optional client prefix.
+     *
+     * @param label label to bind
+     * @param player player state item
+     * @param isClient true when the player is the client
+     */
     private void bindPlayerLabel(Label label, PlayerStateItem player, boolean isClient) {
         label.textProperty().unbind();
         label.textProperty()
@@ -485,111 +666,36 @@ public class GameStateController extends BaseViewCleanup {
                         Bindings.createStringBinding(
                                 () -> {
                                     String prefix = isClient ? "Du: " : "";
-                                    System.out.println(prefix + player.getPlayerNameAsString());
+
                                     return prefix + player.getPlayerNameAsString();
                                 },
                                 player.getPlayerInfo()));
     }
 
+    /**
+     * Initialize spare tile bindings and rotation controls.
+     */
     private void initSpareTile() {
         extraTileWrapper.visibleProperty().set(true);
-        extraTileTreasureLabel.visibleProperty().set(true);
-
-        extraTileTreasureLabel
-                .textProperty()
-                .bind(
-                        Bindings.createStringBinding(
-                                () -> {
-                                    TileItem tile = gameViewModel.getSpareTileItem();
-                                    if (tile != null && tile.getTreasureItem() != null) {
-                                        return String.valueOf(tile.getTreasure().get().getId());
-                                    } else {
-                                        return "";
-                                    }
-                                },
-                                gameViewModel.getGameBoardItem().getSpareTileProperty()));
-
-        extraTileBonusLabel.visibleProperty().set(true);
-        extraTileBonusLabel
-                .textProperty()
-                .bind(
-                        Bindings.createStringBinding(
-                                () -> {
-                                    TileItem tile = gameViewModel.getSpareTileItem();
-                                    if (tile != null && tile.getBonusType() != null) {
-                                        return tile.getBonusType().getValue().toLowerCase();
-                                    } else {
-                                        return "";
-                                    }
-                                },
-                                gameViewModel.getGameBoardItem().getSpareTileProperty()));
 
         ChangeListener<TileItem> spareTileListener =
                 (obs, oldValue, newValue) -> {
                     if (oldValue != null) {
                         oldValue.dispose();
                     }
-                    extraTile.imageProperty().unbind();
-                    extraTile.rotateProperty().unbind();
-                    // Add null check for newValue
                     if (newValue != null) {
-                        extraTile
-                                .imageProperty()
-                                .bind(
-                                        Bindings.createObjectBinding(
-                                                () -> newValue.getTileImage().get(),
-                                                gameViewModel.getSpareTileProperty(),
-                                                newValue.getRotation()));
-                        extraTile.rotateProperty().bindBidirectional(newValue.getRotation());
+                        bindSpareTileImage(newValue);
+                        bindSpareTileTreasureImage(newValue);
+                        bindSpareTileBonusImage(newValue);
                     }
                 };
 
         gameViewModel.addListenerToSpareTileProperty(spareTileListener);
         if (gameViewModel.getSpareTileItem() != null) {
             TileItem currentTile = gameViewModel.getSpareTileItem();
-            extraTile
-                    .imageProperty()
-                    .bind(
-                            Bindings.createObjectBinding(
-                                    () -> currentTile.getTileImage().get(),
-                                    gameViewModel.getSpareTileProperty(),
-                                    currentTile.getRotation()));
-
-/*
-            DoubleBinding squareSize = Bindings.createDoubleBinding(
-                    () -> Math.min(extraTileWrapper.getWidth(), extraTileWrapper.getHeight() * 0.6),
-                    extraTileWrapper.widthProperty(),
-                    extraTileWrapper.heightProperty()
-            );
-
-            extraTile.fitWidthProperty().bind(squareSize);
-            extraTile.fitHeightProperty().bind(squareSize);
-
- */
-            //todo
-            /*
-            extraTile.setPreserveRatio(true);
-
-            DoubleBinding squareSize = Bindings.createDoubleBinding(
-                    () -> Math.min(rightSidebar.getWidth(), rightSidebar.getHeight()),
-                    rightSidebar.widthProperty(), rightSidebar.heightProperty()
-            );
-
-            extraTile.fitHeightProperty().bind(squareSize.divide(2));
-            extraTileWrapper.prefWidthProperty().bind(squareSize);
-            extraTileWrapper.prefHeightProperty().bind(squareSize);
-            extraTileWrapper.maxWidthProperty().bind(squareSize);
-            extraTileWrapper.maxHeightProperty().bind(squareSize);
-           // extraTileWrapper.heightProperty().bind()
-
-
-
-
-
- */
-            //todo end
-
-            extraTile.rotateProperty().bindBidirectional(currentTile.getRotation());
+            bindSpareTileImage(currentTile);
+            bindSpareTileTreasureImage(currentTile);
+            bindSpareTileBonusImage(currentTile);
         }
 
         rotateRightButton
@@ -622,12 +728,189 @@ public class GameStateController extends BaseViewCleanup {
                 });
     }
 
+    /**
+     * Bind the bonus image for the spare tile when present.
+     *
+     * @param currentTile current spare tile
+     */
+    private void bindSpareTileBonusImage(TileItem currentTile) {
+        if (!currentTile.hasBonus()) {
+            bonusBadge.setVisible(false);
+            bonusBadge.setManaged(false);
+            extraTileBonusImage.setVisible(false);
+            extraTileBonusImage.setManaged(false);
+            return;
+        }
+        Image image = ImageResourceLoader.loadImage(currentTile.getBonusType());
+        extraTileBonusImage.setImage(image);
+
+        bonusBadge.setVisible(true);
+        bonusBadge.setManaged(true);
+        extraTileBonusImage.setVisible(true);
+        extraTileBonusImage.setManaged(true);
+    }
+
+    /**
+     * Bind the treasure image for the spare tile when present.
+     *
+     * @param currentTile current spare tile
+     */
+    private void bindSpareTileTreasureImage(TileItem currentTile) {
+        extraTileTreasure.fitWidthProperty().unbind();
+        extraTileTreasure.imageProperty().unbind();
+
+        if (!currentTile.hasTreasure()) {
+            extraTileTreasure.setVisible(false);
+            extraTileTreasure.setManaged(false);
+            return;
+        }
+
+        extraTileTreasure.setPreserveRatio(true);
+
+        extraTileTreasure
+                .imageProperty()
+                .bind(
+                        Bindings.createObjectBinding(
+                                () -> currentTile.getTreasureItem().getTreasureImage(),
+                                gameViewModel.getSpareTileProperty()));
+
+        //  ImageViewStyler.applyTreasureStylingToImageView(extraTileTreasure);
+
+        extraTileTreasure.setRotate(currentTile.getRotation().get().doubleValue());
+
+        extraTileTreasure.fitWidthProperty().bind(extraTileWrapper.widthProperty().multiply(0.2));
+        extraTileTreasure.setVisible(true);
+        extraTileTreasure.setManaged(true);
+    }
+
+    /**
+     * Bind the spare tile image and rotation.
+     *
+     * @param currentTile current spare tile
+     */
+    private void bindSpareTileImage(TileItem currentTile) {
+
+        extraTile.imageProperty().unbind();
+        extraTile.rotateProperty().unbind();
+        extraTile.fitWidthProperty().unbind();
+        extraTile.setPreserveRatio(true);
+        extraTile
+                .imageProperty()
+                .bind(
+                        Bindings.createObjectBinding(
+                                () -> currentTile.getTileImage().get(),
+                                gameViewModel.getSpareTileProperty(),
+                                currentTile.getRotation()));
+        extraTile.rotateProperty().bindBidirectional(currentTile.getRotation());
+    }
+
+    /**
+     * Adjust layout widths for different screen ratios.
+     */
+    private void initViewToRatio() {
+        Ratio screenRation = screenResolutionProperties.getAspectRatio();
+        switch (screenRation) {
+            case FOUR_THREE -> {
+                System.out.println("FOUR_THREE");
+                leftGameGridColomn.setPercentWidth(18);
+                middleGameGridColomn.setPercentWidth(64);
+                rightGameGridColomn.setPercentWidth(18);
+                rightSidebar.getStyleClass().add("sidebar-right");
+                leftSidebar.getStyleClass().add("left-sidebar");
+                setupStyleBonusBadge(screenRation);
+            }
+            case SIXTEEN_NINE -> {
+                leftGameGridColomn.setPercentWidth(23);
+                middleGameGridColomn.setPercentWidth(54);
+                rightGameGridColomn.setPercentWidth(23);
+                rightSidebar.getStyleClass().add("sidebar-right-wide");
+                leftSidebar.getStyleClass().add("sidebar-left-wide");
+                nextTreasurePaneWrapper.getStyleClass().add("nextTreasurePaneWrapper-wide");
+                setupStyleBonusBadge(screenRation);
+            }
+        }
+    }
+
+    /**
+     * Configures the visual style and dimensions of the bonus badges based on the screen ratio.
+     *
+     * @param screenRation the current screen aspect ratio
+     */
+    private void setupStyleBonusBadge(Ratio screenRation) {
+        System.out.println("setupStyleBonusBadge");
+        int size = (screenRation == Ratio.FOUR_THREE) ? 14 : 20;
+        String styleClass =
+                (screenRation == Ratio.FOUR_THREE) ? "bonus-label-image" : "bonus-label-image-wide";
+
+        updateBadgeStyle(
+                swapBonusBadge, swapBonusImage, bonusSwapCircle, bonusSwapClip, size, styleClass);
+        updateBadgeStyle(
+                beamBonusBadge, beamBonusImage, bonusBeamCircle, bonusBeamClip, size, styleClass);
+        updateBadgeStyle(
+                pushTwiceBonusBadge,
+                pushTwiceBonusImage,
+                bonusPushTwiceCircle,
+                bonusPushTwiceClip,
+                size,
+                styleClass);
+        updateBadgeStyle(
+                pushFixedBonusBadge,
+                pushFixedBonusImage,
+                bonusPushFixedCircle,
+                bonusPushFixedClip,
+                size,
+                styleClass);
+    }
+
+    /**
+     * Updates a specific bonus badge's dimensions, clipping, and CSS styling.
+     */
+    private void updateBadgeStyle(
+            StackPane badge,
+            ImageView image,
+            Circle circle,
+            Circle clip,
+            int size,
+            String styleClass) {
+        double radius = size / 2.0;
+
+        badge.setPrefSize(size, size);
+        badge.setMaxSize(size, size);
+
+        // Update style classes carefully to avoid duplicates
+        // image.getStyleClass().removeAll("bonus-label-image", "bonus-label-image-wide");
+        image.getStyleClass().add(styleClass);
+
+        // Update background circle
+        circle.setCenterX(radius);
+        circle.setCenterY(radius);
+        circle.setRadius(radius);
+
+        // Update clip circle
+        clip.setCenterX(radius);
+        clip.setCenterY(radius);
+        clip.setRadius(radius);
+    }
+
+    /**
+     * Build the game grid UI from the current board state.
+     */
     private void initGameGrid() {
         GameBoardItem gameBoardItem = gameViewModel.getGameBoardItem();
         int rows = gameBoardItem.getRows();
         int cols = gameBoardItem.getCols();
         Runnable apply =
                 () -> {
+
+                    // change style for 9x9 game board
+                    if (rows == 9) {
+                        topBar.prefHeight(30);
+                        topBar.getStyleClass().add("top-bar-9x9");
+
+                        bottomBar.prefHeight(30);
+                        bottomBar.getStyleClass().add("timer-bar-9x9");
+                    }
+
                     boardGrid.getChildren().clear();
                     boardGrid.getColumnConstraints().clear();
                     boardGrid.getRowConstraints().clear();
@@ -639,21 +922,22 @@ public class GameStateController extends BaseViewCleanup {
                     boardGrid.setPadding(Insets.EMPTY);
                     GridPane.setMargin(boardGrid, Insets.EMPTY);
 
+                    idToPlayerPawn.clear();
+
                     if (gameContainer.getParent() instanceof Region parent) {
 
                         var squareSize =
                                 Bindings.min(parent.widthProperty(), parent.heightProperty());
 
+                        var squareSizeContainer =
+                                Bindings.min(parent.widthProperty(), parent.heightProperty());
 
-                        gameContainer.minWidthProperty().bind(squareSize);
-                        gameContainer.minHeightProperty().bind(squareSize);
-                        gameContainer.maxWidthProperty().bind(squareSize);
-                        gameContainer.maxHeightProperty().bind(squareSize);
-
+                        gameContainer.prefWidthProperty().bind(squareSizeContainer);
+                        gameContainer.minWidthProperty().set(squareSizeContainer.doubleValue());
+                        gameContainer.minHeightProperty().set(squareSizeContainer.doubleValue());
+                        gameContainer.maxWidthProperty().set(squareSizeContainer.doubleValue());
+                        gameContainer.maxHeightProperty().set(squareSizeContainer.doubleValue());
                     }
-
-
-
 
                     for (int i = 0; i < rows; i++) {
 
@@ -666,8 +950,6 @@ public class GameStateController extends BaseViewCleanup {
                         rc.setPercentHeight(100.0 / rows);
                         rc.setVgrow(Priority.ALWAYS);
                         boardGrid.getRowConstraints().add(rc);
-
-
                     }
 
                     for (int row = 0; row < rows; row++) {
@@ -689,20 +971,32 @@ public class GameStateController extends BaseViewCleanup {
 
                             imageView.fitWidthProperty().bind(cellContainer.widthProperty());
                             imageView.fitHeightProperty().bind(cellContainer.heightProperty());
-                            imageView.setPreserveRatio(false);
+                            imageView.setPreserveRatio(true);
 
                             cellContainer.getChildren().add(imageView);
 
-                            // todo use decicated treasure image
-                            //    ImageView treasureImage = new ImageView(new Image());
-                            if (tile.getTreasure().get() != null) {
-                                Label treasureNode =
-                                        tempLabelImplforTreasure(tile.getTreasure().get());
-                                cellContainer.getChildren().add(treasureNode);
+                            if (tile.hasTreasure()) {
+
+                                TreasureItem treasureItem = tile.getTreasureItem();
+                                ImageView treasureImage =
+                                        new ImageView(treasureItem.getTreasureImage());
+                                treasureImage.setPreserveRatio(true);
+                                double scale = 0.5;
+
+                                treasureImage
+                                        .fitWidthProperty()
+                                        .bind(cellContainer.widthProperty().multiply(scale));
+                                treasureImage
+                                        .fitHeightProperty()
+                                        .bind(cellContainer.heightProperty().multiply(scale));
+                                treasureImage.setRotate(tile.getRotation().get().doubleValue());
+                                ImageViewStyler.applyTreasureStylingToImageView(treasureImage);
+                                cellContainer.getChildren().add(treasureImage);
                             }
 
-                            if (tile.getBonus().get() != null) {
-                                Label bonusNode = tempLabelImplforBonus(tile.getBonus().get());
+                            if (tile.hasBonus()) {
+                                // Label bonusNode = tempLabelImplforBonus(tile.getBonus().get());
+                                StackPane bonusNode = getBonusNodeForTile(tile.getBonusType());
                                 cellContainer.getChildren().add(bonusNode);
                             }
 
@@ -720,15 +1014,28 @@ public class GameStateController extends BaseViewCleanup {
                                             .findFirst();
                             if (playerStateItemOptional.isPresent()) {
                                 PlayerStateItem playerStateItem = playerStateItemOptional.get();
-                                PlayerColor playerColor =
-                                        playerStateItem.getPlayerColor();
-                                Circle playerPawn =
-                                        new Circle(
-                                                10,
-                                                PlayerPawnUtils.mapPlayerColorToFxColor(
-                                                        playerColor));
-                                playerPawn.setOpacity(0.7);
-                                cellContainer.getChildren().add(playerPawn);
+
+                                PlayerColor playerColor = playerStateItem.getPlayerColor();
+
+                                ImageView playerImage = new ImageView();
+                                Image image = ImageResourceLoader.loadImage(playerColor);
+                                playerImage.setPreserveRatio(true);
+                                playerImage.setImage(image);
+                                ImageViewStyler.applyPlayerStylingToImageView(
+                                        playerImage, playerColor);
+
+                                if (tile.hasTreasure())
+                                    offsetPlayerPawnOnTreasurePresence(tile, playerImage);
+                                double scale = 0.45;
+                                playerImage
+                                        .fitWidthProperty()
+                                        .bind(cellContainer.widthProperty().multiply(scale));
+                                playerImage
+                                        .fitHeightProperty()
+                                        .bind(cellContainer.heightProperty().multiply(scale));
+                                idToPlayerPawn.put(
+                                        playerStateItem.getPlayerIdAsString(), playerImage);
+                                cellContainer.getChildren().add(playerImage);
                             }
 
                             markPlayerHomeBase(row, col, cellContainer);
@@ -739,28 +1046,6 @@ public class GameStateController extends BaseViewCleanup {
                                         sendMoveOrBonusCommand(
                                                 finalRow, finalCol, playerStateItemOptional);
                                     });
-                            /*
-                                                       BooleanBinding isMyTurnAndMovePhase =
-                                                               Bindings.createBooleanBinding(
-                                                                       () -> {
-                                                                           return gameViewModel
-                                                                                           .getCurrentPlayerIdAsString()
-                                                                                           .equals(
-                                                                                                   gameViewModel
-                                                                                                           .getClientPlayer()
-                                                                                                           .getId())
-                                                                                   && (gameViewModel.getCurrentTurnState()
-                                                                                                   != null
-                                                                                           && gameViewModel
-                                                                                                   .getCurrentTurnState()
-                                                                                                   .equals(
-                                                                                                           TurnState
-                                                                                                                   .WAITING_FOR_MOVE))
-                                                                                   && !gameViewModel.isClientPlayerTimeout();
-                                                                       },
-                                                                       gameViewModel.getCurrentPlayerIdProperty());
-
-                            */
 
                             boardGrid.add(cellContainer, col, row);
                             cellContainer
@@ -778,9 +1063,36 @@ public class GameStateController extends BaseViewCleanup {
                         }
                     }
                 };
-        JavaFXUtils.runOnFxThread(apply);
+        Platform.runLater(apply);
+        // JavaFXUtils.runOnFxThread(apply);
     }
 
+    /**
+     * Offset a player pawn when a treasure is also present in the tile.
+     *
+     * @param tile tile containing the pawn
+     * @param playerImage player image view
+     */
+    private void offsetPlayerPawnOnTreasurePresence(TileItem tile, ImageView playerImage) {
+        List<Direction> directions = tile.getDirections();
+        for (Direction direction : directions) {
+            if (Direction.DOWN.equals(direction)) continue;
+            switch (direction) {
+                case UP -> playerImage.setTranslateY(-30);
+                case LEFT -> playerImage.setTranslateX(-25);
+                case RIGHT -> playerImage.setTranslateX(25);
+            }
+            break;
+        }
+    }
+
+    /**
+     * Mark a cell as a player's home base if applicable.
+     *
+     * @param row row index
+     * @param col column index
+     * @param cellContainer cell container to decorate
+     */
     private void markPlayerHomeBase(int row, int col, StackPane cellContainer) {
         gameViewModel.getPlayerStatesSorted().stream()
                 .filter(
@@ -788,44 +1100,52 @@ public class GameStateController extends BaseViewCleanup {
                                 player.getHomePosition().get().getColumnAsInt() == col
                                         && player.getHomePosition().get().getRowAsInt() == row)
                 .findFirst()
-                .ifPresent(playerStateItem -> addStyleToPlayerHomeBase(cellContainer, playerStateItem));
+                .ifPresent(
+                        playerStateItem ->
+                                addStyleToPlayerHomeBase(cellContainer, playerStateItem));
     }
 
-    private void addStyleToPlayerHomeBase(StackPane cellContainer, PlayerStateItem playerStateItem) {
+    /**
+     * Add a colored border to indicate a player's home base.
+     *
+     * @param cellContainer cell container to decorate
+     * @param playerStateItem player state item
+     */
+    private void addStyleToPlayerHomeBase(
+            StackPane cellContainer, PlayerStateItem playerStateItem) {
 
         String styleColor = playerStateItem.getPlayerColor().toString().toLowerCase();
 
-
         Rectangle borderOverlay = new Rectangle();
-
 
         borderOverlay.widthProperty().bind(cellContainer.widthProperty());
         borderOverlay.heightProperty().bind(cellContainer.heightProperty());
 
-
         borderOverlay.setFill(Color.TRANSPARENT);
 
-        Color baseColor = Color.web(styleColor); // web() handles standard color names like "red", "blue"
+        Color baseColor =
+                Color.web(styleColor); // web() handles standard color names like "red", "blue"
         // Set the border color and thickness
-        Color softColor = new Color(
-                baseColor.getRed(),
-                baseColor.getGreen(),
-                baseColor.getBlue(),
-                0.5 // Reduce opacity to make it less intense
-        );
+        Color softColor =
+                new Color(
+                        baseColor.getRed(),
+                        baseColor.getGreen(),
+                        baseColor.getBlue(),
+                        0.5 // Reduce opacity to make it less intense
+                        );
 
         borderOverlay.setStroke(softColor);
         borderOverlay.setStrokeWidth(1.5);
         borderOverlay.setStrokeType(StrokeType.INSIDE);
 
-
         borderOverlay.setMouseTransparent(true);
 
-
         cellContainer.getChildren().add(borderOverlay);
-
     }
 
+    /**
+     * Initialize push tile buttons around the board.
+     */
     private void initPushTileButtons() {
         int size = gameViewModel.getGameBoardItem().getCols(); // square, odd
 
@@ -845,6 +1165,13 @@ public class GameStateController extends BaseViewCleanup {
         buildVerticalBar(rightArrowBox, Direction.LEFT, size);
     }
 
+    /**
+     * Build a horizontal bar of push buttons and spacers.
+     *
+     * @param bar target bar
+     * @param dir push direction
+     * @param size board size
+     */
     private void buildHorizontalBar(HBox bar, Direction dir, int size) {
         // Leading spacer absorbs extra width on the left
         Region lead = new Region();
@@ -887,6 +1214,13 @@ public class GameStateController extends BaseViewCleanup {
         bar.getChildren().add(trail);
     }
 
+    /**
+     * Build a vertical bar of push buttons and spacers.
+     *
+     * @param bar target bar
+     * @param dir push direction
+     * @param size board size
+     */
     private void buildVerticalBar(VBox bar, Direction dir, int size) {
 
         // One child per row: button at odd indices, spacer at even
@@ -912,14 +1246,34 @@ public class GameStateController extends BaseViewCleanup {
         }
     }
 
+    /**
+     * Bind an item's width to a board grid column width.
+     *
+     * @param item UI element to bind
+     * @param size board size
+     * @return true when the index is valid for pushing
+     */
     private void bindSlotWidth(Region item, int size) {
         item.prefWidthProperty().bind(boardGrid.widthProperty().divide(size));
     }
 
+    /**
+     * Bind an item's height to a board grid row height.
+     *
+     * @param item UI element to bind
+     * @param size board size
+     */
     private void bindSlotHeight(Region item, int size) {
         item.prefHeightProperty().bind(boardGrid.heightProperty().divide(size));
     }
 
+    /**
+     * Create a base arrow button with direction styles.
+     *
+     * @param text button text
+     * @param dir arrow direction
+     * @return configured button
+     */
     private Button createBaseArrowButton(String text, Direction dir) {
         Button b = new Button(text);
         b.getStyleClass().add("arrow-button");
@@ -931,13 +1285,29 @@ public class GameStateController extends BaseViewCleanup {
         return b;
     }
 
+    /**
+     * Create a push tile button for a valid push index.
+     *
+     * @param text button text
+     * @param index row/column index
+     * @param dir push direction
+     * @return configured button
+     */
     private Button createArrowButton(String text, int index, Direction dir) {
         Button b = createBaseArrowButton(text, dir);
-        b.setOnAction(_ -> choosePushTileCommand(index, dir, CommandType.PUSH_TILE));
+        b.setOnAction(_ -> choosePushTileCommand(index, dir, PUSH_TILE));
         b.disableProperty().bind(shouldPushTileButtonBeDisabled());
         return b;
     }
 
+    /**
+     * Create a push fixed bonus button for a valid index.
+     *
+     * @param text button text
+     * @param index row/column index
+     * @param dir push direction
+     * @return configured button
+     */
     private Button createPushFixedBonusArrowButton(String text, int index, Direction dir) {
         Button b = createBaseArrowButton(text, dir);
         b.getStyleClass().add("arrow-button-fixed");
@@ -947,10 +1317,24 @@ public class GameStateController extends BaseViewCleanup {
         return b;
     }
 
+    /**
+     * Check if a row/column index is valid for a standard push.
+     *
+     * @param index row/column index
+     * @param size board size
+     * @return true when the index is valid for pushing
+     */
     private boolean isValidatePushIndex(int index, int size) {
         return (index % 2 == 1) && (index <= size - 2);
     }
 
+    /**
+     * Check if a row/column index is valid for a push-fixed bonus.
+     *
+     * @param index row/column index
+     * @param size board size
+     * @return true when a push-fixed bonus can be used
+     */
     private boolean isBonusEnabledAndValidPushFixedBonusIndex(int index, int size) {
         return gameViewModel.isBonusEnabled()
                 && (index % 2 == 0)
@@ -958,6 +1342,11 @@ public class GameStateController extends BaseViewCleanup {
                 && (index > 0);
     }
 
+    /**
+     * Return a binding indicating it's not the client's turn or they timed out.
+     *
+     * @return binding for turn/timeout state
+     */
     private BooleanBinding isNotMyTurnAndTimeout() {
         return gameViewModel
                 .getCurrentPlayerIdProperty()
@@ -965,6 +1354,11 @@ public class GameStateController extends BaseViewCleanup {
                 .or(gameViewModel.getTurnTimeoutProperty());
     }
 
+    /**
+     * Return a binding indicating push actions should be disabled.
+     *
+     * @return binding for push phase availability
+     */
     private BooleanBinding isNotMyTurnAndTimeoutAndPushPhase() {
         return isNotMyTurnAndTimeout()
                 .or(
@@ -973,6 +1367,11 @@ public class GameStateController extends BaseViewCleanup {
                                 .isNotEqualTo(TurnState.WAITING_FOR_PUSH));
     }
 
+    /**
+     * Return a binding indicating move actions should be disabled.
+     *
+     * @return binding for move phase availability
+     */
     private BooleanBinding isNotMyTurnAndTimeoutAndMovePhase() {
         return isNotMyTurnAndTimeout()
                 .or(
@@ -981,6 +1380,12 @@ public class GameStateController extends BaseViewCleanup {
                                 .isNotEqualTo(TurnState.WAITING_FOR_MOVE));
     }
 
+    /**
+     * Determine whether a tile should be disabled for mouse interaction.
+     *
+     * @param playerOnTile optional player on the tile
+     * @return binding indicating whether the tile should be disabled
+     */
     private BooleanBinding shouldMouseOverTileBeDisabled(Optional<PlayerStateItem> playerOnTile) {
         BooleanBinding isMyTurn = isNotMyTurnAndTimeout().not();
         BooleanBinding isMovePhase =
@@ -1012,6 +1417,11 @@ public class GameStateController extends BaseViewCleanup {
         return isTileEnabled.not();
     }
 
+    /**
+     * Determine whether standard push buttons should be disabled.
+     *
+     * @return binding for push button availability
+     */
     private BooleanBinding shouldPushTileButtonBeDisabled() {
         return isNotMyTurnAndTimeoutAndPushPhase()
                 .or(gameViewModel.getIsPushFixedTileBonusActiveProperty())
@@ -1019,27 +1429,53 @@ public class GameStateController extends BaseViewCleanup {
                 .or(gameViewModel.getIsSwapBonusActiveProperty());
     }
 
+    /**
+     * Determine whether push-fixed bonus buttons should be disabled.
+     *
+     * @return binding for push-fixed button availability
+     */
     private BooleanBinding shouldPushFixedTileButtonBeDisabled() {
         return isNotMyTurnAndTimeoutAndPushPhase()
                 .or(gameViewModel.getIsPushFixedTileBonusActiveProperty().not());
     }
 
+    /**
+     * Determine whether a bonus button should be disabled.
+     *
+     * @param bonusType bonus type to evaluate
+     * @return binding for bonus button availability
+     */
     private BooleanBinding shouldBonusButtonBeDisabled(BonusType bonusType) {
         return isNotMyTurnAndTimeoutAndPushPhase()
                 .or(
                         Bindings.createBooleanBinding(
-                                () -> gameViewModel.isAnyBonusActive(bonusType),
+                                () ->
+                                        gameViewModel.isAnyBonusActive(
+                                                bonusType, pushTwicePendingAction),
                                 gameViewModel.getIsPushFixedTileBonusActiveProperty(),
                                 gameViewModel.getIsSwapBonusActiveProperty(),
-                                gameViewModel.getIsBeamTileBonusActiveProperty()));
+                                gameViewModel.getIsBeamTileBonusActiveProperty(),
+                                pushTwicePendingAction));
     }
 
+    /**
+     * Build and send a push tile command based on the input.
+     *
+     * @param index row/column index
+     * @param dir push direction
+     * @param type command type
+     */
     private void choosePushTileCommand(int index, Direction dir, CommandType type) {
         Direction[] extraTileEntrances =
                 gameViewModel.getSpareTileItem().getDirections().toArray(Direction[]::new);
         pushTileCommand(new PushTileCommandRecord(index, dir, extraTileEntrances, type));
     }
 
+    /**
+     * Send a push tile command if it does not revert the last push.
+     *
+     * @param data push tile command payload
+     */
     private void pushTileCommand(PushTileCommandRecord data) {
         int index = data.index();
         Direction pushDirection = data.pushDirection();
@@ -1056,6 +1492,13 @@ public class GameStateController extends BaseViewCleanup {
         }
     }
 
+    /**
+     * Check whether a push would revert the last push.
+     *
+     * @param index row/column index
+     * @param pushDirection push direction
+     * @return true when the push would revert the last push
+     */
     private boolean checkIfPushRevertsLastPush(int index, Direction pushDirection) {
         GameBoardItem gameBoardItem = gameViewModel.getGameBoardItem();
         ObjectProperty<PushActionInfo> lastPush = gameBoardItem.lastPushProperty();
@@ -1066,6 +1509,13 @@ public class GameStateController extends BaseViewCleanup {
         return isOppositeDirection(pushDirection, lastPushDirection);
     }
 
+    /**
+     * Check whether two directions are opposites.
+     *
+     * @param pushDirection push direction
+     * @param lastPushDirection last push direction
+     * @return true when directions are opposites
+     */
     private boolean isOppositeDirection(Direction pushDirection, Direction lastPushDirection) {
         return switch (pushDirection) {
             case UP -> lastPushDirection == Direction.DOWN;
@@ -1075,6 +1525,13 @@ public class GameStateController extends BaseViewCleanup {
         };
     }
 
+    /**
+     * Send a move or bonus command depending on active bonuses.
+     *
+     * @param finalRow target row
+     * @param finalCol target column
+     * @param playerStateItemOptional optional player at the target
+     */
     private void sendMoveOrBonusCommand(
             int finalRow, int finalCol, Optional<PlayerStateItem> playerStateItemOptional) {
         if (gameViewModel.isBeamTileBonusActive()) {
@@ -1087,43 +1544,70 @@ public class GameStateController extends BaseViewCleanup {
         }
     }
 
-    // todo rework
+    /**
+     * Bind the next treasure image to the view model.
+     */
     private void initNextTreasure() {
-        nextTreasure
-                .textProperty()
+        nextTreasureImage
+                .imageProperty()
                 .bind(
-                        Bindings.createStringBinding(
-                                gameViewModel::getNextTreasureNameAsString,
-                                gameViewModel.getNextTreasure()));
+                        Bindings.createObjectBinding(
+                                () -> {
+                                    try {
+                                        return gameViewModel.getNextTreasureImageProperty().get();
+                                    } catch (NullPointerException e) {
+                                        if (!gameViewModel.isNextTreasureMightNotBeAvailableYet())
+                                            throw e;
+                                        log.warn(
+                                                "Treasure image is not yet available return emtpy"
+                                                        + " Image");
+                                        return new javafx.scene.image.WritableImage(1, 1);
+                                    }
+                                },
+                                gameViewModel.getNextTreasureItemProperty()));
+        // ImageViewStyler.applyTreasureStylingToImageView(nextTreasureImage);
     }
 
-    private Label tempLabelImplforTreasure(TreasureItem treasureItem) {
-        String treasureId = String.valueOf(treasureItem.getId());
-        Label treasureNode = new Label(treasureId);
-        // Style it to look clear on top of the tile
-        treasureNode.setStyle(
-                "-fx-font-size: 24px; "
-                        + "-fx-font-weight: bold; "
-                        + "-fx-text-fill: white; "
-                        + "-fx-effect: dropshadow(three-pass-box, black, 10, 0, 0, 0);");
-        return treasureNode;
+    /**
+     * Create a bonus badge node for a tile.
+     *
+     * @param bonusType bonus type
+     * @return bonus badge node
+     */
+    private StackPane getBonusNodeForTile(BonusType bonusType) {
+        Image bonus = ImageResourceLoader.loadImage(bonusType);
+        ImageView bonusImage = new ImageView(bonus);
+        bonusImage.setFitWidth(18);
+        bonusImage.setFitHeight(18);
+        bonusImage.setPreserveRatio(false); // ensure 30x30, no letterbox
+        Circle clip = new Circle(9, 9, 9);
+
+        bonusImage.setClip(clip);
+
+        // visible border:
+        Circle border = new Circle(10, 10, 10);
+        border.setFill(Color.web("#fffbd5"));
+        border.setStroke(Color.BLACK);
+        border.setStrokeWidth(1);
+
+        StackPane bonusBadge = new StackPane(border, bonusImage);
+        bonusBadge.setPrefSize(20, 20);
+        bonusBadge.setMaxSize(Region.USE_PREF_SIZE, Region.USE_PREF_SIZE);
+        StackPane.setMargin(bonusBadge, new Insets(2, 2, 0, 0));
+        StackPane.setAlignment(bonusBadge, Pos.TOP_RIGHT);
+        return bonusBadge;
     }
 
-    private Label tempLabelImplforBonus(BonusType bonusType) {
-        String bonusName = bonusType.name().toLowerCase();
-        Label bonusNode = new Label(bonusName);
-        bonusNode.setTranslateY(-20);
-        bonusNode.setStyle(
-                "-fx-font-size: 10px; "
-                        + "-fx-text-fill: black; "
-                        + "-fx-effect: dropshadow(three-pass-box, white, 10, 0, 0, 0);");
-        return bonusNode;
-    }
-
+    /**
+     * Initialize the game counter UI (placeholder).
+     */
     private void initGameCounter() {
         // todo how is the set timer send from server?
     }
 
+    /**
+     * Initialize bonus UI bindings and listeners.
+     */
     private void initBoni() {
 
         // bonusBox.setVisible(true);
@@ -1144,6 +1628,8 @@ public class GameStateController extends BaseViewCleanup {
         bonusPushFixedBox.setVisible(false);
         bonusPushFixedBox.setManaged(false);
         bindRowWidth(bonusPushFixedBox);
+
+        setupBonusImages();
 
         BooleanBinding anyVisible =
                 bonusSwapBox
@@ -1225,17 +1711,13 @@ public class GameStateController extends BaseViewCleanup {
                 .visibleProperty()
                 .bind(
                         Bindings.createBooleanBinding(
-                                () ->
-                                        getAvailableBonusCountForTypeAndClient(BonusType.PUSH_TWICE)
-                                                > 0,
+                                this::checkIfPushTwiceBoxShouldBeVisible,
                                 gameViewModel.getClientPlayerState().getAvailableBonusTypes()));
         bonusPushTwiceBox
                 .managedProperty()
                 .bind(
                         Bindings.createBooleanBinding(
-                                () ->
-                                        getAvailableBonusCountForTypeAndClient(BonusType.PUSH_TWICE)
-                                                > 0,
+                                this::checkIfPushTwiceBoxShouldBeVisible,
                                 gameViewModel.getClientPlayerState().getAvailableBonusTypes()));
         bonusPushTwiceCount
                 .textProperty()
@@ -1248,13 +1730,15 @@ public class GameStateController extends BaseViewCleanup {
                                 },
                                 gameViewModel.getClientPlayerState().getAvailableBonusTypes()));
 
-        bonusPushTwiceButton.disableProperty().bind(isNotMyTurnAndTimeoutAndMovePhase());
+        bonusPushTwiceButton
+                .disableProperty()
+                .bind(shouldBonusButtonBeDisabled(BonusType.PUSH_TWICE));
 
         ChangeListener<Boolean> bonusPushTwiceButtonAvailableListener =
                 (ov, oldVal, newVal) -> {
                     bonusPushTwiceButton.pseudoClassStateChanged(
                             AVAILABLE_BONUS_BUTTON_PSEUDO_CLASS,
-                            isNotMyTurnAndTimeoutAndMovePhase().not().get());
+                            shouldBonusButtonBeDisabled(BonusType.PUSH_TWICE).not().get());
                 };
         bonusPushTwiceButton.disableProperty().addListener(bonusPushTwiceButtonAvailableListener);
         bonusAvailableListeners.put(BonusType.PUSH_TWICE, bonusPushTwiceButtonAvailableListener);
@@ -1300,10 +1784,36 @@ public class GameStateController extends BaseViewCleanup {
         bonusAvailableListeners.put(BonusType.PUSH_FIXED, bonusPushFixedButtonAvailableListener);
     }
 
+    private Boolean checkIfPushTwiceBoxShouldBeVisible() {
+        return getAvailableBonusCountForTypeAndClient(BonusType.PUSH_TWICE) > 0
+                || gameViewModel.isPushTwiceTileBonusActive();
+    }
+
+    /**
+     * Set the bonus images for bonus buttons.
+     */
+    private void setupBonusImages() {
+        swapBonusImage.setImage(ImageResourceLoader.loadImage(BonusType.SWAP));
+        beamBonusImage.setImage(ImageResourceLoader.loadImage(BonusType.BEAM));
+        pushTwiceBonusImage.setImage(ImageResourceLoader.loadImage(BonusType.PUSH_TWICE));
+        pushFixedBonusImage.setImage(ImageResourceLoader.loadImage(BonusType.PUSH_FIXED));
+    }
+
+    /**
+     * Return the available bonus count for the client player.
+     *
+     * @param type bonus type
+     * @return available count
+     */
     private int getAvailableBonusCountForTypeAndClient(BonusType type) {
         return gameViewModel.getClientPlayerState().getAvailableBonusCountForType(type);
     }
 
+    /**
+     * Bind a row width to the bonus box width.
+     *
+     * @param row row region
+     */
     private void bindRowWidth(Region row) {
         row.setMaxWidth(Double.MAX_VALUE);
         row.prefWidthProperty()
@@ -1317,6 +1827,13 @@ public class GameStateController extends BaseViewCleanup {
                                 bonusBox.insetsProperty()));
     }
 
+    /**
+     * Show a JavaFX alert modal with error styling.
+     *
+     * @param title modal title
+     * @param header modal header
+     * @param content modal content
+     */
     private void showAlertModal(String title, String header, String content) {
         Runnable apply =
                 () -> {
@@ -1330,6 +1847,12 @@ public class GameStateController extends BaseViewCleanup {
         else Platform.runLater(apply);
     }
 
+    /**
+     * Resolve the player box by index.
+     *
+     * @param index player index
+     * @return player box
+     */
     private VBox getPlayerBoxByIndex(int index) {
         return switch (index) {
             case 0 -> player1Box;
@@ -1340,23 +1863,49 @@ public class GameStateController extends BaseViewCleanup {
         };
     }
 
+    /**
+     * Handle swap bonus button click.
+     *
+     * @param actionEvent button event
+     */
     public void onBonusSwapButtonClick(ActionEvent actionEvent) {
         toggleOrSetBonusButton(BONUS_TYPE.SWAP, null);
     }
 
+    /**
+     * Handle beam bonus button click.
+     *
+     * @param actionEvent button event
+     */
     public void onBonusBeamButtonClick(ActionEvent actionEvent) {
         toggleOrSetBonusButton(BONUS_TYPE.BEAM, null);
     }
 
+    /**
+     * Handle push twice bonus button click.
+     *
+     * @param actionEvent button event
+     */
     public void onBonusPushTwiceButtonClick(ActionEvent actionEvent) {
         toggleOrSetBonusButton(BONUS_TYPE.PUSH_TWICE, null);
         gameViewModel.sendUsePushTwiceCommand();
     }
 
+    /**
+     * Handle push fixed bonus button click.
+     *
+     * @param actionEvent button event
+     */
     public void onBonusPushFixedButtonClick(ActionEvent actionEvent) {
         toggleOrSetBonusButton(BONUS_TYPE.PUSH_FIXED, null);
     }
 
+    /**
+     * Toggle or set a bonus button active state.
+     *
+     * @param type bonus type
+     * @param set optional explicit state
+     */
     private void toggleOrSetBonusButton(BONUS_TYPE type, @Nullable Boolean set) {
         switch (type) {
             case SWAP -> {
@@ -1384,6 +1933,9 @@ public class GameStateController extends BaseViewCleanup {
         }
     }
 
+    /**
+     * Set up error handling to show modal errors.
+     */
     private void setupErrorHandling() {
         gameViewModel
                 .getHasError()
@@ -1399,6 +1951,11 @@ public class GameStateController extends BaseViewCleanup {
                         });
     }
 
+    /**
+     * Determine whether errors should be shown as modal dialogs.
+     *
+     * @return true when the error should show a modal
+     */
     private boolean shouldErrorBeShownAsModal() {
         if (gameViewModel.getErrorCodeProperty().get() == null) return false;
 
@@ -1408,11 +1965,20 @@ public class GameStateController extends BaseViewCleanup {
         };
     }
 
+    /**
+     * Handle leave game action and show confirmation.
+     *
+     * @param actionEvent button event
+     */
     public void onLeaveGameButtonClick(ActionEvent actionEvent) {
         log.debug("onLeaveGameButtonClick");
         Runnable onConfirm = gameViewModel::leaveGame;
         JavaFXUtils.showConfirmationModal(
                 QUIT_GAME_MODAL_TITLE, QUIT_GAME_MODAL_HEADER, QUIT_GAME_MODAL_CONTENT, onConfirm);
+    }
+
+    public void onFullscreenToggleButtonClick(ActionEvent actionEvent) {
+        navigationController.toogleFullScreen();
     }
 
     private enum BONUS_TYPE {
@@ -1422,6 +1988,9 @@ public class GameStateController extends BaseViewCleanup {
         PUSH_FIXED;
     }
 
+    /**
+     * Initialize the game timer countdown display.
+     */
     private void initGameTimer() {
         Long gameTimeSeconds = gameViewModel.getRemainingGameTimeInSeconds();
         remainingGameTimer.set(Math.toIntExact(gameTimeSeconds));
@@ -1445,6 +2014,11 @@ public class GameStateController extends BaseViewCleanup {
         gameTimeline.playFromStart();
     }
 
+    /**
+     * Initialize the game countdown timeline.
+     *
+     * @param gameTimeSeconds starting game time in seconds
+     */
     private void initCountdownTimeline(Long gameTimeSeconds) {
         gameTimeline =
                 new Timeline(
@@ -1458,5 +2032,72 @@ public class GameStateController extends BaseViewCleanup {
                                     }
                                 }));
         gameTimeline.setCycleCount(Animation.INDEFINITE); // we control stopping via remainingTimer
+    }
+
+    /**
+     * Set up listener to animate tile pushes on updates.
+     */
+    private void initTilePushListener() {
+        gameViewModel
+                .getGameBoardItem()
+                .lastPushProperty()
+                .addListener(
+                        (obs, oldPush, newPush) -> {
+                            if (newPush != null && !Objects.equals(oldPush, newPush)) {
+                                int index = newPush.getRowOrColIndex();
+                                Direction direction = newPush.getDirection();
+
+                                log.debug(
+                                        "Triggering tile push animation for all clients: index={},"
+                                                + " direction={}",
+                                        index,
+                                        direction);
+
+                                animationService.animateTilePush(index, direction, boardGrid);
+                            }
+                        });
+    }
+
+    /**
+     * Set up listeners to animate player movement updates.
+     */
+    private void initPlayerMovementListener() {
+        gameViewModel
+                .getPlayerStatesSorted()
+                .forEach(
+                        playerStateItem -> {
+                            playerStateItem
+                                    .getCurrentPosition()
+                                    .addListener(
+                                            (obs, oldPos, newPos) -> {
+                                                if (animationService.isTilePushAnimationActive()) {
+                                                    log.debug(
+                                                            "Skipping player movement animation"
+                                                                    + " during tile push");
+                                                    return;
+                                                }
+
+                                                if (gameViewModel
+                                                        .getCurrentTurnState()
+                                                        .equals(TurnState.WAITING_FOR_MOVE)) {
+                                                    animationService.animatePlayerPath(
+                                                            gameViewModel.getGameBoardItem(),
+                                                            idToPlayerPawn.get(
+                                                                    playerStateItem
+                                                                            .getPlayerIdAsString()),
+                                                            oldPos,
+                                                            newPos,
+                                                            boardGrid);
+                                                } else {
+                                                    animationService.animateBeam(
+                                                            idToPlayerPawn.get(
+                                                                    playerStateItem
+                                                                            .getPlayerIdAsString()),
+                                                            oldPos,
+                                                            newPos,
+                                                            boardGrid);
+                                                }
+                                            });
+                        });
     }
 }

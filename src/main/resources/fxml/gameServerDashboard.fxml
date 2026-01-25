@@ -20,17 +20,17 @@
 <?import javafx.scene.shape.Rectangle?>
 <?import javafx.scene.Group?>
 <?import javafx.scene.layout.Region?>
+<?import javafx.scene.control.ProgressIndicator?>
 <StackPane xmlns="http://javafx.com/javafx"
            xmlns:fx="http://javafx.com/fxml"
            fx:id="viewport"
            fx:controller="mci.dibse.crazylabyrinth.client.view.controller.impl.GameServerDashboardController"
-           style="-fx-background-color: black;"
-           styleClass="viewport">
+           style="-fx-background-color: linear-gradient(to bottom, #f7f9fc, #eef2f7);">
 
 
     <clip>
         <Rectangle fx:id="rootClip"/>
-    </clip >
+    </clip>
     <!-- Group fx:id="contentGroup"-->
 
         <stylesheets>
@@ -46,8 +46,8 @@
 
 
             <top>
-                <ToolBar>
-                    <Button fx:id="refreshButton" text="Refresh" mnemonicParsing="false" />
+                <ToolBar style="-fx-padding: 10">
+                    <Button fx:id="refreshButton" text="Refresh" mnemonicParsing="false"/>
                     <Separator orientation="VERTICAL" />
                     <CheckBox fx:id="showOnlyJoinable" text="Only joinable" />
                     <Region HBox.hgrow="ALWAYS"/>
@@ -86,16 +86,22 @@
                         </contextMenu -->
 
                     </TableView>
+                    <ProgressIndicator fx:id="progressJoining"/>
                 </StackPane>
             </center>
 
             <left></left>
             <right></right>
             <bottom>
-                <HBox spacing="12" alignment="CENTER_LEFT" style="-fx-padding: 10;">
+
+
+
+                <HBox spacing="12" alignment="CENTER" style="-fx-padding: 10 20 10 20;">
                     <!--padding>
                         <Insets top="10" right="10" bottom="10" left="10"/>
                     </padding-->
+                    <Button  text="Vollbild An/Aus" onAction="#onFullscreenToggleButtonClick" styleClass="pill-button"/>
+                    <Region HBox.hgrow="ALWAYS"/>
                 <Label text="Servers:" />
                 <Label fx:id="serverCountLabel" text="0" />
                 </HBox>

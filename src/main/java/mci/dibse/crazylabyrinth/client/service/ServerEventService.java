@@ -33,6 +33,11 @@ public class ServerEventService {
         this.achievementService = achievementService;
     }
 
+    /**
+     * Parse the raw JSON event and dispatch it to the typed handler.
+     *
+     * @param event raw event JSON from the game server
+     */
     public void handleEvent(String event) {
         ObjectMapper mapper = ObjectMapperConfig.createEventObjectMapper();
         try {
@@ -43,6 +48,11 @@ public class ServerEventService {
         }
     }
 
+    /**
+     * Route the typed event payload to the appropriate handler.
+     *
+     * @param event parsed event payload
+     */
     private void handleTypedEvent(Object event) {
         switch (event) {
             case ServerInfoPayload serverInfo -> handleServerInfo(serverInfo);
@@ -58,49 +68,94 @@ public class ServerEventService {
         }
     }
 
+    /**
+     * Publish an updated player state event.
+     *
+     * @param playerUpdate player update payload
+     */
     private void handlePlayerUpdate(PlayerUpdatedEventPayload playerUpdate) {
         log.debug("player update event received {}", playerUpdate);
         applicationEventPublisher.publishEvent(playerUpdate);
     }
 
+    /**
+     * Forward server time information to the timer service.
+     *
+     * @param serverInfo server info payload
+     */
     private void handleServerInfo(ServerInfoPayload serverInfo) {
         log.debug("Received server info: {}", serverInfo);
         // applicationEventPublisher.publishEvent(serverInfo);
         timerService.handleGameServerTimeInfo(serverInfo);
     }
 
+    /**
+     * Publish an action error event to the application bus.
+     *
+     * @param actionError error payload from the server
+     */
     private void handleError(ActionErrorEventPayload actionError) {
         log.debug("Received action error: {}", actionError);
         // todo
         applicationEventPublisher.publishEvent(actionError);
     }
 
+    /**
+     * Propagate connection acknowledgement to the lobby service.
+     *
+     * @param connectAck connection acknowledgement payload
+     */
     private void handleConnectAck(ConnectAckEventPayload connectAck) {
         log.debug("Connection acknowledged: {}", connectAck.getIdentifierToken());
         lobbyService.handleConnectAck(connectAck);
     }
 
+    /**
+     * Propagate lobby state updates to the lobby service.
+     *
+     * @param lobbyState lobby state payload
+     */
     private void handleLobbyState(LobbyStateEventPayload lobbyState) {
         log.debug("Lobby state updated: {}", lobbyState);
         lobbyService.handleLobbyState(lobbyState);
     }
 
+    /**
+     * Propagate game state updates to the game service.
+     *
+     * @param gameState game state payload
+     */
     private void handleGameState(GameStateEventPayload gameState) {
         log.debug("game state updated: {}", gameState);
         gameService.handleGameEvent(gameState);
     }
 
+    /**
+     * Forward the next treasure event to the game service.
+     *
+     * @param nextTreasure next treasure payload
+     */
     private void handleNextTreasure(NextTreasureCardEventPayload nextTreasure) {
         log.debug("next treasure event received {}", nextTreasure);
         gameService.handleGameEvent(nextTreasure);
     }
 
+    /**
+     * Forward unlocked achievement events to the achievement service.
+     *
+     * @param achievement achievement payload
+     */
     private void handleAchievement(AchievementUnlockedEventPayload achievement) {
         log.debug("achievement unlocked event received{}", achievement);
-        //applicationEventPublisher.publishEvent(achievement);
+        // applicationEventPublisher.publishEvent(achievement);
         achievementService.handleAchievementEvent(achievement);
     }
 
+    /**
+     * Publish the game over event to the application bus.
+     *
+     * @param gameOver game over payload
+     */
     private void handleGameOver(GameOverEventPayload gameOver) {
         log.debug("game over event received {}", gameOver);
         applicationEventPublisher.publishEvent(gameOver);

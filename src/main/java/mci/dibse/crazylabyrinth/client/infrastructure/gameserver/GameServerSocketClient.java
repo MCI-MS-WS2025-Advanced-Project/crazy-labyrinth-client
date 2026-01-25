@@ -30,7 +30,7 @@ public class GameServerSocketClient {
     private static final String SOCKET_GAME_PATH = "/game";
 
     private static final int RETRY_DELAY_SECONDS = 1;
-    private static final int CONNECT_TIMEOUT_SECONDS = 10;
+    private static final int CONNECT_TIMEOUT_SECONDS = 5;
 
     private static final String WARNING_LOST_CONNECTION =
             "Cannot send message: WebSocket is not connected. Scheduling retry in {}s";
@@ -63,7 +63,6 @@ public class GameServerSocketClient {
     */
     private WebSocketConnectionManager connectionManager;
 
-
     private volatile boolean shouldReconnect = false;
     private CompletableFuture<Void> connectionFuture;
 
@@ -74,6 +73,12 @@ public class GameServerSocketClient {
         this.serverEventService = serverEventService;
     }
 
+    /**
+     * Send a message to the game server over the active WebSocket session.
+     *
+     * @param message message payload
+     * @throws ConnectionException when no open session is available
+     */
     public void sendMessage(String message) throws ConnectionException {
 
         try {
@@ -91,6 +96,13 @@ public class GameServerSocketClient {
         }
     }
 
+    /**
+     * Connect to the server and optionally run a callback on success.
+     *
+     * @param serverUrl server URL
+     * @param connectCallback optional callback after connection
+     * @throws ConnectionException when connection fails
+     */
     public void connect(String serverUrl, Runnable connectCallback) throws ConnectionException {
         log.debug("Connecting to WebSocket server at: {}", serverUrl);
 
@@ -136,6 +148,12 @@ public class GameServerSocketClient {
         }
     }
 
+    /**
+     * Schedule a reconnect attempt to the server.
+     *
+     * @param lastServerUrl last known server URL
+     * @param callback callback to run after successful reconnection
+     */
     public void reconnect(String lastServerUrl, Runnable callback) {
         if (lastServerUrl == null || lastServerUrl.isBlank()) {
             log.warn("Reconnect requested but no serverUrl known yet (call connect(url) first)");
@@ -145,11 +163,21 @@ public class GameServerSocketClient {
         scheduleReconnectAttempt(lastServerUrl, callback);
     }
 
+    /**
+     * Stop reconnection attempts when the server reports the player missing.
+     *
+     * @param error action error payload
+     */
     @EventListener
     public void handleReconnectionAbort(ActionErrorEventPayload error) {
         if (ErrorCode.PLAYER_NOT_FOUND.equals(error.getErrorCode())) reconnectingFlag.set(true);
     }
 
+    /**
+     * Disconnect when a client disconnect command is issued.
+     *
+     * @param event disconnect command type
+     */
     @EventListener
     public void ensureDisconnect(CommandType event) {
         if (CommandType.DISCONNECT.equals(event)) {
@@ -175,6 +203,12 @@ public class GameServerSocketClient {
         }
     }
 
+    /**
+     * Reconnect to the server using a prebuilt reconnect payload.
+     *
+     * @param serverUrl server URL
+     * @param reconnectPlay reconnect payload JSON
+     */
     public void reconnectToServerWithToken(String serverUrl, String reconnectPlay) {
         Runnable callback =
                 () -> {
@@ -183,36 +217,66 @@ public class GameServerSocketClient {
         reconnect(serverUrl, callback);
     }
 
+    /**
+     * Return the connection completion future.
+     *
+     * @return connection completion future
+     */
     public CompletableFuture<Void> getConnectionCallback() {
         return connectionFuture;
     }
 
+    /**
+     * Enable or disable message receiving on the socket handler.
+     *
+     * @param canReceive true to receive messages
+     */
     public void setBlockForReceivingMessages(boolean canReceive) {
         webSocketHandler.setBlockForReceivingMessages(canReceive);
     }
 
+    /**
+     * Check whether a reconnect attempt may proceed.
+     *
+     * @return true when reconnect can proceed
+     */
     private boolean canProceedWithReconnecting() {
         boolean ret = reconnectingFlag.compareAndSet(true, false);
         log.debug("reconnectAttemptInProgress : {}", ret);
         return ret;
     }
 
+    /**
+     * Reset reconnection progress when another attempt is needed.
+     */
     private void resetReconnectionProgress() {
         if (canContinueToReconnect()) reconnectingFlag.set(true);
     }
 
+    /**
+     * Check if reconnection should continue.
+     *
+     * @return true when reconnection should continue
+     */
     private boolean canContinueToReconnect() {
         return shouldReconnect;
     }
 
+    /**
+     * Mark the connection as established and reset counters.
+     */
     private void markConnected() {
         shouldReconnect = true;
         reconnectingFlag.set(true);
         reconnectAttempt.set(0);
     }
 
-
-
+    /**
+     * Find an open WebSocket session.
+     *
+     * @return open session
+     * @throws IllegalStateException when no open session is found
+     */
     private WebSocketSession findOpenSession() throws IllegalStateException {
         return webSocketHandler.getSessions().values().stream()
                 .filter(WebSocketSession::isOpen)
@@ -220,6 +284,12 @@ public class GameServerSocketClient {
                 .orElseThrow(() -> new IllegalStateException("No open WebSocket session found"));
     }
 
+    /**
+     * Schedule a reconnect attempt with exponential backoff.
+     *
+     * @param lastServerUrl server URL
+     * @param callback callback to run after reconnection
+     */
     private void scheduleReconnectAttempt(String lastServerUrl, Runnable callback) {
         if (!canProceedWithReconnecting()) return;
         int attempt = reconnectAttempt.getAndIncrement();
@@ -259,6 +329,12 @@ public class GameServerSocketClient {
                 TimeUnit.MILLISECONDS);
     }
 
+    /**
+     * Compute the next backoff delay for a reconnect attempt.
+     *
+     * @param attempt attempt number
+     * @return backoff delay duration
+     */
     private Duration nextBackoffDelay(int attempt) {
         long baseMs = RECONNECT_BASE_DELAY.toMillis();
         long maxMs = RECONNECT_MAX_DELAY.toMillis();
@@ -269,7 +345,4 @@ public class GameServerSocketClient {
 
         return Duration.ofMillis(expMs);
     }
-
-
-
 }

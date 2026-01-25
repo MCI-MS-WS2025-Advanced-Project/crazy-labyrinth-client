@@ -27,6 +27,9 @@ public abstract class BaseViewModel extends BaseViewCleanup {
         super(vm);
     }
 
+    /**
+     * Clear the current error state and message.
+     */
     public void clearError() {
         runOnFxThread(
                 () -> {
@@ -36,10 +39,20 @@ public abstract class BaseViewModel extends BaseViewCleanup {
                 });
     }
 
+    /**
+     * Return the current error code.
+     *
+     * @return error code or null when no error is set
+     */
     public ErrorCode getErrorCode() {
         return errorCodeProperty.get();
     }
 
+    /**
+     * Set an error message without an error code.
+     *
+     * @param message error message
+     */
     protected void setError(String message) {
         runOnFxThread(
                 () -> {
@@ -47,6 +60,12 @@ public abstract class BaseViewModel extends BaseViewCleanup {
                 });
     }
 
+    /**
+     * Set an error message with an error code.
+     *
+     * @param message error message
+     * @param code error code
+     */
     protected void setError(String message, ErrorCode code) {
         runOnFxThread(
                 () -> {
@@ -55,6 +74,11 @@ public abstract class BaseViewModel extends BaseViewCleanup {
                 });
     }
 
+    /**
+     * Update error state and stop any refresh indicator.
+     *
+     * @param message error message
+     */
     private void setBaseError(String message) {
         runOnFxThread(
                 () -> {
@@ -64,6 +88,11 @@ public abstract class BaseViewModel extends BaseViewCleanup {
                 });
     }
 
+    /**
+     * Update the refresh state, clearing errors when refreshing begins.
+     *
+     * @param refreshing true when a refresh is in progress
+     */
     protected void setRefreshing(boolean refreshing) {
         runOnFxThread(
                 () -> {
@@ -75,6 +104,9 @@ public abstract class BaseViewModel extends BaseViewCleanup {
                 });
     }
 
+    /**
+     * Reset view model bindings and error state.
+     */
     @Override
     public void baseViewModelCleanup() {
         runOnFxThread(
@@ -88,6 +120,11 @@ public abstract class BaseViewModel extends BaseViewCleanup {
                 });
     }
 
+    /**
+     * Handle action errors from the server and set them on the view model.
+     *
+     * @param actionError error payload
+     */
     @EventListener
     private void handleError(ActionErrorEventPayload actionError) {
         if (isErrorRelevant()) {
@@ -96,5 +133,10 @@ public abstract class BaseViewModel extends BaseViewCleanup {
         }
     }
 
+    /**
+     * Determine whether errors should be surfaced for this view model.
+     *
+     * @return true when the error is relevant
+     */
     protected abstract boolean isErrorRelevant();
 }

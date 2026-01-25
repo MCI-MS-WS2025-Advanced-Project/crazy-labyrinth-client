@@ -4,7 +4,7 @@ import static mci.dibse.crazylabyrinth.client.infrastructure.util.JavaFXUtils.ru
 
 import java.time.Instant;
 import java.util.Optional;
-
+import java.util.concurrent.Executor;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.value.ObservableValue;
@@ -15,6 +15,7 @@ import javafx.scene.control.*;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.shape.Rectangle;
+import mci.dibse.crazylabyrinth.client.NavigationController;
 import mci.dibse.crazylabyrinth.client.domain.model.record.GameInfoRecord;
 import mci.dibse.crazylabyrinth.client.infrastructure.util.JavaFXUtils;
 import mci.dibse.crazylabyrinth.client.infrastructure.util.ScreenResolutionProperties;
@@ -22,6 +23,7 @@ import mci.dibse.crazylabyrinth.client.view.viewmodel.GameServerDashboardViewMod
 import mci.dibse.crazylabyrinth.client.view.viewmodel.item.GameServerItem;
 import mci.dibse.crazylabyrinth.client.view.viewmodel.navigation.NavigationStateViewModel;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
 /**
@@ -33,10 +35,12 @@ import org.springframework.stereotype.Component;
 @Component
 public class GameServerDashboardController extends BaseViewCleanup {
 
+    private final NavigationController navigationController;
     @FXML public Label statusLabel;
     @FXML public Button refreshButton;
     @FXML public CheckBox showOnlyJoinable;
     @FXML public Label serverCountLabel;
+    @FXML public ProgressIndicator progressJoining;
 
     @FXML public TableView<GameServerItem> serversTable;
     @FXML public TableColumn<GameServerItem, String> nameCol;
@@ -45,56 +49,90 @@ public class GameServerDashboardController extends BaseViewCleanup {
     @FXML public TableColumn<GameServerItem, String> lastSeenCol;
     @FXML public TableColumn<GameServerItem, String> actionCol;
 
-
     @FXML public StackPane viewport;
     @FXML public Rectangle rootClip;
     @FXML public Group contentGroup;
     @FXML public BorderPane root;
 
-
-
-
     private static final String SERVER_ERROR_LOADING_STATUS = "Fehler beim Laden des Servers...";
-    private static final String SERVER_ERROR_TITLE          = "Fehler";
+    private static final String SERVER_ERROR_TITLE = "Fehler";
     private static final String NO_SERVERS_FOUND_STATUS =
             "Keine Server gefunden. Klicken Sie auf 'Aktualisieren', um das Verzeichnis"
                     + " abzufragen.";
     private static final String GENERAL_SERVER_ERROR_STATUS =
             "Etwas ist schiefgelaufen. Bitte versuchen Sie es später noch einmal.";
 
-
-
     private GameServerDashboardViewModel viewModel;
     private Runnable cleanUpTask;
 
     private ScreenResolutionProperties screenResolutionProperties;
 
+    @Qualifier("commandExecutor")
+    private Executor commandExecutor;
+
     @Autowired
     public GameServerDashboardController(
-            GameServerDashboardViewModel vm, NavigationStateViewModel navState, ScreenResolutionProperties screenResolutionProperties) {
+            GameServerDashboardViewModel vm,
+            NavigationStateViewModel navState,
+            ScreenResolutionProperties screenResolutionProperties,
+            NavigationController navigationController,
+            Executor commandExecutor) {
         super(navState);
         this.viewModel = vm;
         this.screenResolutionProperties = screenResolutionProperties;
+        this.navigationController = navigationController;
+        this.commandExecutor = commandExecutor;
     }
 
+    /**
+     * Initialize table configuration, bindings, and listeners.
+     */
     @FXML
     public void initialize() {
+
+        setupProgressIndicator();
         setupTableData();
         setupTableColumns();
         setupTableRowFactory();
         setupControls();
         setupErrorHandling();
-        initUiScaling();
         viewModel.refreshServerList();
+        viewport.sceneProperty()
+                .addListener(
+                        (obs, oldScene, newScene) -> {
+                            if (newScene != null) {
+                                Platform.runLater(
+                                        () -> {
+                                            root.applyCss();
+                                            root.layout();
+                                            initUiScaling();
+                                        });
+                            }
+                        });
     }
 
+    /**
+     * Initialize UI progress indicator
+     */
+    private void setupProgressIndicator() {
+        progressJoining.setVisible(false);
+        progressJoining.setManaged(false);
+        progressJoining.setMinSize(100, 100);
+    }
+
+    /**
+     * Initialize UI scaling based on screen resolution.
+     */
     private void initUiScaling() {
-        ScreenResolutionProperties.ResolutionProperties props = new ScreenResolutionProperties.ResolutionProperties(root,
-                viewport);
+        ScreenResolutionProperties.ResolutionProperties props =
+                new ScreenResolutionProperties.ResolutionProperties(root, viewport);
         screenResolutionProperties.initUiScaling(props);
     }
 
     // todo test with impl of issue #6
+    /**
+     * Clean up bindings and table state on view exit.
+     */
     @Override
     public void cleanup() {
         cleanUpTask.run();
@@ -127,12 +165,27 @@ public class GameServerDashboardController extends BaseViewCleanup {
         runOnFxThread(cleanup);
     }
 
+    /**
+     * Exit the application after user confirmation.
+     *
+     * @param actionEvent button event
+     */
     public void onExitButtonClick(ActionEvent actionEvent) {
         JavaFXUtils.showConfirmationModal(
                 "Beenden", "Wollen Sie das Programm beenden?", "", Platform::exit);
-
     }
 
+    public void onFullscreenToggleButtonClick(ActionEvent actionEvent) {
+        navigationController.toogleFullScreen();
+    }
+
+    /**
+     * Decide whether cleanup should run when leaving the main screen.
+     *
+     * @param oldValue previous screen
+     * @param newValue new screen
+     * @return true when cleanup should run
+     */
     @Override
     protected boolean customCleanupCheckpoint(
             NavigationStateViewModel.ScreenId oldValue,
@@ -142,6 +195,9 @@ public class GameServerDashboardController extends BaseViewCleanup {
                 && !NavigationStateViewModel.ScreenId.MAIN.equals(newValue);
     }
 
+    /**
+     * Bind the table data to the view model.
+     */
     private void setupTableData() {
         serversTable.setItems(viewModel.getSorted());
         viewModel.getSorted().comparatorProperty().bind(serversTable.comparatorProperty());
@@ -150,6 +206,9 @@ public class GameServerDashboardController extends BaseViewCleanup {
         cleanUpTask = JavaFXUtils.setupTableClip(serversTable, 34.0);
     }
 
+    /**
+     * Configure table columns and cell factories.
+     */
     private void setupTableColumns() {
         nameCol.setCellValueFactory(cd -> cd.getValue().nameProperty());
         statusCol.setCellValueFactory(cd -> cd.getValue().statusProperty().asString());
@@ -160,6 +219,12 @@ public class GameServerDashboardController extends BaseViewCleanup {
         actionCol.setCellFactory(col -> createActionCell());
     }
 
+    /**
+     * Format player count values for the table.
+     *
+     * @param cd cell data features
+     * @return formatted player count value
+     */
     private ObservableValue<String> createPlayerCountValue(
             TableColumn.CellDataFeatures<GameServerItem, String> cd) {
         var item = cd.getValue();
@@ -167,6 +232,11 @@ public class GameServerDashboardController extends BaseViewCleanup {
                 "%d / %d", item.currentPlayerCountProperty(), item.maxPlayersProperty());
     }
 
+    /**
+     * Create a table cell that formats the last seen timestamp.
+     *
+     * @return configured table cell
+     */
     private TableCell<GameServerItem, String> createLastSeenCell() {
         return new TableCell<>() {
             @Override
@@ -186,6 +256,11 @@ public class GameServerDashboardController extends BaseViewCleanup {
         };
     }
 
+    /**
+     * Create a table cell with the join action button.
+     *
+     * @return configured table cell
+     */
     private TableCell<GameServerItem, String> createActionCell() {
         return new TableCell<>() {
             private final Button joinBtn = new Button("Join");
@@ -219,6 +294,9 @@ public class GameServerDashboardController extends BaseViewCleanup {
         };
     }
 
+    /**
+     * Configure row context menus for the servers table.
+     */
     private void setupTableRowFactory() {
         serversTable.setRowFactory(
                 tv -> {
@@ -239,6 +317,9 @@ public class GameServerDashboardController extends BaseViewCleanup {
                 });
     }
 
+    /**
+     * Bind UI controls to view model properties.
+     */
     private void setupControls() {
         showOnlyJoinable.selectedProperty().bindBidirectional(viewModel.onlyJoinableProperty());
         serverCountLabel.textProperty().bind(Bindings.size(viewModel.getSorted()).asString());
@@ -255,6 +336,11 @@ public class GameServerDashboardController extends BaseViewCleanup {
                                 viewModel.getIsRefreshing()));
     }
 
+    /**
+     * Determine the status text to show in the UI.
+     *
+     * @return status text
+     */
     private String calculateStatusText() {
         if (viewModel.getHasError().get()) {
             return viewModel.getErrorMessage().get();
@@ -265,6 +351,9 @@ public class GameServerDashboardController extends BaseViewCleanup {
         }
     }
 
+    /**
+     * Display error modals when errors are reported.
+     */
     private void setupErrorHandling() {
         viewModel
                 .getHasError()
@@ -276,11 +365,15 @@ public class GameServerDashboardController extends BaseViewCleanup {
                                         "",
                                         viewModel.getErrorMessage().get(),
                                         () -> viewModel.clearError());
-
                             }
                         });
     }
 
+    /**
+     * Prompt for player name and join the selected server.
+     *
+     * @param serverItem selected server item
+     */
     private void showPLayerNameInputModalAndJoinServer(GameServerItem serverItem) {
         Runnable dialogTask =
                 () -> {
@@ -318,11 +411,27 @@ public class GameServerDashboardController extends BaseViewCleanup {
                                                 serverItem.getName().getValue(),
                                                 String.valueOf(
                                                         serverItem.getMaxPlayers().getValue()));
-                                viewModel.joinSelectedServer(gameInfo);
+
+                                executeJoinCommand(gameInfo);
                             });
                 };
         runOnFxThread(dialogTask);
     }
 
-
+    private void executeJoinCommand(GameInfoRecord gameInfo) {
+        progressJoining.setVisible(true);
+        progressJoining.setManaged(true);
+        commandExecutor.execute(
+                () -> {
+                    try {
+                        viewModel.joinSelectedServer(gameInfo);
+                    } finally {
+                        JavaFXUtils.runOnFxThread(
+                                () -> {
+                                    progressJoining.setVisible(false);
+                                    progressJoining.setManaged(false);
+                                });
+                    }
+                });
+    }
 }
