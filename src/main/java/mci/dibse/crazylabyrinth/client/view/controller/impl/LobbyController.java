@@ -1,5 +1,7 @@
 package mci.dibse.crazylabyrinth.client.view.controller.impl;
 
+import java.util.List;
+import java.util.stream.Collectors;
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.PauseTransition;
@@ -9,39 +11,35 @@ import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
 import javafx.beans.property.*;
 import javafx.beans.value.ChangeListener;
+import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
-import javafx.collections.ObservableList;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.Group;
-import javafx.geometry.Pos;
-import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
-import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
-import javafx.scene.transform.Scale;
 import javafx.util.Duration;
 import labyrinth.contracts.models.*;
-import lombok.extern.slf4j.Slf4j;
 import labyrinth.contracts.models.RankingEntry;
+import lombok.extern.slf4j.Slf4j;
+import mci.dibse.crazylabyrinth.client.NavigationController;
+import mci.dibse.crazylabyrinth.client.domain.context.ApplicationEvents;
+import mci.dibse.crazylabyrinth.client.domain.model.enums.Theme;
 import mci.dibse.crazylabyrinth.client.domain.model.record.StartGameRecord;
-import mci.dibse.crazylabyrinth.client.infrastructure.util.JavaFXUtils;
-import mci.dibse.crazylabyrinth.client.infrastructure.util.ScreenResolutionProperties;
+import mci.dibse.crazylabyrinth.client.infrastructure.util.*;
 import mci.dibse.crazylabyrinth.client.service.AchievementService;
 import mci.dibse.crazylabyrinth.client.view.viewmodel.GameViewModel;
 import mci.dibse.crazylabyrinth.client.view.viewmodel.LobbyViewModel;
 import mci.dibse.crazylabyrinth.client.view.viewmodel.item.PlayerInfoItem;
 import mci.dibse.crazylabyrinth.client.view.viewmodel.navigation.NavigationStateViewModel;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Component
 @Slf4j
@@ -49,6 +47,7 @@ public class LobbyController extends BaseViewCleanup {
 
     private final GameViewModel gameViewModel;
     private final AchievementService achievementService;
+    private final NavigationController navigationController;
     public BooleanProperty clientAdmin = new SimpleBooleanProperty(false);
 
     // todo add results
@@ -73,6 +72,8 @@ public class LobbyController extends BaseViewCleanup {
     @FXML public TableColumn<RankingEntry, String> resultScoreColumn;
     @FXML public TableColumn<RankingEntry, RankingEntry> achievements;
     @FXML private ListView<String> playerList;
+    @FXML public VBox leftBar;
+    @FXML public VBox rightBar;
 
     @FXML public StackPane viewport;
     @FXML public Rectangle rootClip;
@@ -80,10 +81,12 @@ public class LobbyController extends BaseViewCleanup {
     @FXML public BorderPane root;
 
     // Admin Stuff
+
     @FXML public CheckBox bonusEnabledCheck;
     @FXML public ComboBox<String> boardSizeCombo;
     @FXML public Spinner<Integer> treasureCardsSpinner;
     @FXML private Button startGameButton;
+    @FXML public ComboBox<Theme> boardTheme;
 
     @FXML public Label countdown;
     @FXML public HBox countDownBox;
@@ -96,12 +99,10 @@ public class LobbyController extends BaseViewCleanup {
     private static final int MIN_PLAYERS_FOR_GAME_START = 1;
     private static final int MIN_TREASURE_PER_PLAYER = 1;
     private static final int MAX_TREASURE_PER_PLAYER = 6;
-    private static final int DEFAULT_TREASURE_PER_PLAYER = 6;
     private static final int MIN_GAME_TIMER_MINUTES = 1;
     private static final int MAX_GAME_TIMER_MINUTES = 120;
     private static final int MIN_BONUS_COUNT = 0;
     private static final int MAX_BONUS_COUNT = 20;
-    private static final int DEFAULT_BONUS_COUNT = 0;
     private static final int DEFAULT_START_GAME_TIMER = 60;
 
     private final BooleanProperty isStartButtonLocked = new SimpleBooleanProperty(false);
@@ -115,19 +116,34 @@ public class LobbyController extends BaseViewCleanup {
     private Runnable cleanUpTaskResultsTable;
 
     private ScreenResolutionProperties screenResolutionProperties;
+    ChangeListener<Theme> themeChangeListener;
 
     @Autowired
-    public LobbyController(NavigationStateViewModel navState, LobbyViewModel lobbyViewModel, ScreenResolutionProperties screenResolutionProperties, GameViewModel gameViewModel, AchievementService achievementService) {
+    public LobbyController(
+            NavigationStateViewModel navState,
+            LobbyViewModel lobbyViewModel,
+            ScreenResolutionProperties screenResolutionProperties,
+            GameViewModel gameViewModel,
+            AchievementService achievementService,
+            NavigationController navigationController) {
         super(navState);
         this.lobbyViewModel = lobbyViewModel;
         this.screenResolutionProperties = screenResolutionProperties;
         this.gameViewModel = gameViewModel;
         this.achievementService = achievementService;
+        this.navigationController = navigationController;
     }
 
+    /**
+     * Initialize bindings, table configuration, and listeners.
+     */
     @FXML
     public void initialize() {
 
+        int DEFAULT_BONUS_COUNT = lobbyViewModel.getGameDefaultBonusCount();
+        int DEFAULT_TREASURE_PER_PLAYER = lobbyViewModel.getGameDefaultTreasureCountPerPlayer();
+
+        initViewToRatio();
 
         playerTable.setItems(lobbyViewModel.getPlayersListProperty());
 
@@ -143,11 +159,11 @@ public class LobbyController extends BaseViewCleanup {
 
         clientAdmin.set(lobbyViewModel.isClientAdmin());
         adminSettings.visibleProperty().bind(clientAdmin);
-        ListChangeListener<PlayerInfoItem> listener = (change) -> {
-            clientAdmin.set(lobbyViewModel.isClientAdmin());
-        };
+        ListChangeListener<PlayerInfoItem> listener =
+                (change) -> {
+                    clientAdmin.set(lobbyViewModel.isClientAdmin());
+                };
         lobbyViewModel.addListenerToPlayersListProperty(listener);
-
 
         maxPlayers.textProperty().bind(lobbyViewModel.getMaxPlayersProperty());
         connectedPlayers.textProperty().bind(lobbyViewModel.getPlayerCountProperty());
@@ -162,7 +178,7 @@ public class LobbyController extends BaseViewCleanup {
                         DEFAULT_TREASURE_PER_PLAYER);
         treasureCardsSpinner.setValueFactory(valueFactory);
 
-        // TODO min max??
+
         timerEnabledCheck.selectedProperty().set(lobbyViewModel.isDefaultTimerEnabled());
         timerSettings.visibleProperty().bind(timerEnabledCheck.selectedProperty());
         timerSettings.managedProperty().bind(timerEnabledCheck.selectedProperty());
@@ -173,6 +189,7 @@ public class LobbyController extends BaseViewCleanup {
                         MIN_GAME_TIMER_MINUTES, MAX_GAME_TIMER_MINUTES, defaultTimerInMinutes);
         gameTimerSpinner.setValueFactory(timerFactory);
 
+        bonusEnabledCheck.selectedProperty().set(lobbyViewModel.isDefaultBonusEnabled());
         bonusSetting.visibleProperty().bind(bonusEnabledCheck.selectedProperty());
         bonusSetting.managedProperty().bind(bonusEnabledCheck.selectedProperty());
 
@@ -181,97 +198,154 @@ public class LobbyController extends BaseViewCleanup {
                         MIN_BONUS_COUNT, MAX_BONUS_COUNT, DEFAULT_BONUS_COUNT);
         bonusCountSpinner.setValueFactory(bonusFactory);
 
+
         setupCountDownTimer();
 
         setupErrorHandling();
 
         setupResultsTable();
 
-        initUiScaling();
+        setupThemeComboBox();
+
+        viewport.sceneProperty()
+                .addListener(
+                        (obs, oldScene, newScene) -> {
+                            if (newScene != null) {
+                                // wait a few pulses
+                                Platform.runLater(
+                                        () -> {
+                                            root.applyCss();
+                                            root.layout();
+                                            initUiScaling();
+
+                                        });
+                            }
+                        });
     }
 
+    /**
+     * Adjust side bar widths based on screen ratio.
+     */
+    private void initViewToRatio() {
+        Ratio ratio = screenResolutionProperties.getAspectRatio();
+        switch (ratio) {
+            case FOUR_THREE -> {
+                leftBar.setPrefWidth(225);
+                rightBar.setPrefWidth(200);
+            }
+            case SIXTEEN_NINE -> {
+                leftBar.setPrefWidth(250);
+                rightBar.setPrefWidth(250);
+            }
+        }
+    }
+
+    /**
+     * Initialize UI scaling based on screen resolution.
+     */
     private void initUiScaling() {
-        ScreenResolutionProperties.ResolutionProperties props = new ScreenResolutionProperties.ResolutionProperties(root,
-                viewport);
+        ScreenResolutionProperties.ResolutionProperties props =
+                new ScreenResolutionProperties.ResolutionProperties(root, viewport);
         screenResolutionProperties.initUiScaling(props);
-
     }
 
+    /**
+     * Configure the results table when results become available.
+     */
     private void setupResultsTable() {
         log.info("setupResultsTable");
-        // Clip/cleanup
 
+        ChangeListener<Boolean> resultsListener =
+                (obs, oldVal, newVal) -> {
+                    Runnable task =
+                            () -> {
+                                ObservableList<RankingEntry> rankingEntriesSorted =
+                                        lobbyViewModel.getSortedRankingEntries();
+                                resultsTable.setItems(rankingEntriesSorted);
+                                lobbyViewModel.bindSortedRankingsComparator(
+                                        resultsTable.comparatorProperty());
 
-        ChangeListener<Boolean> resultsListener = (obs, oldVal, newVal) -> {
-            Runnable task = () -> {
-                ObservableList<RankingEntry> rankingEntriesSorted = lobbyViewModel.getSortedRankingEntries();
-                resultsTable.setItems(rankingEntriesSorted);
-                lobbyViewModel.bindSortedRankingsComparator(resultsTable.comparatorProperty());
+                                int numberEntries = rankingEntriesSorted.size();
+                                // numberEntries
+                                cleanUpTaskResultsTable =
+                                        JavaFXUtils.setupTableClip(resultsTable, 30.0);
 
+                                resultNameColumn.setCellValueFactory(
+                                        cd ->
+                                                new SimpleStringProperty(
+                                                        cd.getValue().getPlayerId()));
+                                resultNameColumn.setCellFactory(
+                                        column -> {
+                                            return new TableCell<RankingEntry, String>() {
+                                                @Override
+                                                protected void updateItem(
+                                                        String item, boolean empty) {
+                                                    super.updateItem(item, empty);
+                                                    if (empty) {
+                                                        setText(null);
+                                                        return;
+                                                    }
+                                                    String name =
+                                                            lobbyViewModel.getPlayerNameForId(item);
+                                                    if (lobbyViewModel.getWinnerId().equals(item))
+                                                        name += " (Gewinner)";
+                                                    setText(name);
+                                                }
+                                            };
+                                        });
 
+                                resultScoreColumn.setCellValueFactory(
+                                        cd ->
+                                                new SimpleStringProperty(
+                                                        cd.getValue().getScore().toString()));
 
+                                achievements.setCellValueFactory(
+                                        cd ->
+                                                new SimpleObjectProperty<RankingEntry>(
+                                                        cd.getValue()));
+                                achievements.setCellFactory(
+                                        column -> {
+                                            return new TableCell<RankingEntry, RankingEntry>() {
+                                                @Override
+                                                protected void updateItem(
+                                                        RankingEntry item, boolean empty) {
+                                                    super.updateItem(item, empty);
+                                                    if (empty) {
+                                                        setText(null);
+                                                        return;
+                                                    }
 
-                int numberEntries = rankingEntriesSorted.size();
-                // numberEntries
-                cleanUpTaskResultsTable = JavaFXUtils.setupTableClip(resultsTable, 30.0);
+                                                    //
+                                                    // setGraphic(createAchievementGraphicForPlayer(item));
+                                                    String achievements =
+                                                            getAchievementResultsStringForPlayer(
+                                                                    item);
+                                                    setText(achievements);
+                                                }
+                                            };
+                                        });
 
-                resultNameColumn.setCellValueFactory(cd -> new SimpleStringProperty(cd.getValue().getPlayerId()));
-                resultNameColumn.setCellFactory(
-                        column -> {
-                            return new TableCell<RankingEntry, String>() {
-                                @Override
-                                protected void updateItem(String item, boolean empty) {
-                                    super.updateItem(item, empty);
-                                    if (empty) {
-                                        setText(null);
-                                        return;
-                                    }
-                                    String name = lobbyViewModel.getPlayerNameForId(item);
-                                    if (lobbyViewModel.getWinnerId().equals(item)) name += " (Gewinner)";
-                                    setText(name);
-                                }
+                                resultsBox.setVisible(true);
+                                resultsBox.setManaged(true);
                             };
-                        }
-                );
-
-                resultScoreColumn.setCellValueFactory(cd -> new SimpleStringProperty(cd.getValue().getScore().toString()));
-
-                achievements.setCellValueFactory(cd -> new SimpleObjectProperty<RankingEntry>(cd.getValue()));
-                achievements.setCellFactory(
-                        column -> {
-                            return new TableCell<RankingEntry, RankingEntry>() {
-                                @Override
-                                protected void updateItem(RankingEntry item, boolean empty) {
-                                    super.updateItem(item, empty);
-                                    if (empty) {
-                                        setText(null);
-                                        return;
-                                    }
-
-                                    //  setGraphic(createAchievementGraphicForPlayer(item));
-                                    String achievements = getAchievementResultsStringForPlayer(item);
-                                    setText(achievements);
-                                }
-                            };
-                        }
-                );
-
-                resultsBox.setVisible(true);
-                resultsBox.setManaged(true);
-
-
-            };
-            JavaFXUtils.runOnFxThread(task);
-        };
+                    JavaFXUtils.runOnFxThread(task);
+                };
 
         lobbyViewModel.addListenerToResultsAvailableProperty(resultsListener);
-
     }
 
+    /**
+     * Handle the leave lobby button click.
+     *
+     * @param actionEvent button event
+     */
     public void onleaveLobbyButtonClick(ActionEvent actionEvent) {
         lobbyViewModel.leaveLobby();
     }
 
+    /**
+     * Handle the start game button click and trigger countdown lock.
+     */
     @FXML
     public void onStartButtonClick() {
         isStartButtonLocked.set(true);
@@ -279,10 +353,32 @@ public class LobbyController extends BaseViewCleanup {
         pause.setOnFinished(e -> isStartButtonLocked.set(false));
         pause.play();
         cancelCountdown();
-
         startGame();
     }
 
+    /**
+     * Cancel countdown when a disconnect event occurs in the lobby.
+     *
+     * @param event application event
+     */
+    @EventListener
+    public void handleDisconnectEvent(ApplicationEvents event) {
+        if (NavigationStateViewModel.ScreenId.LOBBY.equals(
+                navigationStateViewModel.getCurrentScreenId())) {
+            try {
+                cancelCountdown();
+            } catch (Exception e) {
+            }
+        }
+    }
+
+    /**
+     * Decide whether cleanup should run when leaving the lobby.
+     *
+     * @param oldValue previous screen
+     * @param newValue new screen
+     * @return true when cleanup should run
+     */
     @Override
     protected boolean customCleanupCheckpoint(
             NavigationStateViewModel.ScreenId oldValue,
@@ -292,6 +388,9 @@ public class LobbyController extends BaseViewCleanup {
                 && !NavigationStateViewModel.ScreenId.LOBBY.equals(newValue);
     }
 
+    /**
+     * Clear bindings, listeners, and table state on view exit.
+     */
     @Override
     public void cleanup() {
         /*
@@ -335,11 +434,19 @@ public class LobbyController extends BaseViewCleanup {
 
                     resultsBox.setVisible(false);
                     resultsBox.setManaged(false);
+
+                    boardTheme
+                            .getSelectionModel()
+                            .selectedItemProperty()
+                            .removeListener(themeChangeListener);
                 });
         cleanUpTaskPlayerTable.run();
-        if (cleanUpTaskResultsTable != null)  cleanUpTaskResultsTable.run();
+        if (cleanUpTaskResultsTable != null) cleanUpTaskResultsTable.run();
     }
 
+    /**
+     * Initialize countdown timer bindings and listeners.
+     */
     private void setupCountDownTimer() {
         initCountdownTimeline();
 
@@ -365,6 +472,9 @@ public class LobbyController extends BaseViewCleanup {
         }
     }
 
+    /**
+     * Initialize the countdown timeline used for auto-start.
+     */
     private void initCountdownTimeline() {
         countdownTimeline =
                 new Timeline(
@@ -381,6 +491,9 @@ public class LobbyController extends BaseViewCleanup {
                 Animation.INDEFINITE); // we control stopping via remainingTimer
     }
 
+    /**
+     * Register listeners that manage the countdown based on player count.
+     */
     private void initListener() {
         ListChangeListener<PlayerInfoItem> countDownTimerListener =
                 (change) -> {
@@ -396,6 +509,9 @@ public class LobbyController extends BaseViewCleanup {
         lobbyViewModel.addListenerToPlayersListProperty(countDownTimerListener);
     }
 
+    /**
+     * Stop the countdown and reset timer to the default value.
+     */
     private void cancelCountdown() {
         if (countdownTimeline != null) {
             countdownTimeline.stop();
@@ -403,6 +519,9 @@ public class LobbyController extends BaseViewCleanup {
         remainingTimer.set(DEFAULT_START_GAME_TIMER);
     }
 
+    /**
+     * Start the countdown when not already running.
+     */
     private void startCountdownIfNeeded() {
         if (countdownTimeline == null) {
             initCountdownTimeline();
@@ -413,39 +532,128 @@ public class LobbyController extends BaseViewCleanup {
         }
     }
 
+    /**
+     * Configure the player table columns and cell factories.
+     */
     private void setUpTableColumns() {
         playerNameColumn.setCellValueFactory(cellData -> cellData.getValue().nameProperty());
         colorColumn.setCellValueFactory(cellData -> cellData.getValue().colorProperty());
         adminColumn.setCellValueFactory(cellData -> cellData.getValue().isAdminProperty());
 
-        // Add custom cell factory to display the text in the actual color
+        // Style the Name Column
+        playerNameColumn.setCellFactory(
+                column ->
+                        new TableCell<PlayerInfoItem, String>() {
+                            @Override
+                            protected void updateItem(String item, boolean empty) {
+                                super.updateItem(item, empty);
+                                if (empty || item == null) {
+                                    setText(null);
+                                } else {
+                                    setText(item);
+                                    setStyle("-fx-font-weight: bold; -fx-font-size: 14px; -fx-text-fill: #2c3e50; -fx-padding: 0 0 0 10;");
+                                }
+                            }
+                        });
+
+
+        adminColumn.setCellFactory(
+                column ->
+                        new TableCell<PlayerInfoItem, Boolean>() {
+                            @Override
+                            protected void updateItem(Boolean isAdmin, boolean empty) {
+                                super.updateItem(isAdmin, empty);
+                                if (empty || isAdmin == null) {
+                                    setText(null);
+                                } else {
+                                    if (isAdmin) {
+                                        setText("✔");
+                                        setTextFill(Color.GREEN);
+                                    } else {
+                                        setText("✘");
+                                        setTextFill(Color.RED);
+                                    }
+                                    setStyle("-fx-font-weight: bold; -fx-alignment: CENTER; -fx-font-size: 16px;");
+                                }
+                            }
+                        });
+
+
         colorColumn.setCellFactory(
                 column ->
                         new TableCell<PlayerInfoItem, PlayerColor>() {
+                            private final Rectangle colorBox = new Rectangle(18, 18);
+
+                            {
+                                colorBox.setStroke(Color.rgb(0, 0, 0, 0.3));
+                                colorBox.setStrokeWidth(1);
+                                colorBox.setArcWidth(4);
+                                colorBox.setArcHeight(4);
+                            }
 
                             @Override
                             protected void updateItem(PlayerColor playerColor, boolean empty) {
                                 super.updateItem(playerColor, empty);
-                                if (empty) {
+                                if (empty || playerColor == null) {
+                                    setGraphic(null);
                                     setText(null);
-                                    setTextFill(Color.BLACK);
-                                    return;
+                                } else {
+                                    colorBox.setFill(convertPlayerColorToFxColor(playerColor));
+                                    setGraphic(colorBox);
+                                    setText(null);
                                 }
-
-                                setText(playerColor != null ? playerColor.toString() : "");
-                                setTextFill(
-                                        playerColor != null
-                                                ? convertPlayerColorToFxColor(playerColor)
-                                                : Color.BLACK);
                             }
                         });
     }
 
+    /**
+     * Configure the theme combo box.
+     */
+    private void setupThemeComboBox() {
+        boardTheme.setItems(FXCollections.observableArrayList(Theme.values()));
+        boardTheme.getSelectionModel().select(Theme.RUNEHAVEN_LABYRINTH);
+        boardTheme.setCellFactory(
+                cb ->
+                        new ListCell<Theme>() {
+                            @Override
+                            protected void updateItem(Theme item, boolean empty) {
+                                super.updateItem(item, empty);
+                                if (empty || item == null) {
+                                    setText(null);
+                                } else {
+                                    setText(item.getDisplayName());
+                                }
+                            }
+                        });
+        boardTheme.setButtonCell(
+                new ListCell<Theme>() {
+                    @Override
+                    protected void updateItem(Theme item, boolean empty) {
+                        super.updateItem(item, empty);
+                        setText(empty || item == null ? null : item.getDisplayName());
+                    }
+                });
+
+        themeChangeListener =
+                (obs, oldVal, newVal) -> {
+                    setThemeForGameBoard(newVal);
+                };
+        boardTheme.getSelectionModel().selectedItemProperty().addListener(themeChangeListener);
+    }
+
+    /**
+     * Trigger a start game command with current settings.
+     */
     private void startGame() {
         StartGameRecord gameStartRecord = gatherStartGameData();
         lobbyViewModel.startGame(gameStartRecord);
     }
 
+    /**
+     * Collect settings for starting a game.
+     *
+     * @return start game record
+     */
     private StartGameRecord gatherStartGameData() {
         int treasureCardCount = treasureCardsSpinner.getValue();
         treasureCardCount = treasureCardCount * Integer.parseInt(connectedPlayers.getText());
@@ -460,6 +668,12 @@ public class LobbyController extends BaseViewCleanup {
     }
 
     // Helper method to convert PlayerColor to JavaFX Color
+    /**
+     * Convert player colors to JavaFX colors.
+     *
+     * @param playerColor player color enum
+     * @return JavaFX color
+     */
     private Color convertPlayerColorToFxColor(PlayerColor playerColor) {
         switch (playerColor) {
             case RED:
@@ -476,6 +690,12 @@ public class LobbyController extends BaseViewCleanup {
         }
     }
 
+    /**
+     * Map a board size to the display label.
+     *
+     * @param boardSize board size value
+     * @return display label
+     */
     private String mapBoardSizeToLabel(int boardSize) {
         return switch (boardSize) {
             case 5 -> SMALL_GAME_BOARD_SIZE;
@@ -485,6 +705,12 @@ public class LobbyController extends BaseViewCleanup {
         };
     }
 
+    /**
+     * Map a board size label to the numeric size.
+     *
+     * @param label size label
+     * @return board size
+     */
     private int mapLabelToBoardSize(String label) {
         return switch (label) {
             case SMALL_GAME_BOARD_SIZE -> 5;
@@ -494,14 +720,29 @@ public class LobbyController extends BaseViewCleanup {
         };
     }
 
+    /**
+     * Convert minutes to seconds.
+     *
+     * @param minutes minutes value
+     * @return seconds value
+     */
     private int minutesToSeconds(int minutes) {
         return minutes * 60;
     }
 
+    /**
+     * Convert seconds to minutes.
+     *
+     * @param seconds seconds value
+     * @return minutes value
+     */
     private int secondsToMinutes(int seconds) {
         return seconds / 60;
     }
 
+    /**
+     * Bind error handling to show alert modals.
+     */
     private void setupErrorHandling() {
         ChangeListener<Boolean> errorListener =
                 (obs, oldVal, newVal) -> {
@@ -514,21 +755,41 @@ public class LobbyController extends BaseViewCleanup {
         lobbyViewModel.getHasError().addListener(errorListener);
     }
 
-
+    /**
+     * Build an achievements summary string for a ranking entry.
+     *
+     * @param entry ranking entry
+     * @return achievements summary string
+     */
     private String getAchievementResultsStringForPlayer(RankingEntry entry) {
         String id = entry.getPlayerId();
-        List<AchievementUnlockedEventPayload> achievements = achievementService.getAchievementEventsForPLayerId(id);
+        List<AchievementUnlockedEventPayload> achievements =
+                achievementService.getAchievementEventsForPLayerId(id);
         return achievements.stream()
-                .map(event -> {
-                    AchievementType type = event.getAchievement();
-                    return switch (type) {
-                        case RUNNER -> "Runner (" + entry.getStats().getStepsTaken() + ")";
-                        case PUSHER -> "Pusher (" + entry.getStats().getTilesPushed() + ")";
-                        // Note: Assuming Pusher refers to tiles pushed, not treasures
-                        default -> type.name();
-                    };
-                })
+                .map(
+                        event -> {
+                            AchievementType type = event.getAchievement();
+                            return switch (type) {
+                                case RUNNER -> "Runner (" + entry.getStats().getStepsTaken() + ")";
+                                case PUSHER -> "Pusher (" + entry.getStats().getTilesPushed() + ")";
+                                // Note: Assuming Pusher refers to tiles pushed, not treasures
+                                default -> type.name();
+                            };
+                        })
                 .collect(Collectors.joining(", "));
+    }
+
+    /**
+     * Update the theme used for game board assets.
+     *
+     * @param theme selected theme
+     */
+    private void setThemeForGameBoard(Theme theme) {
+        FileNameMapper.setTheme(theme);
+    }
+
+    public void onFullscreenToggleButtonClick(ActionEvent actionEvent) {
+        navigationController.toogleFullScreen();
     }
 
     /*
@@ -576,7 +837,5 @@ public class LobbyController extends BaseViewCleanup {
     }
 
      */
-
-
 
 }

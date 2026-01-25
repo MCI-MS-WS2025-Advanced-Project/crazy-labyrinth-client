@@ -24,6 +24,11 @@ public class JavaFXSpringApplicationInitializer
         this.fxApplication = fxApplication;
     }
 
+    /**
+     * Register the JavaFX application instance as a Spring bean.
+     *
+     * @param context application context
+     */
     @Override
     public void initialize(GenericApplicationContext context) {
         context.registerBean(Application.class, () -> fxApplication);

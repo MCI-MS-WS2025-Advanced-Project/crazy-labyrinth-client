@@ -36,7 +36,8 @@ public class GameServerSocketService implements PlayerConnectedAckListener {
     public GameServerSocketService(
             GameServerSocketClient client,
             ApplicationEventPublisher eventPublisher,
-            LobbyService lobbyService, NavigationStateViewModel navState) {
+            LobbyService lobbyService,
+            NavigationStateViewModel navState) {
         this.client = client;
         this.eventPublisher = eventPublisher;
         this.lobbyService = lobbyService;
@@ -44,6 +45,13 @@ public class GameServerSocketService implements PlayerConnectedAckListener {
         lobbyService.addPlayerListener(this);
     }
 
+    /**
+     * Send a command to the game server and publish the command event locally.
+     *
+     * @param command serialized command payload
+     * @param commandType command type to publish locally
+     * @throws GeneralUiException when the socket send fails
+     */
     public void sendCommand(String command, CommandType commandType) throws GeneralUiException {
         try {
             client.sendMessage(command);
@@ -56,6 +64,13 @@ public class GameServerSocketService implements PlayerConnectedAckListener {
         eventPublisher.publishEvent(sendCommand);
     }
 
+    /**
+     * Connect to the game server and send an initial message.
+     *
+     * @param serverUrl server URL to connect to
+     * @param json initial message payload
+     * @throws ConnectionException when the connection fails
+     */
     public void connectToServerAndSendMessage(String serverUrl, String json)
             throws ConnectionException {
         try {
@@ -70,10 +85,20 @@ public class GameServerSocketService implements PlayerConnectedAckListener {
         this.serverUrl = serverUrl.trim();
     }
 
+    /**
+     * Configure whether incoming messages are blocked in the socket client.
+     *
+     * @param canReceive true to allow receiving messages; false to block
+     */
     public void setBlockForReceivingMessages(boolean canReceive) {
         client.setBlockForReceivingMessages(canReceive);
     }
 
+    /**
+     * Attempt to reconnect using saved connection information when a disconnect event occurs.
+     *
+     * @param event application event signalling a disconnect
+     */
     @EventListener
     public void handleDisconnectEvent(ApplicationEvents event) {
         if (ApplicationEvents.CONNECTION_LOST.equals(event)
@@ -99,11 +124,21 @@ public class GameServerSocketService implements PlayerConnectedAckListener {
         }
     }
 
+    /**
+     * Store the player name from the latest game info record.
+     *
+     * @param gameInfo game info payload
+     */
     @EventListener
     public void saveGameInfoData(GameInfoRecord gameInfo) {
         this.clientUserName = gameInfo.playerName();
     }
 
+    /**
+     * Clear connection state when the player initiates a disconnect.
+     *
+     * @param command disconnect command type
+     */
     @EventListener
     public void handlePlayerDrivenDisconnect(CommandType command) {
         if (CommandType.DISCONNECT.equals(command)) {
@@ -114,6 +149,11 @@ public class GameServerSocketService implements PlayerConnectedAckListener {
         }
     }
 
+    /**
+     * Reset connection state when returning to the server dashboard.
+     *
+     * @param event application event signalling navigation change
+     */
     @EventListener
     public void handleBackToServerDashboard(ApplicationEvents event) {
         if (ApplicationEvents.BACK_TO_GAME_SERVER_DASHBOARD.equals(event)) {
@@ -121,10 +161,14 @@ public class GameServerSocketService implements PlayerConnectedAckListener {
             this.identifierToken = null;
             this.serverUrl = null;
             this.clientUserName = null;
-
         }
     }
 
+    /**
+     * Capture the identifier token from the connected player payload.
+     *
+     * @param clientPlayer connected player payload
+     */
     @Override
     public void onPlayerConnected(ClientPlayer clientPlayer) {
         log.debug("Handle onPlayerConnected event");

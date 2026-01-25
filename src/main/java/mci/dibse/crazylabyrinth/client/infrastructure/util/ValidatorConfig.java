@@ -11,6 +11,11 @@ import org.hibernate.validator.messageinterpolation.ParameterMessageInterpolator
  */
 public class ValidatorConfig {
 
+    /**
+     * Create a bean validator with Hibernate Validator.
+     *
+     * @return validator instance
+     */
     public static Validator createBeanValidator() {
         try (ValidatorFactory factory =
                 Validation.byProvider(HibernateValidator.class)

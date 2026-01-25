@@ -1,9 +1,8 @@
 package mci.dibse.crazylabyrinth.client;
 
+import java.util.Locale;
 import javafx.application.Application;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-
-import java.util.Locale;
 
 /**
  * Entry point for the Crazy Labyrinth client application.
@@ -23,6 +22,9 @@ public class MainApplication {
         Application.launch(JavaFXClientApplication.class, args);
     }
 
+    /**
+     * Set the default locale for the application.
+     */
     private static void setDefaultLocale() {
         Locale.setDefault(Locale.GERMAN);
     }

@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.collections.FXCollections?>
+<?import java.lang.String?>
+
+<?import javafx.scene.text.TextFlow?>
+<?import javafx.scene.text.Text?>
+<StackPane xmlns="http://javafx.com/javafx"
+           xmlns:fx="http://javafx.com/fxml"
+           stylesheets="@/styles/shared.css"
+           prefWidth="400" prefHeight="450">
+
+    <VBox spacing="20" alignment="CENTER" style="-fx-padding: 30;" styleClass="card">
+        <Label text="Einstellungen" styleClass="section-header" style="-fx-font-size: 24;"/>
+
+        <VBox spacing="10" alignment="CENTER_LEFT">
+            <Label text="Bildschirmauflösung" styleClass="setting-label"/>
+            <ComboBox fx:id="resolutionComboBox" maxWidth="Infinity">
+                <items>
+                    <FXCollections fx:factory="observableArrayList">
+                        <String fx:value="1024x768 (4:3)"/>
+                        <String fx:value="1152x864 (4:3)"/>
+                        <String fx:value="1280x960 (4:3)"/>
+                        <String fx:value="1400x1050 (4:3)"/>
+                        <String fx:value="1600x1200 (4:3)"/>
+                        <String fx:value="1280x720 (16:9)"/>
+                        <String fx:value="1920x1080 (16:9)"/>
+                        <String fx:value="2560x1440 (16:9)"/>
+                        <String fx:value="3840x2160 (16:9)"/>
+                    </FXCollections>
+                </items>
+                <tooltip>
+                    <Tooltip text="Wähle die Zielauflösung für das Spielfenster."/>
+                </tooltip>
+            </ComboBox>
+        </VBox>
+
+        <VBox spacing="10" alignment="CENTER_LEFT">
+            <Label text="Skalierungsmodus" styleClass="setting-label"/>
+            <RadioButton fx:id="scaleToFitRadio" text="Einpassen (Seitenverhältnis beibehalten)" selected="true">
+                <toggleGroup>
+                    <ToggleGroup fx:id="scaleGroup"/>
+                </toggleGroup>
+                <tooltip>
+                    <Tooltip text="Skaliert den Inhalt so, dass alles sichtbar bleibt und das Seitenverhältnis erhalten wird. Es können Ränder entstehen."/>
+                </tooltip>
+            </RadioButton>
+            <RadioButton fx:id="scaleToFillRadio" text="Ausfüllen (vollflächig)" toggleGroup="$scaleGroup">
+                <tooltip>
+                    <Tooltip text="Füllt den verfügbaren Bereich vollständig. Es kann zu Beschnitt an den Rändern kommen."/>
+                </tooltip>
+            </RadioButton>
+        </VBox>
+
+        <HBox spacing="10" alignment="CENTER_LEFT">
+            <CheckBox fx:id="fullscreenCheckBox" text="Vollbild beim Start (später umschaltbar)">
+                <tooltip>
+                    <Tooltip text="Die Anwendung startet im Vollbildmodus. Du kannst Vollbild später im Spiel/den Einstellungen wieder deaktivieren."/>
+                </tooltip>
+            </CheckBox>
+        </HBox>
+
+        <VBox spacing="2" alignment="CENTER_LEFT" fillWidth="true">
+            <CheckBox fx:id="borderlessCheckBox" text="Rahmenloses Fenster"/>
+            <Label text="Ohne Titelleiste und Fensterrahmen." style="-fx-font-size: 12; -fx-text-fill: #666;"/>
+            <Label text="Verschieben und native Größenänderung sind deaktiviert." style="-fx-font-size: 12; -fx-text-fill: #666;"/>
+        </VBox>
+
+        <Region VBox.vgrow="ALWAYS"/>
+
+        <HBox spacing="15" alignment="CENTER">
+            <Button text="Beenden" onAction="#onCancel" styleClass="secondary-button" prefWidth="120"/>
+            <Button text="Starten" onAction="#onSave" styleClass="primary-button" prefWidth="120"/>
+        </HBox>
+    </VBox>
+</StackPane>

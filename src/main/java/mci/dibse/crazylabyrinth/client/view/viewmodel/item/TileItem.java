@@ -23,15 +23,45 @@ public class TileItem extends BaseItem<Tile> {
     @Getter
     private final SimpleObjectProperty<TreasureItem> treasure = new SimpleObjectProperty<>();
 
-    @Getter private final SimpleObjectProperty<BonusType> bonus = new SimpleObjectProperty<>();
+    @Getter
+    private final SimpleObjectProperty<BonusType> bonusProperty = new SimpleObjectProperty<>();
+
     @Getter private SimpleBooleanProperty isFixed = new SimpleBooleanProperty();
 
+    /**
+     * Return the treasure item on this tile.
+     *
+     * @return treasure item or null when none
+     */
     public TreasureItem getTreasureItem() {
         return treasure.get();
     }
 
+    /**
+     * Return the bonus type on this tile.
+     *
+     * @return bonus type or null when none
+     */
     public BonusType getBonusType() {
-        return bonus.get();
+        return bonusProperty.get();
+    }
+
+    /**
+     * Check whether the tile has a bonus.
+     *
+     * @return true when a bonus is present
+     */
+    public boolean hasBonus() {
+        return bonusProperty.get() != null;
+    }
+
+    /**
+     * Check whether the tile has a treasure.
+     *
+     * @return true when a treasure is present
+     */
+    public boolean hasTreasure() {
+        return treasure.get() != null;
     }
 
     public TileItem(Tile source) {
@@ -45,8 +75,8 @@ public class TileItem extends BaseItem<Tile> {
 
                     //  imageView = ImageResourceLoader.mapDirectionsToTile(directions);
 
-                    tileImage.set(ImageResourceLoader.loadImageForDirection(directionList));
-                    rotation.set(ImageResourceLoader.getRotationAngleForDirection(directionList));
+                    tileImage.set(ImageResourceLoader.loadImage(directionList));
+                    rotation.set(getRotationAngleForDirection(directionList));
 
                     if (source.getTreasure() != null) {
                         this.treasure.set(new TreasureItem(source.getTreasure()));
@@ -55,9 +85,9 @@ public class TileItem extends BaseItem<Tile> {
                     }
 
                     if (source.getBonus() != null) {
-                        this.bonus.set(source.getBonus());
+                        this.bonusProperty.set(source.getBonus());
                     } else {
-                        this.bonus.set(null);
+                        this.bonusProperty.set(null);
                     }
 
                     this.isFixed.set(source.getIsFixed());
@@ -70,23 +100,31 @@ public class TileItem extends BaseItem<Tile> {
         // todo?
     }
 
+    /**
+     * Update tile state from the source tile.
+     *
+     * @param source tile payload
+     */
     @Override
     protected void updateItemFromSource(Tile source) {
         this.isFixed.set(source.getIsFixed());
         List<Direction> directionList = new ArrayList<>(Arrays.asList(source.getEntrances()));
-        this.rotation.set(ImageResourceLoader.getRotationAngleForDirection(directionList));
+        this.rotation.set(getRotationAngleForDirection(directionList));
 
         if (this.treasure.get() != null) {
             this.treasure.get().updateFrom(source.getTreasure());
         }
         if (source.getBonus() != null) {
-            this.bonus.set(source.getBonus());
+            this.bonusProperty.set(source.getBonus());
         } else {
-            this.bonus.set(null);
+            this.bonusProperty.set(null);
         }
     }
 
     // todo not needed anymore? rotation is done on server via command
+    /**
+     * Rotate the tile left and update image and directions.
+     */
     public void onLeftRotation() {
         Runnable apply =
                 () -> {
@@ -98,6 +136,9 @@ public class TileItem extends BaseItem<Tile> {
         runOnFxThread(apply);
     }
 
+    /**
+     * Rotate the tile right and update image and directions.
+     */
     public void onRightRotation() {
         Runnable apply =
                 () -> {
@@ -109,6 +150,11 @@ public class TileItem extends BaseItem<Tile> {
         runOnFxThread(apply);
     }
 
+    /**
+     * Update the direction list after a rotation.
+     *
+     * @param clockwise true for clockwise rotation
+     */
     private void updateDirectionsonRotation(boolean clockwise) {
 
         switch (directions.size()) {
@@ -208,7 +254,65 @@ public class TileItem extends BaseItem<Tile> {
         }
     }
 
+    /**
+     * Refresh the tile image based on the current directions.
+     */
     private void updateImageFromRotation() {
-        tileImage.set(ImageResourceLoader.loadImageForDirection(directions));
+        tileImage.set(ImageResourceLoader.loadImage(directions));
+    }
+
+    /**
+     * Compute the rotation angle for a set of entrances.
+     *
+     * @param direction list of entrance directions
+     * @return rotation angle in degrees
+     */
+    private static Number getRotationAngleForDirection(List<Direction> direction) {
+        direction.sort(Comparator.comparingInt(Direction::ordinal));
+        return switch (direction.size()) {
+            case 2 -> {
+                if (direction.contains(Direction.UP) && direction.contains(Direction.DOWN)) {
+                    yield 0;
+                } else if (direction.contains(Direction.LEFT)
+                        && direction.contains(Direction.RIGHT)) {
+                    yield 90;
+                } else if ((direction.contains(Direction.UP)
+                        && direction.contains(Direction.RIGHT))) {
+                    yield 0;
+                } else if (direction.contains(Direction.DOWN)
+                        && direction.contains(Direction.LEFT)) {
+                    yield 180;
+                } else if (direction.contains(Direction.UP) && direction.contains(Direction.LEFT)) {
+                    yield -90;
+                } else if (direction.contains(Direction.DOWN)
+                        && direction.contains(Direction.RIGHT)) {
+                    yield 90;
+                } else {
+                    throw new IllegalStateException("Unexpected directions: " + direction);
+                }
+            }
+            case 3 -> {
+                if (direction.contains(Direction.UP)
+                        && direction.contains(Direction.DOWN)
+                        && direction.contains(Direction.LEFT)) {
+                    yield 0;
+                } else if (direction.contains(Direction.UP)
+                        && direction.contains(Direction.DOWN)
+                        && direction.contains(Direction.RIGHT)) {
+                    yield 180;
+                } else if (direction.contains(Direction.LEFT)
+                        && direction.contains(Direction.RIGHT)
+                        && direction.contains(Direction.UP)) {
+                    yield 90;
+                } else if (direction.contains(Direction.LEFT)
+                        && direction.contains(Direction.RIGHT)
+                        && direction.contains(Direction.DOWN)) {
+                    yield -90;
+                } else {
+                    throw new IllegalStateException("Unexpected directions: " + direction);
+                }
+            }
+            default -> throw new IllegalStateException("Unexpected value: " + direction.size());
+        };
     }
 }

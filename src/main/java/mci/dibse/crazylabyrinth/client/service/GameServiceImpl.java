@@ -19,6 +19,11 @@ public class GameServiceImpl implements GameService {
         this.eventPublisher = eventPublisher;
     }
 
+    /**
+     * Publish relevant game state events to the application bus.
+     *
+     * @param gameState game state payload
+     */
     @Override
     public void handleGameEvent(GameStateEventPayload gameState) {
         switch (gameState.getType()) {
@@ -27,6 +32,11 @@ public class GameServiceImpl implements GameService {
         }
     }
 
+    /**
+     * Publish next treasure card events to the application bus.
+     *
+     * @param nextTreasureCard next treasure payload
+     */
     @Override
     public void handleGameEvent(NextTreasureCardEventPayload nextTreasureCard) {
         eventPublisher.publishEvent(nextTreasureCard);

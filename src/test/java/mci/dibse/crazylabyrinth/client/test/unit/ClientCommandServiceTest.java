@@ -1,5 +1,10 @@
 package mci.dibse.crazylabyrinth.client.test.unit;
 
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.*;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import labyrinth.contracts.models.CommandType;
 import labyrinth.contracts.models.Direction;
@@ -12,11 +17,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.context.ApplicationEventPublisher;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.*;
 
 class ClientCommandServiceTest {
 
@@ -50,14 +50,16 @@ class ClientCommandServiceTest {
         String capturedJson = jsonCaptor.getValue();
 
         // THEN: JSON is valid and contains correct data
-        assertDoesNotThrow(() -> {
-            var jsonNode = objectMapper.readTree(capturedJson);
-            assertEquals("MOVE_PAWN", jsonNode.get("type").asText());
-            assertEquals(targetRow, jsonNode.get("targetCoordinates").get("row").asInt());
-            assertEquals(targetCol, jsonNode.get("targetCoordinates").get("column").asInt());
+        assertDoesNotThrow(
+                () -> {
+                    var jsonNode = objectMapper.readTree(capturedJson);
+                    assertEquals("MOVE_PAWN", jsonNode.get("type").asText());
+                    assertEquals(targetRow, jsonNode.get("targetCoordinates").get("row").asInt());
+                    assertEquals(
+                            targetCol, jsonNode.get("targetCoordinates").get("column").asInt());
 
-            System.out.println("UT-01 Result: " + capturedJson);
-        });
+                    System.out.println("UT-01 Result: " + capturedJson);
+                });
     }
 
     @Test
@@ -79,14 +81,15 @@ class ClientCommandServiceTest {
         String capturedJson = jsonCaptor.getValue();
 
         // THEN: JSON serialization is valid
-        assertDoesNotThrow(() -> {
-            var jsonNode = objectMapper.readTree(capturedJson);
-            assertEquals("PUSH_TILE", jsonNode.get("type").asText());
-            assertEquals("UP", jsonNode.get("direction").asText());
-            assertEquals(2, jsonNode.get("rowOrColIndex").asInt());
+        assertDoesNotThrow(
+                () -> {
+                    var jsonNode = objectMapper.readTree(capturedJson);
+                    assertEquals("PUSH_TILE", jsonNode.get("type").asText());
+                    assertEquals("UP", jsonNode.get("direction").asText());
+                    assertEquals(2, jsonNode.get("rowOrColIndex").asInt());
 
-            System.out.println("UT-02 Result: " + capturedJson);
-        });
+                    System.out.println("UT-02 Result: " + capturedJson);
+                });
     }
 
     @Test
@@ -101,15 +104,17 @@ class ClientCommandServiceTest {
         commandService.sendStartGameCommand(config);
 
         // THEN: Verify the command sent to the socket
-        verify(socketServiceMock, atLeastOnce()).sendCommand(jsonCaptor.capture(), eq(CommandType.START_GAME));
+        verify(socketServiceMock, atLeastOnce())
+                .sendCommand(jsonCaptor.capture(), eq(CommandType.START_GAME));
         String json = jsonCaptor.getValue();
 
-        assertDoesNotThrow(() -> {
-            var node = objectMapper.readTree(json);
-            // Verify if the BoardSize in the JSON is actually 7
-            assertEquals(7, node.get("boardSize").get("rows").asInt());
-            System.out.println("UT-03 Result: Config validated with BoardSize 7.");
-        });
+        assertDoesNotThrow(
+                () -> {
+                    var node = objectMapper.readTree(json);
+                    // Verify if the BoardSize in the JSON is actually 7
+                    assertEquals(7, node.get("boardSize").get("rows").asInt());
+                    System.out.println("UT-03 Result: Config validated with BoardSize 7.");
+                });
     }
 
     @Test
@@ -140,7 +145,8 @@ class ClientCommandServiceTest {
         commandService.sendStartGameCommand(restart);
 
         // THEN: Command object created and JSON serialization is valid
-        verify(socketServiceMock, atLeastOnce()).sendCommand(jsonCaptor.capture(), eq(CommandType.START_GAME));
+        verify(socketServiceMock, atLeastOnce())
+                .sendCommand(jsonCaptor.capture(), eq(CommandType.START_GAME));
         assertNotNull(jsonCaptor.getValue());
         assertTrue(jsonCaptor.getValue().contains("START_GAME"));
         System.out.println("UT-05 Result: NewRound/Restart JSON: " + jsonCaptor.getValue());

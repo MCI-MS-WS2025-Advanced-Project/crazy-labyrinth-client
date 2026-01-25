@@ -12,6 +12,11 @@ public class TimerService {
 
     private Duration clockOffset = Duration.ZERO;
 
+    /**
+     * Update the local clock offset based on server time information.
+     *
+     * @param serverInfo server info payload containing server time
+     */
     public void handleGameServerTimeInfo(ServerInfoPayload serverInfo) {
         OffsetDateTime localTime = OffsetDateTime.now();
         OffsetDateTime serverTime = serverInfo.getServerTime();
@@ -25,6 +30,11 @@ public class TimerService {
         }
     }
 
+    /**
+     * Return the current server time using the computed offset.
+     *
+     * @return server time derived from local time and offset
+     */
     public OffsetDateTime getCurrentServerTimeWithGameServerOffset() {
         return OffsetDateTime.now().plus(clockOffset);
     }
