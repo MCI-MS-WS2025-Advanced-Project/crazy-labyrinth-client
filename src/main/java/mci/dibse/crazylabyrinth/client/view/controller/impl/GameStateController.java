@@ -43,6 +43,7 @@ import mci.dibse.crazylabyrinth.client.infrastructure.util.*;
 import mci.dibse.crazylabyrinth.client.infrastructure.util.JavaFXUtils;
 import mci.dibse.crazylabyrinth.client.infrastructure.util.PlayerPawnUtils;
 import mci.dibse.crazylabyrinth.client.service.GameServerSocketService;
+import mci.dibse.crazylabyrinth.client.service.animation.AnimationInitializerService;
 import mci.dibse.crazylabyrinth.client.service.animation.AnimationService;
 import mci.dibse.crazylabyrinth.client.view.viewmodel.GameViewModel;
 import mci.dibse.crazylabyrinth.client.view.viewmodel.item.*;
@@ -186,6 +187,7 @@ public class GameStateController extends BaseViewCleanup {
     private final Map<String, ImageView> idToPlayerPawn = new HashMap<>();
 
     private final AnimationService animationService;
+    private AnimationInitializerService animationInitializerService;
 
     @Autowired
     public GameStateController(
@@ -215,7 +217,8 @@ public class GameStateController extends BaseViewCleanup {
 
         ChangeListener<TurnState> turnStateChangeListener =
                 (observable, oldValue, newValue) -> {
-                    if (animationService.isAnimationInProgress()) {
+                    if (animationInitializerService != null
+                            && animationInitializerService.isAnimationInProgress()) {
                         Platform.runLater(this::waitForAnimationsAndRecreateGrid);
                     } else {
                         initGameGrid();
@@ -223,11 +226,8 @@ public class GameStateController extends BaseViewCleanup {
                 };
         gameViewModel.addListenerToCurrentTurnStateProperty(turnStateChangeListener);
 
-        initAvailableBonusTypesListener();
-
-        initPlayerMovementListener();
-
-        initTilePushListener();
+        initializeAnimationInitializerService();
+        animationInitializerService.initializeAnimationListeners();
 
         initPushTileButtons();
 
@@ -283,6 +283,16 @@ public class GameStateController extends BaseViewCleanup {
     }
 
     /**
+     * Initialize the animation initializer service.
+     * This creates the service that will handle all animation listener setup.
+     */
+    private void initializeAnimationInitializerService() {
+        this.animationInitializerService =
+                new AnimationInitializerService(
+                        animationService, gameViewModel, idToPlayerPawn, boardGrid);
+    }
+
+    /**
      * Initialize UI scaling based on screen resolution.
      */
     private void initUiScaling() {
@@ -295,7 +305,8 @@ public class GameStateController extends BaseViewCleanup {
      * Wait for running animations to finish, then rebuild the game grid.
      */
     private void waitForAnimationsAndRecreateGrid() {
-        if (animationService.isAnimationInProgress()) {
+        if (animationInitializerService != null
+                && animationInitializerService.isAnimationInProgress()) {
             Platform.runLater(this::waitForAnimationsAndRecreateGrid);
         } else {
             initGameGrid();
@@ -2034,118 +2045,5 @@ public class GameStateController extends BaseViewCleanup {
                                     }
                                 }));
         gameTimeline.setCycleCount(Animation.INDEFINITE); // we control stopping via remainingTimer
-    }
-
-    /**
-     * Set up listener to animate tile pushes on updates.
-     */
-    private void initTilePushListener() {
-        gameViewModel
-                .getGameBoardItem()
-                .lastPushProperty()
-                .addListener(
-                        (obs, oldPush, newPush) -> {
-                            if (newPush != null && !Objects.equals(oldPush, newPush)) {
-                                int index = newPush.getRowOrColIndex();
-                                Direction direction = newPush.getDirection();
-                                animationService.animateTilePush(index, direction, boardGrid);
-                            }
-                        });
-    }
-
-    /**
-     * Set up listeners to animate player movement updates.
-     */
-    private void initPlayerMovementListener() {
-        gameViewModel
-                .getPlayerStatesSorted()
-                .forEach(
-                        playerStateItem -> {
-                            playerStateItem
-                                    .getCurrentPosition()
-                                    .addListener(
-                                            (obs, oldPos, newPos) -> {
-                                                if (gameViewModel
-                                                        .getCurrentTurnState()
-                                                        .equals(TurnState.WAITING_FOR_MOVE)) {
-                                                    animationService.animatePlayerPath(
-                                                            gameViewModel.getGameBoardItem(),
-                                                            idToPlayerPawn.get(
-                                                                    playerStateItem
-                                                                            .getPlayerIdAsString()),
-                                                            oldPos,
-                                                            newPos,
-                                                            boardGrid);
-                                                } else {
-                                                    checkForSwapAnimation(
-                                                            playerStateItem, oldPos, newPos);
-                                                }
-                                            });
-                        });
-    }
-
-    private void initAvailableBonusTypesListener() {
-        gameViewModel
-                .getPlayerStatesSorted()
-                .forEach(
-                        playerStateItem ->
-                                playerStateItem
-                                        .getAvailableBonusTypes()
-                                        .addListener(
-                                                (obs, oldTypes, newTypes) -> {
-                                                    if (oldTypes.contains(BonusType.BEAM)
-                                                            && !newTypes.contains(BonusType.BEAM)) {
-                                                        animationService.animateBeam(
-                                                                idToPlayerPawn.get(
-                                                                        playerStateItem
-                                                                                .getPlayerIdAsString()),
-                                                                playerStateItem
-                                                                        .getPreviousPosition()
-                                                                        .get(),
-                                                                playerStateItem
-                                                                        .getCurrentPosition()
-                                                                        .get(),
-                                                                boardGrid);
-                                                    }
-                                                }));
-    }
-
-    /**
-     * Check if a position change represents a swap between two players.
-     * @param movedPlayer the player that moved
-     * @param oldPosition the old position of the moved player
-     * @param newPosition the new position of the moved player
-     */
-    private void checkForSwapAnimation(
-            PlayerStateItem movedPlayer, CoordinatesItem oldPosition, CoordinatesItem newPosition) {
-        gameViewModel.getPlayerStatesSorted().stream()
-                .filter(
-                        otherPlayer ->
-                                !otherPlayer
-                                        .getPlayerIdAsString()
-                                        .equals(movedPlayer.getPlayerIdAsString()))
-                .filter(otherPlayer -> otherPlayer.getPreviousPosition().get() != null)
-                .filter(
-                        otherPlayer ->
-                                otherPlayer.getCurrentPosition().get() != null
-                                        && otherPlayer
-                                                .getCurrentPosition()
-                                                .get()
-                                                .equals(oldPosition)
-                                        && otherPlayer
-                                                .getPreviousPosition()
-                                                .get()
-                                                .equals(newPosition))
-                .findFirst()
-                .ifPresent(
-                        swapPartner -> {
-                            ImageView pawn1 = idToPlayerPawn.get(movedPlayer.getPlayerIdAsString());
-                            ImageView pawn2 = idToPlayerPawn.get(swapPartner.getPlayerIdAsString());
-
-                            if (pawn1 != null && pawn2 != null) {
-                                animationService.animateSwap(
-                                        pawn1, pawn2, oldPosition, newPosition, boardGrid);
-                            }
-                        });
     }
 }
