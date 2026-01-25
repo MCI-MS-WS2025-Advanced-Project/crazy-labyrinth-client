@@ -1,6 +1,5 @@
 package mci.dibse.crazylabyrinth.client.view.controller.impl;
 
-import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
@@ -34,7 +33,8 @@ public class SettingsController {
     private boolean borderless;
 
     public ApplicationSettingsRecord getSettings() {
-        return new ApplicationSettingsRecord(selectedResolution, scaleRatio, fullscreen, borderless);
+        return new ApplicationSettingsRecord(
+                selectedResolution, scaleRatio, fullscreen, borderless);
     }
 
     @FXML

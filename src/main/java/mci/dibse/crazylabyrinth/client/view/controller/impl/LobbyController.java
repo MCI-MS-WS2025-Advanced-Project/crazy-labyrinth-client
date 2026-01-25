@@ -178,7 +178,6 @@ public class LobbyController extends BaseViewCleanup {
                         DEFAULT_TREASURE_PER_PLAYER);
         treasureCardsSpinner.setValueFactory(valueFactory);
 
-
         timerEnabledCheck.selectedProperty().set(lobbyViewModel.isDefaultTimerEnabled());
         timerSettings.visibleProperty().bind(timerEnabledCheck.selectedProperty());
         timerSettings.managedProperty().bind(timerEnabledCheck.selectedProperty());
@@ -198,7 +197,6 @@ public class LobbyController extends BaseViewCleanup {
                         MIN_BONUS_COUNT, MAX_BONUS_COUNT, DEFAULT_BONUS_COUNT);
         bonusCountSpinner.setValueFactory(bonusFactory);
 
-
         setupCountDownTimer();
 
         setupErrorHandling();
@@ -217,7 +215,6 @@ public class LobbyController extends BaseViewCleanup {
                                             root.applyCss();
                                             root.layout();
                                             initUiScaling();
-
                                         });
                             }
                         });
@@ -551,11 +548,13 @@ public class LobbyController extends BaseViewCleanup {
                                     setText(null);
                                 } else {
                                     setText(item);
-                                    setStyle("-fx-font-weight: bold; -fx-font-size: 14px; -fx-text-fill: #2c3e50; -fx-padding: 0 0 0 10;");
+                                    setStyle(
+                                            "-fx-font-weight: bold; -fx-font-size: 14px;"
+                                                    + " -fx-text-fill: #2c3e50; -fx-padding: 0 0 0"
+                                                    + " 10;");
                                 }
                             }
                         });
-
 
         adminColumn.setCellFactory(
                 column ->
@@ -573,11 +572,12 @@ public class LobbyController extends BaseViewCleanup {
                                         setText("✘");
                                         setTextFill(Color.RED);
                                     }
-                                    setStyle("-fx-font-weight: bold; -fx-alignment: CENTER; -fx-font-size: 16px;");
+                                    setStyle(
+                                            "-fx-font-weight: bold; -fx-alignment: CENTER;"
+                                                    + " -fx-font-size: 16px;");
                                 }
                             }
                         });
-
 
         colorColumn.setCellFactory(
                 column ->

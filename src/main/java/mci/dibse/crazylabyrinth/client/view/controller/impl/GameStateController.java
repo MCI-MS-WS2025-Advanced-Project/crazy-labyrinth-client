@@ -223,6 +223,8 @@ public class GameStateController extends BaseViewCleanup {
                 };
         gameViewModel.addListenerToCurrentTurnStateProperty(turnStateChangeListener);
 
+        initAvailableBonusTypesListener();
+
         initPlayerMovementListener();
 
         initTilePushListener();
@@ -2074,16 +2076,34 @@ public class GameStateController extends BaseViewCleanup {
                                                             oldPos,
                                                             newPos,
                                                             boardGrid);
-                                                } else {
-                                                    animationService.animateBeam(
-                                                            idToPlayerPawn.get(
-                                                                    playerStateItem
-                                                                            .getPlayerIdAsString()),
-                                                            oldPos,
-                                                            newPos,
-                                                            boardGrid);
                                                 }
                                             });
                         });
+    }
+
+    private void initAvailableBonusTypesListener() {
+        gameViewModel
+                .getPlayerStatesSorted()
+                .forEach(
+                        playerStateItem ->
+                                playerStateItem
+                                        .getAvailableBonusTypes()
+                                        .addListener(
+                                                (obs, oldTypes, newTypes) -> {
+                                                    if (oldTypes.contains(BonusType.BEAM)
+                                                            && !newTypes.contains(BonusType.BEAM)) {
+                                                        animationService.animateBeam(
+                                                                idToPlayerPawn.get(
+                                                                        playerStateItem
+                                                                                .getPlayerIdAsString()),
+                                                                playerStateItem
+                                                                        .getPreviousPosition()
+                                                                        .get(),
+                                                                playerStateItem
+                                                                        .getCurrentPosition()
+                                                                        .get(),
+                                                                boardGrid);
+                                                    }
+                                                }));
     }
 }

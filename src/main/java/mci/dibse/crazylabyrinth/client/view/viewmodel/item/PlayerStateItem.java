@@ -18,6 +18,9 @@ public class PlayerStateItem extends BaseItem<PlayerState> {
     private final ObjectProperty<CoordinatesItem> currentPosition = new SimpleObjectProperty<>();
 
     @Getter
+    private final ObjectProperty<CoordinatesItem> previousPosition = new SimpleObjectProperty<>();
+
+    @Getter
     private final ObjectProperty<CoordinatesItem> homePosition = new SimpleObjectProperty<>();
 
     @Getter
@@ -165,6 +168,9 @@ public class PlayerStateItem extends BaseItem<PlayerState> {
                                                 .contains(t.getId()))
                         .map(TreasureItem::new)
                         .toList();
+        if (this.currentPosition.get() != null) {
+            this.previousPosition.set(this.currentPosition.get());
+        }
         this.currentPosition.set(new CoordinatesItem(source.getCurrentPosition()));
         this.treasuresFound.addAll(notExistingTreasures);
         this.playerInfo.get().updateFrom(source.getPlayerInfo());
