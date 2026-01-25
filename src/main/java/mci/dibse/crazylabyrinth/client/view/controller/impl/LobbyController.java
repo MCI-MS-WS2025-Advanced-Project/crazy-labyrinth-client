@@ -537,7 +537,45 @@ public class LobbyController extends BaseViewCleanup {
         colorColumn.setCellValueFactory(cellData -> cellData.getValue().colorProperty());
         adminColumn.setCellValueFactory(cellData -> cellData.getValue().isAdminProperty());
 
-        // Add custom cell factory to display a square block as the color
+        // Style the Name Column
+        playerNameColumn.setCellFactory(
+                column ->
+                        new TableCell<PlayerInfoItem, String>() {
+                            @Override
+                            protected void updateItem(String item, boolean empty) {
+                                super.updateItem(item, empty);
+                                if (empty || item == null) {
+                                    setText(null);
+                                } else {
+                                    setText(item);
+                                    setStyle("-fx-font-weight: bold; -fx-font-size: 14px; -fx-text-fill: #2c3e50; -fx-padding: 0 0 0 10;");
+                                }
+                            }
+                        });
+
+
+        adminColumn.setCellFactory(
+                column ->
+                        new TableCell<PlayerInfoItem, Boolean>() {
+                            @Override
+                            protected void updateItem(Boolean isAdmin, boolean empty) {
+                                super.updateItem(isAdmin, empty);
+                                if (empty || isAdmin == null) {
+                                    setText(null);
+                                } else {
+                                    if (isAdmin) {
+                                        setText("✔");
+                                        setTextFill(Color.GREEN);
+                                    } else {
+                                        setText("✘");
+                                        setTextFill(Color.RED);
+                                    }
+                                    setStyle("-fx-font-weight: bold; -fx-alignment: CENTER; -fx-font-size: 16px;");
+                                }
+                            }
+                        });
+
+
         colorColumn.setCellFactory(
                 column ->
                         new TableCell<PlayerInfoItem, PlayerColor>() {
