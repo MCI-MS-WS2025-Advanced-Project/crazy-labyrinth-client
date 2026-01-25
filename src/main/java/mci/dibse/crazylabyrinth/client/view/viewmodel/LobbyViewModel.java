@@ -38,8 +38,15 @@ public class LobbyViewModel extends BaseViewModel
 
     public final SimpleBooleanProperty isResultsAvailable = new SimpleBooleanProperty(false);
 
-    @Value("${game.default.bonus.enabled:true}")
+    @Value("${game.default.bonus.enabled:false}")
     private boolean GAME_DEFAULT_BONUS_ENABLED;
+
+    @Value("${game.default.bonus.count:0}")
+    private int GAME_DEFAULT_BONUS_COUNT;
+
+    @Value("${game.default.treasure.count.per.player:6}")
+    private int GAME_DEFAULT_TREASURE_COUNT_PER_PLAYER;
+
 
     @Value("${game.default.board.size:7}")
     private int GAME_DEFAULT_BOARD_SIZE;
@@ -142,6 +149,14 @@ public class LobbyViewModel extends BaseViewModel
      */
     public boolean isDefaultBonusEnabled() {
         return GAME_DEFAULT_BONUS_ENABLED;
+    }
+
+    public int getGameDefaultBonusCount() {
+        return GAME_DEFAULT_BONUS_COUNT;
+    }
+
+    public int getGameDefaultTreasureCountPerPlayer() {
+        return GAME_DEFAULT_TREASURE_COUNT_PER_PLAYER;
     }
 
     /**
@@ -438,4 +453,6 @@ public class LobbyViewModel extends BaseViewModel
             ReadOnlyObjectProperty<Comparator<RankingEntry>> comparatorReadOnlyObjectProperty) {
         gameOverItem.bindSortedRankingsComparator(comparatorReadOnlyObjectProperty);
     }
+
+
 }
