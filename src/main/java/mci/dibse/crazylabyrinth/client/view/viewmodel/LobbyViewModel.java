@@ -38,7 +38,7 @@ public class LobbyViewModel extends BaseViewModel
 
     public final SimpleBooleanProperty isResultsAvailable = new SimpleBooleanProperty(false);
 
-    @Value("${game.default.bonus.enabled:false}")
+    @Value("${game.default.bonus.enabled:true}")
     private boolean GAME_DEFAULT_BONUS_ENABLED;
 
     @Value("${game.default.board.size:7}")
