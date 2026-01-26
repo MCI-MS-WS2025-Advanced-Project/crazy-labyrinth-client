@@ -45,6 +45,7 @@ public class GameViewModel extends BaseViewModel implements PlayerConnectedAckLi
     private ClientCommandService clientCommandService;
     private final TimerService timerService;
     @Getter private boolean nextTreasureMightNotBeAvailableYet = true;
+    private boolean lastTreasureFound = false;
 
     private final SimpleObjectProperty<GameStateEventPayload> lastGameStateProperty = new SimpleObjectProperty<>();
 
@@ -583,6 +584,12 @@ public class GameViewModel extends BaseViewModel implements PlayerConnectedAckLi
 
 
     public Treasure getCurrentTargetTreasureForAi() {
+        if (getClientPlayerState().getRemainingTreasureCount().get() == 0) {
+            Treasure t = new Treasure();
+            t.setId(0);
+            t.setName("backToHome");
+            return t;
+        }
         TreasureItem item = nextTreasureItemProperty.get();
         if (item == null) return null;
         Treasure t = new Treasure();
@@ -657,7 +664,7 @@ public class GameViewModel extends BaseViewModel implements PlayerConnectedAckLi
                         p -> {
                             String incomingId = p.getPlayerInfo().getId();
                             if (incomingId.equals(clientPlayer.getId()))
-                                checkIfLastTreasureIsFound(p);
+                                if(!lastTreasureFound) checkIfLastTreasureIsFound(p);
                             playerStatesSorted.stream()
                                     .filter(
                                             playerItem ->
@@ -680,6 +687,7 @@ public class GameViewModel extends BaseViewModel implements PlayerConnectedAckLi
      */
     private void checkIfLastTreasureIsFound(PlayerState p) {
         if (p.getRemainingTreasureCount() > 0) return;
+        lastTreasureFound = true;
         log.info("last treasure found setting up back to base treasure");
         int id = FileNameMapper.getHomeTreasureIdForPlayerColor(p.getPlayerInfo().getColor());
         Treasure t = new Treasure();
@@ -710,5 +718,9 @@ public class GameViewModel extends BaseViewModel implements PlayerConnectedAckLi
      */
     public void leaveGame() {
         clientCommandService.sendDisconnectCommand();
+    }
+
+    public void setAiTurnListener(ChangeListener<Boolean> aiTurnStateListener) {
+        currentTurnInfoItem.setAiTurnListener(aiTurnStateListener);
     }
 }

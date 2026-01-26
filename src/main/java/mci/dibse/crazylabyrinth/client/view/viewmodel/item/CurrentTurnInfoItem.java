@@ -20,6 +20,9 @@ CurrentTurnInfoItem extends BaseItem<CurrentTurnInfo> {
     @Getter
     private SimpleObjectProperty<OffsetDateTime> turnEndTimeProperty = new SimpleObjectProperty<>();
 
+    private SimpleBooleanProperty aiTurnListenerProperty = new SimpleBooleanProperty();
+    private ChangeListener<Boolean> setAiTurnListener;
+
     @Getter
     private SimpleObjectProperty<TurnState> turnStateProperty = new SimpleObjectProperty<>();
 
@@ -75,6 +78,12 @@ CurrentTurnInfoItem extends BaseItem<CurrentTurnInfo> {
         turnEndTimeProperty.addListener(listener);
     }
 
+
+    public void setAiTurnListener(ChangeListener<Boolean> listener) {
+        setAiTurnListener = listener;
+        aiTurnListenerProperty.addListener(setAiTurnListener);
+    }
+
     /**
      * Update item state from the latest turn info.
      *
@@ -82,9 +91,18 @@ CurrentTurnInfoItem extends BaseItem<CurrentTurnInfo> {
      */
     @Override
     protected void updateItemFromSource(CurrentTurnInfo source) {
+
+        Runnable task = null;
+        if (!turnStateProperty.get().equals(source.getState())
+                || !turnEndTimeProperty.get().isEqual(source.getTurnEndTime())
+        ) {
+             task = () -> aiTurnListenerProperty.set(!aiTurnListenerProperty.get());
+        }
         currentPlayerIdProperty.setValue(source.getCurrentPlayerId());
-        turnEndTimeProperty.setValue(source.getTurnEndTime());
         turnStateProperty.set(source.getState());
+        turnEndTimeProperty.setValue(source.getTurnEndTime());
+
+        if (task != null) JavaFXUtils.runOnFxThread(task);
     }
 
     /**
@@ -99,5 +117,6 @@ CurrentTurnInfoItem extends BaseItem<CurrentTurnInfo> {
         turnEndTimeProperty = null;
         turnStateProperty.unbind();
         turnStateProperty = null;
+        aiTurnListenerProperty.removeListener(setAiTurnListener);
     }
 }
