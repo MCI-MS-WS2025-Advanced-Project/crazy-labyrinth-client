@@ -725,6 +725,29 @@ public class OffensiveMoveCalculator {
                 bestMoveTarget = bestAiPosAfterPush;
             }
 
+            // If we have no path and both AI and treasure sit on non-shiftable axes, move onto a shiftable row/col to enable better pushes next round.
+            if (isStuckNoPathCase(bestAiPosAfterPush, bestTreasurePosAfterPush, bestPath, validIndices)) {
+
+                Coordinates escape = chooseEscapeMoveTarget(
+                        game,
+                        board,
+                        myPlayerId,
+                        bestAiPosAfterPush,
+                        bestTreasurePosAfterPush,
+                        bestPushIndex,
+                        bestPushDirection,
+                        bestRotatedEntrances,
+                        validIndices
+                );
+
+                if (escape != null) {
+                    bestMoveTarget = escape;
+                    log.debug("Stuck-case detected (no path, fixed axes). Escaping to {}", escape);
+                } else {
+                    log.debug("Stuck-case detected, but no reachable unoccupied escape found.");
+                }
+            }
+
             Coordinates bonusMoveTarget = bonusCalculator.chooseBonusMoveTargetAfterChosenPush(
                     game, board, myPlayerId, bonusPositions,
                     bestPushIndex, bestPushDirection, bestRotatedEntrances,
@@ -825,5 +848,96 @@ public class OffensiveMoveCalculator {
         }
         return AiContractUtil.coord(0, 0);
     }
+
+
+    private boolean isShiftableIndex(int idx, List<Integer> validPushIndices) {
+        return validPushIndices.contains(idx);
+    }
+
+    private boolean isStuckNoPathCase(
+            Coordinates aiAfterPush,
+            Coordinates treasureAfterPush,
+            List<Coordinates> bestPath,
+            List<Integer> validPushIndices
+    ) {
+        boolean noPath = (bestPath == null || bestPath.isEmpty());
+        if (!noPath) return false;
+
+        boolean aiRowShiftable = isShiftableIndex(aiAfterPush.getRow(), validPushIndices);
+        boolean aiColShiftable = isShiftableIndex(aiAfterPush.getColumn(), validPushIndices);
+        boolean trRowShiftable = isShiftableIndex(treasureAfterPush.getRow(), validPushIndices);
+        boolean trColShiftable = isShiftableIndex(treasureAfterPush.getColumn(), validPushIndices);
+
+        boolean aiFullyFixed = !aiRowShiftable && !aiColShiftable;
+        boolean trFullyFixed = !trRowShiftable && !trColShiftable;
+
+        boolean alreadyAligned = aiAfterPush.getRow() == treasureAfterPush.getRow()
+                || aiAfterPush.getColumn() == treasureAfterPush.getColumn();
+
+        return aiFullyFixed && trFullyFixed && !alreadyAligned;
+    }
+
+    private Coordinates chooseEscapeMoveTarget(
+            GameStateEventPayload game,
+            GameBoard board,
+            String myPlayerId,
+            Coordinates aiAfterPush,
+            Coordinates treasureAfterPush,
+            int pushIndex,
+            Direction pushDirection,
+            Direction[] rotatedEntrances,
+            List<Integer> validPushIndices
+    ) {
+        Coordinates best = null;
+        int bestScore = Integer.MIN_VALUE;
+
+        for (int r = 0; r < board.getRows(); r++) {
+            for (int c = 0; c < board.getCols(); c++) {
+                Coordinates cand = new Coordinates();
+                cand.setRow(r);
+                cand.setColumn(c);
+
+
+                // reachable after chosen push?
+                List<Coordinates> p = AiPathFindingService.findPathAfterVirtualPush(
+                        board, pushIndex, pushDirection, rotatedEntrances, aiAfterPush, cand
+                );
+                boolean reachable = (p != null && !p.isEmpty());
+                if (!reachable) continue;
+
+                // ignore occupied
+                if (moveTargetHelper.isPositionOccupiedAfterPush(game, cand, myPlayerId, pushIndex, pushDirection)) {
+                    continue;
+                }
+
+                int score = 0;
+
+                // 1) strongest: get onto a shiftable row/col to enable better pushes next round
+                if (isShiftableIndex(cand.getRow(), validPushIndices)) score += 1000;
+                if (isShiftableIndex(cand.getColumn(), validPushIndices)) score += 1000;
+
+                // 2) alignment helps (setups)
+                if (cand.getRow() == treasureAfterPush.getRow()) score += 400;
+                if (cand.getColumn() == treasureAfterPush.getColumn()) score += 400;
+
+                // 3) reduce manhattan distance
+                int dist = boardSimulationHelper.manhattanDistance(cand, treasureAfterPush);
+                score -= dist * 10;
+
+                // tiny nudge to actually move
+                if (!cand.equals(aiAfterPush)) score += 5;
+
+                if (score > bestScore) {
+                    bestScore = score;
+                    best = cand;
+                }
+            }
+        }
+
+        return best;
+    }
+
+
+
 }
 
