@@ -311,6 +311,16 @@ public class GameStateController extends BaseViewCleanup {
             } else {
                 aiTakeoverButton.getStyleClass().remove("ai-on");
             }
+
+            CurrentTurnInfoItem turnInfo = gameViewModel.getCurrentTurnInfoItem();
+            if (turnInfo != null) {
+                boolean current = turnInfo.isAiTakeoverEnabled();
+                boolean desired = newV;
+
+                if (current != desired) {
+                    turnInfo.toggleAiTakeover();
+                }
+            }
         });
 
         aiTakeoverButton.selectedProperty().bindBidirectional(aiTakeoverEnabledProperty);
@@ -412,6 +422,7 @@ public class GameStateController extends BaseViewCleanup {
             }
 
             Integer remaining = me.getRemainingTreasureCount();
+
 
             Integer targetId = null;
             if (remaining == null || remaining == 0) {
