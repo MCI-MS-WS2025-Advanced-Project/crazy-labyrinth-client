@@ -1,101 +1,194 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import java.lang.*?>
-<?import java.util.*?>
-<?import javafx.scene.*?>
+<?import javafx.collections.FXCollections?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<?import javafx.collections.FXCollections?>
-<BorderPane xmlns="http://javafx.com/javafx"
-            xmlns:fx="http://javafx.com/fxml"
-            stylesheets="@/styles/lobby.css"
-            prefHeight="400" prefWidth="800"
-            fx:controller="mci.dibse.crazylabyrinth.client.view.controller.impl.LobbyController">
+<?import java.lang.String?>
+<?import javafx.scene.effect.*?>
 
-    <top>
-        <Label fx:id="gameNameLabel" styleClass="server-name" alignment="CENTER" BorderPane.alignment="CENTER"/>
-    </top>
+<?import javafx.scene.shape.Rectangle?>
+<?import javafx.scene.Group?>
+<StackPane xmlns="http://javafx.com/javafx"
+           xmlns:fx="http://javafx.com/fxml"
+           fx:controller="mci.dibse.crazylabyrinth.client.view.controller.impl.LobbyController"
+           fx:id="viewport"
+           stylesheets="@/styles/shared.css"
+           style="-fx-background-color: linear-gradient(to bottom, #f7f9fc, #eef2f7);"
+           styleClass="viewport">
 
-    <left>
-        <!-- Admin Settings  managed="${controller.isAdmin}"-->
-        <VBox fx:id="adminSettings" spacing="10" >
-            <Label text="Spieleinstellungen" styleClass="section-header"/>
 
-            <!-- Bonus Feature Toggle -->
-            <VBox spacing="5">
-                <Label text="Bonus Feature:" styleClass="setting-label"/>
-                <CheckBox fx:id="bonusEnabledCheck" text="Bonus aktivieren (TODO)"/>
+    <clip>
+        <Rectangle fx:id="rootClip"/>
+    </clip >
+    <!-- Group fx:id="contentGroup" -->
+
+    <BorderPane xmlns="http://javafx.com/javafx"
+                xmlns:fx="http://javafx.com/fxml"
+
+                fx:id="root"
+                styleClass="root">
+
+        <top>
+            <StackPane style="-fx-padding: 12">
+                <Label fx:id="gameNameLabel"
+                       styleClass="server-name"
+                       alignment="CENTER"/>
+            </StackPane>
+        </top>
+
+        <left>
+            <VBox spacing="12"
+            style="-fx-padding: 14"
+            styleClass="card"
+            prefWidth="225"
+            fx:id="leftBar">
+
+                <VBox
+                      spacing="8"
+                      style="-fx-padding: 14"
+                      styleClass="card"
+                      prefWidth="225"
+                      alignment="CENTER">
+                    <Label text="Spielfeld Theme" styleClass="section-header"/>
+                    <ComboBox fx:id="boardTheme" promptText="Spielfeld wählen" maxWidth="180" />
+                </VBox>
+                <Separator/>
+                <!-- Admin Settings -->
+                <VBox fx:id="adminSettings"
+                      spacing="12"
+                      style="-fx-padding: 14"
+                      styleClass="card">
+
+                    <Label text="Spieleinstellungen" styleClass="section-header"/>
+
+                    <!-- Bonus Feature Toggle -->
+                    <VBox spacing="8">
+                        <Label text="Bonus Feature" styleClass="setting-label"/>
+                        <CheckBox fx:id="bonusEnabledCheck" text="Bonus aktivieren"/>
+                        <HBox fx:id="bonusSetting" spacing="8" alignment="CENTER_LEFT">
+                            <Label text="Anzahl Boni" styleClass="setting-label"/>
+                            <Spinner fx:id="bonusCountSpinner" min="0" max="20" initialValue="0"
+                                     maxWidth="75" editable="true"/>
+                        </HBox>
+                    </VBox>
+
+                    <!-- Board Size Selection -->
+                    <VBox spacing="8">
+                        <Label text="Spielfeldgröße" styleClass="setting-label"/>
+                        <ComboBox fx:id="boardSizeCombo" promptText="Größe wählen" maxWidth="150">
+                            <items>
+                                <FXCollections fx:factory="observableArrayList">
+                                    <String fx:value="Klein (5x5)"/>
+                                    <String fx:value="Normal (7x7)"/>
+                                    <String fx:value="Groß (9x9)"/>
+                                </FXCollections>
+                            </items>
+                        </ComboBox>
+                    </VBox>
+
+                    <!-- Treasure Cards Count -->
+                    <VBox spacing="8">
+                        <Label text="Schatzkarten" styleClass="setting-label"/>
+                        <HBox spacing="8" alignment="CENTER_LEFT">
+                            <Spinner fx:id="treasureCardsSpinner" min="1" max="6" initialValue="6"
+                                     maxWidth="75" editable="true"/>
+                            <Label text="pro Spieler"/>
+                        </HBox>
+                    </VBox>
+
+                    <!-- Game Timer -->
+                    <VBox spacing="8">
+                        <Label text="Timer" styleClass="setting-label"/>
+                        <CheckBox fx:id="timerEnabledCheck" text="Timer anpassen"/>
+                        <HBox fx:id="timerSettings" spacing="8" alignment="CENTER_LEFT">
+                            <Label text="Spieldauer (Min)" style="-fx-font-size: 12" styleClass="setting-label"/>
+                            <Spinner fx:id="gameTimerSpinner"
+                                     maxWidth="75" editable="true"/>
+                        </HBox>
+                    </VBox>
+
+                    <Separator/>
+                    <VBox alignment="CENTER">
+                        <Button fx:id="startGameButton" onAction="#onStartButtonClick"
+                                text="Spiel starten"  styleClass="primary-button" maxWidth="150"/>
+                    </VBox>
+
+                </VBox>
+                <Region VBox.vgrow="SOMETIMES"/>
+
+                <Button  text="Vollbild An/Aus" onAction="#onFullscreenToggleButtonClick" styleClass="pill-button"/>
             </VBox>
-
-            <!-- Board Size Selection -->
-            <VBox spacing="5">
-                <Label text="Spielfeldgröße" styleClass="setting-label"/>
-                <ComboBox fx:id="boardSizeCombo" promptText="Select Board Size">
-                    <items>
-                        <FXCollections fx:factory="observableArrayList">
-                            <String fx:value="Klein (5x5)"/>
-                            <String fx:value="Normal (7x7)"/>
-                            <String fx:value="Groß (9x9)"/>
-                        </FXCollections>
-                    </items>
-                </ComboBox>
-            </VBox>
-
-            <!-- Treasure Cards Count -->
-            <VBox spacing="5">
-                <Label text="Schatzkarten" styleClass="setting-label"/>
-                <HBox>
-                    <Spinner fx:id="treasureCardsSpinner" min="1" max="6" initialValue="6" maxWidth="50" editable="true"/>
-                    <Label text="pro Spieler"/>
-                </HBox>
-            </VBox>
-
-            <!-- Game Timer -->
-            <VBox spacing="5">
-                <Label text="Timer" styleClass="setting-label"/>
-                <CheckBox fx:id="timerEnabledCheck" text="Timer anpassen"/>
-                <HBox fx:id="timerSettings">
-                    <Label text="Spieldauer (Minuten)" styleClass="setting-label"/>
-                    <Spinner fx:id="gameTimerSpinner" min="1" max="120" initialValue="30" maxWidth="80" editable="true"/>
-                </HBox>
-
-            </VBox>
-
-
-
-            <!--Spinner fx:id="gameCountSpinner"/-->
-            <Button fx:id="startGameButton" onAction="#onStartButtonClick" text="Start Game"/>
-        </VBox>
-    </left>
+        </left>
 
     <center>
-        <TableView fx:id="playerTable">
-            <columns>
-                <TableColumn fx:id="playerNameColumn" text="Player"/>
-                <TableColumn fx:id="colorColumn" text="Color"/>
-                <TableColumn fx:id="adminColumn" text="Admin"/>
-            </columns>
-        </TableView>
+        <VBox spacing="20" >
+            <VBox spacing="8" style="-fx-padding: 8" styleClass="card">
+                <HBox alignment="CENTER">
+                    <Label text="Lobby" styleClass="section-header,embossed,shadowed">
+                    </Label>
+                </HBox>
+                <TableView fx:id="playerTable" prefHeight="150" maxHeight="175">
+                    <columnResizePolicy>
+                        <TableView fx:constant="CONSTRAINED_RESIZE_POLICY"/>
+                    </columnResizePolicy>
+                    <columns>
+                        <TableColumn fx:id="playerNameColumn" prefWidth="100" text="Spieler"/>
+                        <TableColumn fx:id="colorColumn" prefWidth="100" style="-fx-alignment: CENTER;" text="Farbe"/>
+                        <TableColumn fx:id="adminColumn" prefWidth="100"  style="-fx-alignment: CENTER;" text="Admin"/>
+                    </columns>
+                </TableView>
+            </VBox>
+            <!-- Results section container -->
+            <VBox fx:id="resultsBox" style="-fx-padding: 8"  styleClass="card" spacing="15" visible="false" managed="false">
+                <HBox alignment="CENTER">
+                    <Label text="Ergebnisse" styleClass="section-header,embossed,shadowed">
+                    </Label>
+                </HBox>
+
+                <TableView fx:id="resultsTable" prefHeight="150" maxHeight="175">
+                    <columnResizePolicy>
+                        <TableView fx:constant="CONSTRAINED_RESIZE_POLICY"/>
+                    </columnResizePolicy>
+                    <columns>
+                        <TableColumn fx:id="resultNameColumn" text="Player" prefWidth="100"/>
+                        <TableColumn fx:id="resultScoreColumn" text="Score" prefWidth="40"/>
+                        <TableColumn fx:id="achievements" prefWidth="100" text="Achievements"/>
+                    </columns>
+                </TableView>
+            </VBox>
+        </VBox>
     </center>
 
-    <right>
-        <VBox spacing="10">
-            <Label text="Game Statistics" styleClass="section-header"/>
-            <HBox>
-                <Label  text="Max Players: "/>
-                <Label fx:id="maxPlayers" />
-            </HBox>
-            <HBox>
-                <Label text="Connected: "/>
-                <Label fx:id="connectedPlayers"/>
-            </HBox>
-            <HBox>
-                <Label text="Starting in: "/>
-                <Label fx:id="countdown"/>
-            </HBox>
-            <Button fx:id="leaveLobby" onAction="#onleaveLobbyButtonClick" text="Lobby verlassen"/>
-        </VBox>
-    </right>
+        <right>
 
-</BorderPane>
+
+
+            <VBox spacing="12" style="-fx-padding: 14" styleClass="card" prefWidth="200" fx:id="rightBar">
+
+                <VBox spacing="12" styleClass="card" alignment="CENTER" style="-fx-padding: 10">
+                    <Label text="Game Statistics" styleClass="section-header"/>
+                    <HBox spacing="6" alignment="CENTER_LEFT" style="-fx-padding: 0 0 0 10">
+                        <Label text="Max Players:" styleClass="setting-label"/>
+                        <Label fx:id="maxPlayers" styleClass="value-label"/>
+                    </HBox>
+
+                    <HBox spacing="6" alignment="CENTER_LEFT" style="-fx-padding: 0 0 0 10">
+                        <Label text="Connected:" styleClass="setting-label"/>
+                        <Label fx:id="connectedPlayers" styleClass="value-label"/>
+                    </HBox>
+
+                    <HBox fx:id="countDownBox" spacing="6" alignment="CENTER_LEFT">
+                        <Label text="Starting in:" styleClass="setting-label"/>
+                        <Label fx:id="countdown" styleClass="countdown-label"/>
+                    </HBox>
+                </VBox>
+
+                <Separator/>
+                    <Button fx:id="leaveLobby" onAction="#onleaveLobbyButtonClick"
+                            text="Lobby verlassen" styleClass="secondary-button"/>
+            </VBox>
+        </right>
+    </BorderPane>
+    <!-- /Group -->
+</StackPane>

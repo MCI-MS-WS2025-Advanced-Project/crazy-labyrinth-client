@@ -28,14 +28,16 @@ import org.springframework.web.client.HttpServerErrorException;
  *
  * <h2>Threading</h2>
  * The client uses Java's synchronous HttpClient. Calls block the invoking thread.
- * @author Julian Janetschek
+ *
  */
 @Slf4j
 @Component
 public class ManagementServerClient {
 
     private static final int HTTP_OK = 200;
+    private static final int HTTP_SERVER_ERROR = 500;
     private static final String PATH_GET_SERVERS = "/servers";
+
     private final String managementServerUrl;
     private final String port;
     private final HttpClient httpClient;
@@ -55,11 +57,18 @@ public class ManagementServerClient {
                         .build();
     }
 
-    // TODO impl ErrorResponse Object?
+    /**
+     * Fetch the list of game servers from the management server.
+     *
+     * @return response body as JSON string
+     * @throws GameManagementServerException when the request fails
+     */
     public String getGameServers() throws GameManagementServerException {
         try {
+
             HttpResponse<String> response = sendGetServerRequest();
             return response.body();
+
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             log.error("Request interrupted", e);
@@ -78,13 +87,22 @@ public class ManagementServerClient {
             throw new GameManagementServerException("Unknown host", e);
         } catch (HttpServerErrorException e) {
             log.error("HttpServerError error", e);
-            throw new GameManagementServerException("HttpServerError: " + e.getStatusCode(), e);
+            throw new GameManagementServerException(
+                    "HttpServerError: " + e.getStatusCode(), e, e.getResponseBodyAsString());
         } catch (IOException e) {
             log.error("I/O error during request", e);
             throw new GameManagementServerException("I/O error during request", e);
         }
     }
 
+    /**
+     * Send the HTTP request to retrieve game servers.
+     *
+     * @return HTTP response
+     * @throws IOException when a network error occurs
+     * @throws InterruptedException when the request is interrupted
+     * @throws HttpServerErrorException when the response indicates an error
+     */
     private HttpResponse<String> sendGetServerRequest()
             throws IOException, InterruptedException, HttpServerErrorException {
         HttpRequest request =
@@ -95,16 +113,53 @@ public class ManagementServerClient {
                         .build();
         HttpResponse<String> response =
                 httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-        if (response.statusCode() != HTTP_OK) {
-            System.out.println("response.statusCode: " + response.statusCode());
-            throw new HttpServerErrorException(HttpStatus.valueOf(response.statusCode()));
-        }
-        return response;
+        return validateResponse(response);
     }
 
+    /**
+     * Validate the HTTP response status and throw on errors.
+     *
+     * @param response HTTP response
+     * @return response when status is OK
+     */
+    private HttpResponse<String> validateResponse(HttpResponse<String> response) {
+        int statusCode = response.statusCode();
+        switch (statusCode) {
+            case HTTP_OK:
+                return response;
+            case HTTP_SERVER_ERROR:
+                throw createDetailedServerErrorException(response);
+            default:
+                log.error("Failed to get game servers from management server: {}", statusCode);
+                throw new HttpServerErrorException(HttpStatus.valueOf(statusCode));
+        }
+    }
+
+    /**
+     * Build a detailed server error exception from a response.
+     *
+     * @param response HTTP response
+     * @return server error exception
+     */
+    private HttpServerErrorException createDetailedServerErrorException(
+            HttpResponse<String> response) {
+        return new HttpServerErrorException(
+                HttpStatus.valueOf(response.statusCode()),
+                "Internal Server Error",
+                response.body().getBytes(java.nio.charset.StandardCharsets.UTF_8),
+                java.nio.charset.StandardCharsets.UTF_8);
+    }
+
+    /**
+     * Build the URI for the management server endpoint.
+     *
+     * @return management server URI
+     */
     private URI buildServerUri() {
         String base = managementServerUrl == null ? "" : managementServerUrl.trim();
         String p = (port == null || port.isBlank()) ? "" : ":" + port.trim();
+        URI uri = URI.create(base + p + PATH_GET_SERVERS);
+        log.info("Built URI for management server: {}", uri);
         return URI.create(base + p + PATH_GET_SERVERS);
     }
 }

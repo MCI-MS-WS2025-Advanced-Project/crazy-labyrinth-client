@@ -6,7 +6,7 @@ import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
-import mci.dibse.crazylabyrinth.client.domain.model.GameServer;
+import mci.dibse.crazylabyrinth.client.domain.model.management.GameServer;
 import mci.dibse.crazylabyrinth.client.infrastructure.api.dto.GameServerDTO;
 import mci.dibse.crazylabyrinth.client.infrastructure.management.ManagementServerClient;
 import mci.dibse.crazylabyrinth.client.service.GameServerManagementService;
@@ -19,6 +19,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
+
 /**
  *  @author Julian Janetschek
  */

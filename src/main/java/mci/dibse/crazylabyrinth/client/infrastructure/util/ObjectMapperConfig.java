@@ -5,13 +5,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import mci.dibse.crazylabyrinth.client.domain.model.enums.GameStatus;
 
-/**
- * @author Julian Janetschek
- */
 public class ObjectMapperConfig {
 
+    /**
+     * Create an ObjectMapper with Java time support and ISO date output.
+     *
+     * @return configured ObjectMapper
+     */
     public static ObjectMapper createCustomObjectMapper() {
         ObjectMapper mapper = new ObjectMapper();
         mapper.registerModule(new JavaTimeModule());
@@ -19,6 +20,11 @@ public class ObjectMapperConfig {
         return mapper;
     }
 
+    /**
+     * Create an ObjectMapper configured for event payload deserialization.
+     *
+     * @return configured ObjectMapper
+     */
     public static ObjectMapper createEventObjectMapper() {
         ObjectMapper mapper = createCustomObjectMapper();
 
@@ -32,6 +38,4 @@ public class ObjectMapperConfig {
 
         return mapper;
     }
-    
-
 }

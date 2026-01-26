@@ -1,0 +1,98 @@
+name: Run Tests
+
+# Trigger: push, PR and manually
+on:
+  push:
+    branches:
+      - '**'
+  pull_request:
+    branches:
+      - develop
+      - main
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout client repository
+        uses: actions/checkout@v4
+
+      - name: Checkout labyrinth-interface (for shared models)
+        uses: actions/checkout@v4
+        with:
+          repository: 'brackettz/labyrinth-interface'
+          path: 'labyrinth-interface'
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '25'
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+            node-version: '20'
+
+      - name: Cache Maven dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+
+      - name: Generate Java Models
+        run: |
+          cd labyrinth-interface
+          npm install
+          node models/generate-async-models.js
+
+      - name: Build and install shared models
+        run: |
+          cd labyrinth-interface/models
+          mkdir -p src/main/java/labyrinth/contracts/models 
+          find async -name "*.java" -exec cp {} src/main/java/labyrinth/contracts/models/ \;
+          
+          SHARED_MODEL_VERSION=$(grep '<shared.model.version>' ../../pom.xml | sed 's/.*<shared.model.version>\(.*\)<\/shared.model.version>.*/\1/' | tr -d '[:space:]')
+      
+          cat > pom.xml << 'EOF'
+          <?xml version="1.0" encoding="UTF-8"?>
+          <project xmlns="http://maven.apache.org/POM/4.0.0"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+              <modelVersion>4.0.0</modelVersion>
+              <groupId>mci.dibse.crazylabyrinth</groupId>
+              <artifactId>shared-model</artifactId>
+              <version>PLACEHOLDER_VERSION</version>
+              <properties>
+                  <maven.compiler.source>25</maven.compiler.source>
+                  <maven.compiler.target>25</maven.compiler.target>
+                  <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+              </properties>
+              <dependencies>
+                  <dependency>
+                      <groupId>com.fasterxml.jackson.core</groupId>
+                      <artifactId>jackson-annotations</artifactId>
+                      <version>2.18.2</version>
+                  </dependency>
+                  <dependency>
+                      <groupId>com.fasterxml.jackson.core</groupId>
+                      <artifactId>jackson-databind</artifactId>
+                      <version>2.18.2</version>
+                  </dependency>
+              </dependencies>
+              <build>
+                  <sourceDirectory>src/main/java</sourceDirectory>
+              </build>
+          </project>
+          EOF
+          
+          sed -i "s/PLACEHOLDER_VERSION/$SHARED_MODEL_VERSION/" pom.xml
+          
+          mvn clean install -DskipTests
+
+      - name: Run Tests
+        run: mvn test

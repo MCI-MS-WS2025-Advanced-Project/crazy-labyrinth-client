@@ -1,37 +1,43 @@
 package mci.dibse.crazylabyrinth.client.service;
 
-import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import labyrinth.contracts.models.*;
 import lombok.extern.slf4j.Slf4j;
 import mci.dibse.crazylabyrinth.client.infrastructure.util.ObjectMapperConfig;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
-
-import java.io.IOException;
-
 
 @Slf4j
 @Service
 public class ServerEventService {
 
-
-
-
+    private final ApplicationEventPublisher applicationEventPublisher;
     private final LobbyService lobbyService;
     private final GameService gameService;
-
+    private final TimerService timerService;
+    private final AchievementService achievementService;
 
     @Autowired
-    public ServerEventService(LobbyService lobbyService, GameService gameService) {
+    public ServerEventService(
+            LobbyService lobbyService,
+            GameService gameService,
+            ApplicationEventPublisher applicationEventPublisher,
+            TimerService timerService,
+            AchievementService achievementService) {
         this.lobbyService = lobbyService;
         this.gameService = gameService;
+        this.applicationEventPublisher = applicationEventPublisher;
+        this.timerService = timerService;
+        this.achievementService = achievementService;
     }
 
-
-
+    /**
+     * Parse the raw JSON event and dispatch it to the typed handler.
+     *
+     * @param event raw event JSON from the game server
+     */
     public void handleEvent(String event) {
         ObjectMapper mapper = ObjectMapperConfig.createEventObjectMapper();
         try {
@@ -40,88 +46,117 @@ public class ServerEventService {
         } catch (JsonProcessingException e) {
             log.error("Failed to parse event JSON: {}", e.getMessage());
         }
-
     }
 
-    //TODO complete
+    /**
+     * Route the typed event payload to the appropriate handler.
+     *
+     * @param event parsed event payload
+     */
     private void handleTypedEvent(Object event) {
         switch (event) {
             case ServerInfoPayload serverInfo -> handleServerInfo(serverInfo);
             case ConnectAckEventPayload connectAck -> handleConnectAck(connectAck);
-            case GameStateUpdateEventPayload gameState -> handleGameState(gameState);
-            case GameStartedEventPayload gameStarted -> handleGameStarted(gameStarted);
             case LobbyStateEventPayload lobbyState -> handleLobbyState(lobbyState);
-            case ActionErrorEventPayload errorState -> handleErrorState(errorState);
-            case PlayerTurnEventPayload playerTurn -> handlePlayerTurnEvent(playerTurn);
-            case NextTreasureCardEventPayload nextTreasureCard -> handleNextTreasureCard(nextTreasureCard);
-            case PlayerDisconnectedEventPayload playerDisconnected -> handlePlayerDisconnected(playerDisconnected);
+            case GameStateEventPayload gameState -> handleGameState(gameState);
+            case NextTreasureCardEventPayload nextTreasure -> handleNextTreasure(nextTreasure);
+            case ActionErrorEventPayload actionError -> handleError(actionError);
+            case AchievementUnlockedEventPayload achievement -> handleAchievement(achievement);
+            case GameOverEventPayload gameOver -> handleGameOver(gameOver);
+            case PlayerUpdatedEventPayload playerUpdate -> handlePlayerUpdate(playerUpdate);
             default -> log.warn("Unknown event type: {}", event.getClass().getSimpleName());
         }
     }
 
-
-
-    private String extractTypeFromStream(JsonParser parser) throws IOException {
-        while (parser.nextToken() != null) {
-            if (parser.getCurrentToken() == JsonToken.FIELD_NAME &&
-                    "type".equals(parser.currentName())) {
-                parser.nextToken(); // Move to field value
-                return parser.getValueAsString();
-            }
-        }
-        throw new IllegalArgumentException("No 'type' field found in JSON");
+    /**
+     * Publish an updated player state event.
+     *
+     * @param playerUpdate player update payload
+     */
+    private void handlePlayerUpdate(PlayerUpdatedEventPayload playerUpdate) {
+        log.debug("player update event received {}", playerUpdate);
+        applicationEventPublisher.publishEvent(playerUpdate);
     }
 
-
-
-
-
+    /**
+     * Forward server time information to the timer service.
+     *
+     * @param serverInfo server info payload
+     */
     private void handleServerInfo(ServerInfoPayload serverInfo) {
         log.debug("Received server info: {}", serverInfo);
-        //TODO save server info here
-        // snyc client with server time
+        // applicationEventPublisher.publishEvent(serverInfo);
+        timerService.handleGameServerTimeInfo(serverInfo);
     }
 
+    /**
+     * Publish an action error event to the application bus.
+     *
+     * @param actionError error payload from the server
+     */
+    private void handleError(ActionErrorEventPayload actionError) {
+        log.debug("Received action error: {}", actionError);
+        applicationEventPublisher.publishEvent(actionError);
+    }
+
+    /**
+     * Propagate connection acknowledgement to the lobby service.
+     *
+     * @param connectAck connection acknowledgement payload
+     */
     private void handleConnectAck(ConnectAckEventPayload connectAck) {
         log.debug("Connection acknowledged: {}", connectAck.getIdentifierToken());
         lobbyService.handleConnectAck(connectAck);
     }
+
+    /**
+     * Propagate lobby state updates to the lobby service.
+     *
+     * @param lobbyState lobby state payload
+     */
     private void handleLobbyState(LobbyStateEventPayload lobbyState) {
         log.debug("Lobby state updated: {}", lobbyState);
-        // {"type":"LOBBY_STATE","players":[{"id":"7c561a10-1220-4bf1-a8c4-4fbdc77b55f9","name":"Julian","color":"RED","isAdmin":true,"isAiControlled":false}]}
-        lobbyService.handleLobbyState( lobbyState);
+        lobbyService.handleLobbyState(lobbyState);
     }
 
-    private void handleGameState(GameStateUpdateEventPayload gameState) {
-        log.debug("Game state updated: {}", gameState);
+    /**
+     * Propagate game state updates to the game service.
+     *
+     * @param gameState game state payload
+     */
+    private void handleGameState(GameStateEventPayload gameState) {
+        log.debug("game state updated: {}", gameState);
         gameService.handleGameEvent(gameState);
     }
 
-    private void handleGameStarted(GameStartedEventPayload gameStarted) {
-        log.debug("Game started event arrived: {}", gameStarted);
-        gameService.handleGameEvent(gameStarted);
+    /**
+     * Forward the next treasure event to the game service.
+     *
+     * @param nextTreasure next treasure payload
+     */
+    private void handleNextTreasure(NextTreasureCardEventPayload nextTreasure) {
+        log.debug("next treasure event received {}", nextTreasure);
+        gameService.handleGameEvent(nextTreasure);
     }
 
-    private void handleNextTreasureCard(NextTreasureCardEventPayload nextTreasureCard) {
-        log.debug("Next Treasure Card Arrived: {}", nextTreasureCard);
-        gameService.handleGameEvent(nextTreasureCard);
+    /**
+     * Forward unlocked achievement events to the achievement service.
+     *
+     * @param achievement achievement payload
+     */
+    private void handleAchievement(AchievementUnlockedEventPayload achievement) {
+        log.debug("achievement unlocked event received{}", achievement);
+        // applicationEventPublisher.publishEvent(achievement);
+        achievementService.handleAchievementEvent(achievement);
     }
 
-
-    private void handlePlayerTurnEvent(PlayerTurnEventPayload playerTurn) {
-        log.debug("PLayer turn event arrived: {}", playerTurn);
-        gameService.handleGameEvent(playerTurn);
+    /**
+     * Publish the game over event to the application bus.
+     *
+     * @param gameOver game over payload
+     */
+    private void handleGameOver(GameOverEventPayload gameOver) {
+        log.debug("game over event received {}", gameOver);
+        applicationEventPublisher.publishEvent(gameOver);
     }
-
-    private void handlePlayerDisconnected(PlayerDisconnectedEventPayload playerDisconnected) {
-        log.debug("Player disconnected: {}", playerDisconnected);
-    }
-
-    private void handleErrorState(ActionErrorEventPayload errorState) {
-        log.debug("Action error: {}", errorState);
-        //TODO impl
-       // errorHandler.handleErrorState(errorState);
-    }
-
-
 }

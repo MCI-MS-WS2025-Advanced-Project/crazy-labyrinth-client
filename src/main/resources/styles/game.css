@@ -1,0 +1,383 @@
+/* Root background for the game view */
+.root {
+    -fx-background-color: linear-gradient(to bottom right, #f3f6f1, #e6edf0);
+}
+
+/* Top bar and bottom timer formatting */
+
+
+.topbar { -fx-padding: 6 16; }
+.top-bar-9x9 {-fx-padding: 3 8;}
+.timer-bar { -fx-padding: 6 16; }
+.timer-bar-9x9 { -fx-padding: 3 18; }
+
+
+
+/* Layout grid */
+.main-grid {
+     -fx-padding: 12 16 16 16;
+ }
+
+ /* Compact card variants for small content blocks */
+.compact-card {
+    -fx-padding: 10;
+}
+.image-card {
+    -fx-padding: 12;
+    -fx-background-color: rgba(18, 25, 34, 0.06);
+}
+
+/* Badge (counter) style: pill-like value display */
+.badge {
+    -fx-alignment: CENTER;
+    -fx-padding: 5 14;
+    -fx-background-color: linear-gradient(to bottom, #ffffff, #eaf1f5);
+    -fx-background-radius: 12;
+    -fx-border-color: rgba(15, 23, 42, 0.12);
+    -fx-border-radius: 12;
+    -fx-border-width: 1;
+    -fx-text-fill: #0f172a;
+    -fx-font-size: 13px;
+    -fx-font-weight: 800;
+}
+
+/* Player list items */
+.list-item {
+    -fx-padding: 6 8;
+    -fx-background-color: rgba(255, 255, 255, 0.9);
+    -fx-background-radius: 8;
+    -fx-border-color: rgba(15, 23, 42, 0.12);
+    -fx-border-radius: 8;
+    -fx-border-width: 1;
+}
+
+/* Tile labels overlay */
+.tile-treasure-label {
+    -fx-font-size: 22px;
+    -fx-font-weight: 900;
+    -fx-text-fill: white;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.45), 10, 0.2, 0, 0);
+}
+
+.treasure-image {
+    -fx-effect: dropshadow(gaussian, #fde047, 16, 0.45, 0, 0),
+                dropshadow(gaussian, rgba(0, 0, 0, 0.55), 10, 0.25, 0, 2);
+}
+
+.tile-bonus-label {
+    -fx-translate-y: -20;
+    -fx-font-size: 11px;
+    -fx-text-fill: #0f172a;
+    -fx-effect: dropshadow(gaussian, rgba(255, 255, 255, 0.9), 8, 0.2, 0, 0);
+}
+
+/* Round buttons (rotate) using existing button color schemes */
+.round-button {
+    -fx-background-radius: 24;
+    -fx-min-width: 44;
+    -fx-min-height: 44;
+    -fx-max-width: 44;
+    -fx-max-height: 44;
+    -fx-font-size: 18px;
+    -fx-padding: 0;
+}
+
+/* Board styling */
+.board {
+    -fx-background-color: linear-gradient(to bottom, #5b7f63, #3b5244);
+    -fx-background-radius: 10;
+    -fx-background-insets: 0;
+    -fx-border-color: rgba(10, 14, 20, 0.6);
+    -fx-border-width: 2;
+    -fx-border-radius: 10;
+    -fx-effect: dropshadow(gaussian, rgba(3, 7, 18, 0.55), 28, 0.25, 0, 10),
+                innershadow(gaussian, rgba(255, 255, 255, 0.18), 10, 0.3, 0, 0);
+}
+
+/* Arrow bars and arrows */
+.arrow-bar {
+    -fx-background-color: linear-gradient(to bottom, #1e2a23, #121b16);
+    -fx-border-color: rgba(0, 0, 0, 0.5);
+    -fx-border-width: 1;
+}
+.top-arrow-bar { -fx-background-radius: 12 12 0 0; -fx-pref-height: 15px; }
+.bottom-arrow-bar { -fx-background-radius: 0 0 12 12; -fx-pref-height: 15px; }
+.left-arrow-bar { -fx-pref-width: 15px; }
+.right-arrow-bar { -fx-pref-width: 15px; }
+
+.arrow-button {
+    -fx-background-color: linear-gradient(to bottom, #fdfcf7, #dfe5ee);
+    -fx-text-fill: #0b1220;
+    -fx-background-radius: 20;
+    -fx-padding: 0;
+    -fx-border-color: rgba(15, 23, 42, 0.28);
+    -fx-border-radius: 20;
+    -fx-border-width: 1;
+    -fx-cursor: hand;
+    -fx-font-size: 7px;
+    -fx-font-weight: 800;
+    -fx-margin: 0 6 0 6;
+    -fx-effect: dropshadow(gaussian, rgba(3, 7, 18, 0.35), 10, 0.2, 0, 3);
+}
+.arrow-button-fixed { -fx-background-color: rgba(248, 250, 252, 0.7); }
+.arrow-button-vertical { -fx-pref-width: 16; }
+.arrow-button-horizontal { -fx-pref-height: 16; }
+.arrow-button:disabled {
+    -fx-background-color: transparent;
+    -fx-border-color: rgba(0, 0, 0, 0);
+    -fx-text-fill: rgba(0, 0, 0, 0);
+    -fx-opacity: 1;
+}
+.arrow-button:hover { -fx-background-color: linear-gradient(to bottom, #ffffff, #dfe7f2); }
+.arrow-button:pressed { -fx-background-color: linear-gradient(to bottom, #e2e8f0, #cfd8e6); }
+
+.sidebar-left { -fx-padding: 45 0 60 10; }
+.sidebar-left-wide { -fx-padding: 45 0 60 30; }
+.sidebar-right { /* -fx-padding: 45 10 60 0; */}
+.sidebar-right-wide { /*-fx-padding: 45 30 60 0; */}
+
+.game-container {
+     -fx-padding: 8;
+    -fx-background-color: linear-gradient(to bottom right, rgba(24, 36, 28, 0.85), rgba(12, 18, 15, 0.15));
+    -fx-background-radius: 16;
+    -fx-border-color: rgba(0, 0, 0, 0.35);
+    -fx-border-radius: 16;
+    -fx-border-width: 1;
+    -fx-effect: innershadow(gaussian, rgba(0, 0, 0, 0.35), 14, 0.3, 0, 0);
+}
+
+
+
+/* Bonus box and related controls */
+.bonus-box {
+    -fx-padding: 2;
+    -fx-background-color: linear-gradient(to bottom, #f6f7fa, #e8eef4);
+    -fx-background-radius: 12;
+    -fx-border-color: rgba(15, 23, 42, 0.12);
+    -fx-border-radius: 12;
+    -fx-border-width: 1;
+    -fx-effect: dropshadow(gaussian, rgba(15, 23, 42, 0.12), 14, 0.2, 0, 4);
+}
+
+.bonus-row {
+    -fx-padding: 6 10;
+    -fx-background-color: rgba(255, 255, 255, 0.9);
+    -fx-background-radius: 10;
+    -fx-border-color: rgba(15, 23, 42, 0.12);
+    -fx-border-radius: 10;
+    -fx-border-width: 1;
+}
+
+.bonus-label {
+    -fx-font-size: 12px;
+    -fx-text-fill: #334155;
+    -fx-font-weight: 700;
+}
+
+.bonus-label-image {
+    -fx-fit-height: 14;
+    -fx-fit-width: 14;
+}
+
+.bonus-label-image-wide {
+    -fx-fit-height: 20;
+    -fx-fit-width: 20;
+}
+
+.bonus-badge-circle {
+    -fx-fill: #fff7cc;
+    -fx-stroke: #111827;
+    -fx-stroke-width: 1;
+    -fx-effect: dropshadow(gaussian, rgba(43, 40, 40, 0.35), 10, 0.2, 0, 0);
+}
+
+.count-pill {
+    -fx-padding: 2 8;
+    -fx-background-color: linear-gradient(to bottom, #ffffff, #eaf1f5);
+    -fx-background-radius: 12;
+    -fx-border-color: rgba(15, 23, 42, 0.12);
+    -fx-border-radius: 12;
+    -fx-border-width: 1;
+    -fx-text-fill: #0f172a;
+    -fx-font-size: 12px;
+    -fx-font-weight: 800;
+}
+
+.pill-button {
+    -fx-background-color: linear-gradient(to bottom, #f8fafc, #e8eef6);
+    -fx-background-radius: 14;
+    -fx-text-fill: #0f172a;
+    -fx-font-size: 12px;
+    -fx-cursor: hand;
+    -fx-padding: 0;
+    -fx-border-color: rgba(15, 23, 42, 0.12);
+    -fx-border-radius: 14;
+    -fx-border-width: 1;
+    -fx-pref-width: 30;
+    -fx-pref-height: 20;
+}
+.pill-button:hover { -fx-background-color: linear-gradient(to bottom, #ffffff, #e4ecf6); }
+.pill-button:pressed { -fx-background-color: linear-gradient(to bottom, #dde6f1, #cfd8e6); }
+.pill-button:disabled {
+    -fx-cursor: default;
+    -fx-background-color: rgba(233, 237, 243, 0.35) !important;
+}
+.pill-button:bonus-active { -fx-background-color: #1f7a4a !important; }
+.pill-button:bonus-available { -fx-effect: dropshadow(three-pass-box, #fde047, 10, 0, 0, 0); }
+
+.leaveGameButton {
+    -fx-pref-width: 75 !important;
+    -fx-pref-height: 30 !important;
+    -fx-alignment: CENTER;
+}
+
+/* Player list emphasis */
+.list-item .hbox:first-child .label {
+    -fx-font-size: 13px;
+    -fx-font-weight: 800;
+    -fx-text-fill: linear-gradient(to right, #0f172a, #0f766e);
+    -fx-effect: dropshadow(gaussian, rgba(15, 23, 42, 0.12), 4, 0.2, 0, 1);
+}
+.list-item .hbox:last-child .label {
+    -fx-font-size: 11px;
+    -fx-font-weight: 800;
+    -fx-text-fill: #0f172a;
+    -fx-background-color: linear-gradient(to right, rgba(14, 165, 150, 0.18), rgba(14, 165, 150, 0.06));
+    -fx-background-radius: 999;
+    -fx-padding: 2 8;
+    -fx-border-color: rgba(14, 165, 150, 0.35);
+    -fx-border-radius: 999;
+    -fx-border-width: 1;
+}
+
+#playerLabelsWrapper .section-header {
+    -fx-font-size: 14px;
+    -fx-font-weight: 900;
+    -fx-text-fill: #0b1324;
+    -fx-effect: dropshadow(gaussian, rgba(15, 23, 42, 0.35), 10, 0.25, 0, 2);
+}
+
+/* Featured cards */
+#nextTreasurePane {
+    -fx-background-color: linear-gradient(to bottom, rgba(255, 255, 255, 0.98), rgba(232, 238, 246, 0.95));
+    -fx-background-radius: 14;
+    -fx-border-color: rgba(15, 23, 42, 0.35);
+    -fx-border-radius: 14;
+    -fx-border-width: 2;
+    -fx-padding: 12;
+    -fx-effect: dropshadow(gaussian, rgba(15, 23, 42, 0.25), 18, 0.25, 0, 6),
+                innershadow(gaussian, rgba(255, 255, 255, 0.6), 10, 0.3, 0, 0);
+}
+
+.nextTreasurePaneWrapper-wide {
+    -fx-padding: 10 40 10 40;
+}
+#extraTileWrapper {
+    -fx-background-color: linear-gradient(to bottom, rgba(255, 255, 255, 0.98), rgba(232, 238, 246, 0.95));
+    -fx-border-color: rgba(15, 23, 42, 0.35);
+    -fx-border-radius: 16;
+    -fx-background-radius: 16;
+    -fx-border-width: 2;
+    -fx-effect: dropshadow(gaussian, rgba(15, 23, 42, 0.25), 18, 0.25, 0, 6),
+                innershadow(gaussian, rgba(255, 255, 255, 0.6), 10, 0.3, 0, 0);
+}
+#extraTileContainer {
+    -fx-background-color: linear-gradient(to bottom, rgba(214, 220, 230, 0.95), rgba(245, 248, 252, 0.85));
+    -fx-border-color: rgba(15, 23, 42, 0.28);
+    -fx-border-radius: 10;
+    -fx-background-radius: 10;
+    -fx-border-width: 1;
+    -fx-effect: innershadow(gaussian, rgba(0, 0, 0, 0.35), 12, 0.35, 0, 0),
+                dropshadow(gaussian, rgba(15, 23, 42, 0.2), 8, 0.2, 0, 2);
+}
+
+/* Theme skins for the game board */
+.theme-runehaven .root,
+.theme-runehaven.viewport {
+    -fx-background-color: linear-gradient(to bottom right, rgba(224, 252, 252, 0.93), #d3eff8);
+}
+.theme-runehaven .board {
+    -fx-background-color: linear-gradient(to bottom, rgba(8, 128, 110, 0.25), rgba(4, 90, 90, 0.34));
+    -fx-border-color: rgba(0, 64, 64, 0.8);
+    -fx-effect: dropshadow(gaussian, rgba(0, 50, 60, 0.6), 32, 0.3, 0, 12),
+                innershadow(gaussian, rgba(176, 251, 255, 0.35), 14, 0.4, 0, 0);
+}
+.theme-runehaven .arrow-bar {
+    -fx-background-color: linear-gradient(to bottom, #004d4d, #002626);
+}
+.theme-runehaven .game-container {
+    -fx-background-color: linear-gradient(to bottom right, rgba(0, 77, 77, 0.85), rgba(0, 38, 38, 0.22));
+}
+.theme-runehaven .badge,
+.theme-runehaven .count-pill {
+    -fx-background-color: linear-gradient(to bottom, #ffffff, #d6fdfd);
+}
+
+.theme-glowing-caves .root,
+.theme-glowing-caves.viewport {
+    -fx-background-color: linear-gradient(to bottom right, #edf7f6, #c7e3f3);
+}
+.theme-glowing-caves .board {
+    -fx-background-color: linear-gradient(to bottom, #1a4a52, #0f2830);
+    -fx-border-color: rgba(3, 24, 30, 0.8);
+    -fx-effect: dropshadow(gaussian, rgba(3, 25, 35, 0.65), 30, 0.3, 0, 12),
+                innershadow(gaussian, rgba(56, 255, 234, 0.12), 14, 0.4, 0, 0);
+}
+.theme-glowing-caves .arrow-bar {
+    -fx-background-color: linear-gradient(to bottom, #082a31, #061a20);
+}
+.theme-glowing-caves .game-container {
+    -fx-background-color: linear-gradient(to bottom right, rgba(7, 42, 50, 0.85), rgba(6, 18, 22, 0.22));
+}
+.theme-glowing-caves .badge,
+.theme-glowing-caves .count-pill {
+    -fx-background-color: linear-gradient(to bottom, #f2fffd, #d7f1f0);
+}
+.theme-glowing-caves .pill-button {
+    -fx-border-color: rgba(6, 182, 212, 0.35);
+}
+
+.theme-stone-catacombs .root,
+.theme-stone-catacombs.viewport {
+    -fx-background-color: linear-gradient(to bottom right, #f3f4f6, #e2e8f0);
+}
+.theme-stone-catacombs .board {
+    -fx-background-color: linear-gradient(to bottom, #656d76, #3b4249);
+    -fx-border-color: rgba(10, 12, 16, 0.75);
+    -fx-effect: dropshadow(gaussian, rgba(8, 10, 15, 0.6), 28, 0.25, 0, 10),
+                innershadow(gaussian, rgba(255, 255, 255, 0.12), 10, 0.3, 0, 0);
+}
+.theme-stone-catacombs .arrow-bar {
+    -fx-background-color: linear-gradient(to bottom, #242a31, #1a1f25);
+}
+.theme-stone-catacombs .game-container {
+    -fx-background-color: linear-gradient(to bottom right, rgba(46, 53, 61, 0.85), rgba(22, 26, 31, 0.22));
+}
+.theme-stone-catacombs .badge,
+.theme-stone-catacombs .count-pill {
+    -fx-background-color: linear-gradient(to bottom, #ffffff, #e7ecf2);
+}
+
+.theme-emberforge .root,
+.theme-emberforge.viewport {
+    -fx-background-color: linear-gradient(to bottom right, #f7f2eb, #efe4d7);
+}
+.theme-emberforge .board {
+    -fx-background-color: linear-gradient(to bottom, #8a4a3a, #4a241d);
+    -fx-border-color: rgba(32, 12, 8, 0.85);
+    -fx-effect: dropshadow(gaussian, rgba(40, 10, 6, 0.7), 30, 0.3, 0, 12),
+                innershadow(gaussian, rgba(255, 120, 60, 0.18), 14, 0.4, 0, 0);
+}
+.theme-emberforge .arrow-bar {
+    -fx-background-color: linear-gradient(to bottom, #2b1511, #1a0d0a);
+}
+.theme-emberforge .game-container {
+    -fx-background-color: linear-gradient(to bottom right, rgba(64, 26, 18, 0.88), rgba(28, 12, 9, 0.24));
+}
+.theme-emberforge .badge,
+.theme-emberforge .count-pill {
+    -fx-background-color: linear-gradient(to bottom, #fff5ed, #f2e0d6);
+}
+.theme-emberforge .pill-button {
+    -fx-border-color: rgba(234, 88, 12, 0.35);
+}
