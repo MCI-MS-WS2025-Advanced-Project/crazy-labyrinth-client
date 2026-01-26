@@ -1,0 +1,288 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.*?>
+<?import java.util.*?>
+<?import javafx.scene.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.shape.Circle?>
+<?import java.net.URL?>
+
+<?import javafx.scene.shape.Rectangle?>
+<StackPane xmlns="http://javafx.com/javafx"
+           xmlns:fx="http://javafx.com/fxml"
+           fx:controller="mci.dibse.crazylabyrinth.client.view.controller.impl.GameStateController"
+           fx:id="viewport"
+           styleClass="viewport">
+
+    <stylesheets>
+        <URL value="@/styles/shared.css"/>
+        <URL value="@/styles/game.css"/>
+    </stylesheets>
+
+    <clip>
+        <Rectangle fx:id="rootClip"/>
+    </clip>
+    <!-- Group fx:id="contentGroup" -->
+    <BorderPane xmlns="http://javafx.com/javafx"
+                xmlns:fx="http://javafx.com/fxml"
+                fx:id="root"
+                styleClass="root">
+
+
+
+
+        <!-- ================== TOP ================== -->
+        <top>
+            <StackPane  fx:id="topBar" prefHeight="45" styleClass="card,topbar">
+                <Label fx:id="playerTurnLabel"
+                       styleClass="section-header"
+                       StackPane.alignment="CENTER"/>
+                <HBox alignment="CENTER_RIGHT"
+                      spacing="8"
+                      StackPane.alignment="CENTER_RIGHT">
+                    <Label text="Spielzug Zeit:" styleClass="setting-label"/>
+                    <Label fx:id="turnCounterLabel" styleClass="badge"/>
+                </HBox>
+            </StackPane>
+        </top>
+
+        <!-- ================== BOTTOM ================== -->
+        <bottom>
+            <StackPane fx:id="bottomBar" prefHeight="55" styleClass="card,timer-bar">
+                <HBox alignment="CENTER"
+                      spacing="12"> <!-- styleClass="card,timer-bar" -->
+                    <Label text="Verbleibende Spiel Zeit:" styleClass="setting-label"/>
+                    <Label fx:id="gameCounterLabel" styleClass="badge"/>
+                </HBox>
+
+                <HBox StackPane.alignment="CENTER_LEFT" spacing="12">
+                    <Button alignment="CENTER_LEFT" text="Vollbild An/Aus" onAction="#onFullscreenToggleButtonClick" styleClass="secondary-button" />
+                    <ToggleButton fx:id="aiTakeoverButton"
+                                  alignment="CENTER"
+                                  text="🤖 Vertretung"
+                                  styleClass="secondary-button"/>
+
+                </HBox>
+
+                <Button StackPane.alignment="CENTER_RIGHT" alignment="CENTER" fx:id="leaveGameButton" onAction="#onLeaveGameButtonClick" text="Verlassen" styleClass="pill-button, leaveGameButton"/>
+            </StackPane>
+        </bottom>
+
+
+        <!-- ================== MAIN GAME AREA ================== -->
+        <center>
+            <GridPane fx:id="mainLayoutGrid" styleClass="main-grid">
+                <columnConstraints>
+                    <ColumnConstraints fx:id="leftGameGridColomn" percentWidth="18.0" hgrow="SOMETIMES" />
+                    <ColumnConstraints fx:id="middleGameGridColomn" percentWidth="64.0" hgrow="SOMETIMES" />
+                    <ColumnConstraints fx:id="rightGameGridColomn" percentWidth="18.0" hgrow="SOMETIMES" />
+                </columnConstraints>
+                <rowConstraints>
+                    <RowConstraints vgrow="SOMETIMES" />
+                </rowConstraints>
+                <!-- LEFT SIDEBAR -->
+                <VBox fx:id="leftSidebar" spacing="12"  GridPane.columnIndex="0">
+                    <!-- ... content from your old <left> section ... -->
+                    <VBox spacing="12" fx:id="nextTreasurePaneWrapper" alignment="TOP_CENTER" styleClass="card" >
+                        <Label text="Nächster Schatz"  styleClass="section-header"/>
+                        <StackPane fx:id="nextTreasurePane" styleClass="card,compact-card">
+                            <!--Label fx:id="nextTreasure" styleClass="value-label"/ -->
+                            <ImageView fx:id="nextTreasureImage" fitWidth="110" fitHeight="100" />
+                        </StackPane>
+                    </VBox>
+
+                    <VBox spacing="12" fx:id="bonusBox" alignment="TOP_CENTER" fillWidth="true" styleClass="card,bonus-box">
+                        <Label text="Verfügbare Boni" styleClass="section-header"/>
+                        <HBox fx:id="bonusSwapBox" spacing="10" styleClass="bonus-row">
+                            <StackPane fx:id="swapBonusBadge" StackPane.alignment="TOP_RIGHT">
+                                <!-- White disk + black ring -->
+                                <Circle fx:id="bonusSwapCircle"   styleClass="bonus-badge-circle"/>
+
+                                <!-- swapBonusImage -->
+                                <ImageView fx:id="swapBonusImage">
+                                    <clip>
+                                        <Circle fx:id="bonusSwapClip"/>
+                                    </clip>
+                                </ImageView>
+                            </StackPane>
+                            <Label text="Swap" styleClass="bonus-label"/>
+                            <Region HBox.hgrow="ALWAYS"/>
+                            <Label fx:id="bonusSwapCount" styleClass="count-pill"/>
+                            <Button fx:id="bonusSwapButton" onAction="#onBonusSwapButtonClick" text="▷" styleClass="pill-button"/>
+                        </HBox>
+                        <HBox fx:id="bonusBeamBox" spacing="5" styleClass="bonus-row">
+                            <StackPane fx:id="beamBonusBadge" StackPane.alignment="TOP_RIGHT">
+                                <!-- White disk + black ring -->
+                                <Circle fx:id="bonusBeamCircle"  styleClass="bonus-badge-circle"/>
+
+                                <!-- beamBonusImage -->
+                                <ImageView fx:id="beamBonusImage" >
+                                    <clip>
+                                        <Circle fx:id="bonusBeamClip" />
+                                    </clip>
+                                </ImageView>
+                            </StackPane>
+                            <Label text="Beam" styleClass="bonus-label"/>
+                            <Region HBox.hgrow="ALWAYS"/>
+                            <Label fx:id="bonusBeamCount" styleClass="count-pill"/>
+                            <Button fx:id="bonusBeamButton" onAction="#onBonusBeamButtonClick" text="▷" styleClass="pill-button"/>
+                        </HBox>
+                        <HBox fx:id="bonusPushTwiceBox" spacing="5" styleClass="bonus-row">
+                            <StackPane fx:id="pushTwiceBonusBadge" StackPane.alignment="TOP_RIGHT">
+                                <!-- White disk + black ring -->
+                                <Circle fx:id="bonusPushTwiceCircle"  styleClass="bonus-badge-circle"/>
+
+                                <!-- Clipped bonus image (18x18) -->
+                                <ImageView fx:id="pushTwiceBonusImage" >
+                                    <clip>
+                                        <Circle fx:id="bonusPushTwiceClip"/>
+                                    </clip>
+                                </ImageView>
+                            </StackPane>
+                            <Label text="Push twice" styleClass="bonus-label"/>
+                            <Region HBox.hgrow="ALWAYS"/>
+                            <Label fx:id="bonusPushTwiceCount" styleClass="count-pill"/>
+                            <Button fx:id="bonusPushTwiceButton" onAction="#onBonusPushTwiceButtonClick" text="▷" styleClass="pill-button"/>
+                        </HBox>
+                        <HBox fx:id="bonusPushFixedBox" spacing="5" styleClass="bonus-row">
+                            <StackPane fx:id="pushFixedBonusBadge" StackPane.alignment="TOP_RIGHT">
+                                <!-- White disk + black ring -->
+                                <Circle fx:id="bonusPushFixedCircle"  styleClass="bonus-badge-circle"/>
+
+                                <!-- Clipped bonus image (18x18) -->
+                                <ImageView fx:id="pushFixedBonusImage" >
+                                    <clip>
+                                        <Circle fx:id="bonusPushFixedClip" />
+                                    </clip>
+                                </ImageView>
+                            </StackPane>
+                            <Label text="Push fixed" styleClass="bonus-label"/>
+                            <Region HBox.hgrow="ALWAYS"/>
+                            <Label fx:id="bonusPushFixedCount" styleClass="count-pill"/>
+                            <Button fx:id="bonusPushFixedButton" onAction="#onBonusPushFixedButtonClick" text="▷" styleClass="pill-button"/>
+                        </HBox>
+                    </VBox>
+                </VBox>
+
+                <!-- CENTER GAME AREA -->
+                <StackPane fx:id="centerStackPane"  GridPane.columnIndex="1">
+                    <BorderPane fx:id="gameContainer"  styleClass="game-container" >
+                        <center>
+                            <StackPane fx:id="centerWrapper">
+                                <GridPane fx:id="boardGrid" alignment="CENTER" styleClass="board"/>
+                            </StackPane>
+                        </center>
+
+                        <!-- ARROWS -->
+                        <top>
+                            <HBox fx:id="topArrowBox" alignment="CENTER" fillHeight="false" styleClass="arrow-bar,top-arrow-bar"/>
+                        </top>
+                        <bottom>
+                            <HBox fx:id="bottomArrowBox" alignment="CENTER_LEFT" fillHeight="false" styleClass="arrow-bar,bottom-arrow-bar"/>
+                        </bottom>
+                        <left>
+                            <VBox fx:id="leftArrowBox" alignment="CENTER" fillWidth="false" styleClass="arrow-bar,left-arrow-bar"/>
+                        </left>
+                        <right>
+                            <VBox fx:id="rightArrowBox" alignment="CENTER" fillWidth="false" styleClass="arrow-bar,right-arrow-bar"/>
+                        </right>
+                    </BorderPane>
+                </StackPane>
+
+                <!-- RIGHT SIDEBAR -->
+                <VBox fx:id="rightSidebar" alignment="TOP_CENTER"   GridPane.columnIndex="2">
+                    <Region VBox.vgrow="SOMETIMES"/>
+                    <VBox fx:id="playerLabelsWrapper" alignment="TOP_CENTER" spacing="10" styleClass="card">
+                        <Label text="Spieler" styleClass="section-header" />
+                        <VBox spacing="8" alignment="CENTER_LEFT">
+                            <VBox fx:id="player1Box" spacing="5" alignment="CENTER_LEFT" styleClass="list-item">
+                                <HBox spacing="5">
+                                    <Circle fx:id="player1Circle" radius="7"/>
+                                    <Label fx:id="player1" styleClass="value-label"/>
+                                </HBox>
+                                <HBox spacing="5" alignment="CENTER_LEFT">
+                                    <Region minWidth="14" prefWidth="14" maxWidth="14" />
+                                    <Label fx:id="player1Status" text="Playerholder" styleClass="value-label"/>
+                                </HBox>
+                            </VBox>
+                            <VBox fx:id="player2Box" spacing="5" alignment="CENTER_LEFT" styleClass="list-item">
+                                <HBox spacing="5">
+                                    <Circle fx:id="player2Circle" radius="7"/>
+                                    <Label fx:id="player2" styleClass="value-label"/>
+                                </HBox>
+                                <HBox spacing="5" alignment="CENTER_LEFT">
+                                    <Region minWidth="14" prefWidth="14" maxWidth="14" />
+                                    <Label fx:id="player2Status" text="Playerholder" styleClass="value-label"/>
+                                </HBox>
+                            </VBox>
+                            <VBox fx:id="player3Box" spacing="5" alignment="CENTER_LEFT" styleClass="list-item">
+                                <HBox spacing="5">
+                                    <Circle fx:id="player3Circle" radius="7"/>
+                                    <Label fx:id="player3" styleClass="value-label"/>
+                                </HBox>
+                                <HBox spacing="5" alignment="CENTER_LEFT">
+                                    <Region  minWidth="14" prefWidth="14" maxWidth="14"/>
+                                    <Label fx:id="player3Status" text="Playerholder" styleClass="value-label"/>
+                                </HBox>
+                            </VBox>
+                            <VBox fx:id="player4Box" spacing="5" alignment="CENTER_LEFT" styleClass="list-item">
+                                <HBox spacing="5">
+                                    <Circle fx:id="player4Circle" radius="7"/>
+                                    <Label fx:id="player4" styleClass="value-label"/>
+                                </HBox>
+                                <HBox spacing="5" alignment="CENTER_LEFT">
+                                    <Region  minWidth="14" prefWidth="14" maxWidth="14"/>
+                                    <Label fx:id="player4Status" text="Playerholder" styleClass="value-label"/>
+                                </HBox>
+                            </VBox>
+                        </VBox>
+                    </VBox>
+
+                    <Region VBox.vgrow="SOMETIMES"/>
+
+                    <VBox fx:id="extraTileWrapper" fillWidth="false" alignment="CENTER" spacing="12" styleClass="card" >
+                        <Label text="Gang Karte" styleClass="section-header"/>
+                        <StackPane fx:id="extraTileContainer" styleClass="card,image-card">
+                            <ImageView fx:id="extraTile" fitWidth="110" fitHeight="110"/> <!-- fitWidth="110" fitHeight="110" -->
+                            <!--Label fx:id="extraTileTreasureLabel" styleClass="tile-treasure-label"/-->
+                            <ImageView fx:id="extraTileTreasure"/>
+                            <!-- Bonus badge pinned to top-right -->
+                            <StackPane fx:id="bonusBadge"
+                                       prefWidth="20" prefHeight="20"
+                                       maxWidth="20"  maxHeight="20"
+                                       StackPane.alignment="TOP_RIGHT">
+                                <padding>
+                                    <Insets top="2" right="2"/>
+                                </padding>
+
+
+                                <!-- White disk + black ring -->
+                                <Circle centerX="10" centerY="10" radius="10"
+                                        fill="#fffbd5" stroke="BLACK" strokeWidth="1"/>
+
+                                <!-- Clipped bonus image (18x18) -->
+                                <ImageView fx:id="extraTileBonusImage"
+                                           fitWidth="18" fitHeight="18">
+                                    <clip>
+                                        <Circle centerX="9" centerY="9" radius="9"/>
+                                    </clip>
+                                </ImageView>
+                            </StackPane>
+                        </StackPane>
+                        <HBox spacing="12" alignment="CENTER">
+                            <Button fx:id="rotateRightButton" text="⟳" prefWidth="44" styleClass="round-button,secondary-button"/>
+                        </HBox>
+                    </VBox>
+                    <Region VBox.vgrow="SOMETIMES"/>
+                </VBox>
+
+            </GridPane>
+        </center>
+
+    </BorderPane>
+    <!-- /Group -->
+</StackPane>
+

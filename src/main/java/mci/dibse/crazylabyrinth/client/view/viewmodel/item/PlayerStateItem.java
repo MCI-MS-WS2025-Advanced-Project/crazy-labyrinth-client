@@ -1,157 +1,196 @@
 package mci.dibse.crazylabyrinth.client.view.viewmodel.item;
 
-import javafx.beans.property.*;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
-import labyrinth.contracts.models.AchievementType;
-import labyrinth.contracts.models.BonusType;
-import labyrinth.contracts.models.PlayerState;
-import labyrinth.contracts.models.Treasure;
-
-
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
+import javafx.beans.property.*;
+import javafx.collections.FXCollections;
+import labyrinth.contracts.models.*;
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
+import mci.dibse.crazylabyrinth.client.infrastructure.util.JavaFXUtils;
 
-public class PlayerStateItem implements Disposable {
+@Slf4j
+public class PlayerStateItem extends BaseItem<PlayerState> {
 
-    private final java.util.concurrent.atomic.AtomicBoolean pendingUpdate =
-            new java.util.concurrent.atomic.AtomicBoolean(false);
+    @Getter private final ObjectProperty<PlayerInfoItem> playerInfo = new SimpleObjectProperty<>();
 
-    private final ObjectProperty<PlayerInfoItem> playerInfo = new SimpleObjectProperty<>();
+    @Getter
     private final ObjectProperty<CoordinatesItem> currentPosition = new SimpleObjectProperty<>();
-    private final ObjectProperty<CoordinatesItem> homePosition = new SimpleObjectProperty<>();
-    private final ListProperty<TreasureItem> treasuresFound = new SimpleListProperty<>(FXCollections.observableArrayList());
-    private final IntegerProperty remainingTreasureCount = new SimpleIntegerProperty();
-    private final ListProperty<AchievementType> achievementTypes = new SimpleListProperty<>(FXCollections.observableArrayList());
-    private final ListProperty<BonusType> availableBonusTypes = new SimpleListProperty<>(FXCollections.observableArrayList());
 
+    @Getter
+    private final ObjectProperty<CoordinatesItem> previousPosition = new SimpleObjectProperty<>();
+
+    @Getter
+    private final ObjectProperty<CoordinatesItem> homePosition = new SimpleObjectProperty<>();
+
+    @Getter
+    private final ListProperty<TreasureItem> treasuresFound =
+            new SimpleListProperty<>(FXCollections.observableArrayList());
+
+    @Getter private final IntegerProperty remainingTreasureCount = new SimpleIntegerProperty();
+
+    @Getter
+    private final ListProperty<AchievementType> achievementTypes =
+            new SimpleListProperty<>(FXCollections.observableArrayList());
+
+    @Getter
+    private final ListProperty<BonusType> availableBonusTypes =
+            new SimpleListProperty<>(FXCollections.observableArrayList());
 
     public PlayerStateItem(PlayerState source) {
-        List<TreasureItem> treasureItems = Arrays.stream(source.getTreasuresFound()).map(TreasureItem::new).toList();
-        List<AchievementType> achievements = Arrays.stream(source.getAchievements()).toList();
+        super();
+        List<TreasureItem> treasureItems =
+                Arrays.stream(source.getTreasuresFound()).map(TreasureItem::new).toList();
+
+        List<AchievementType> achievements = processAchievementList(source);
+
         List<BonusType> bonuses = Arrays.stream(source.getAvailableBonuses()).toList();
-        Runnable apply = () -> {
-
-            this.playerInfo.set(new PlayerInfoItem(source.getPlayerInfo()));
-            System.out.println("playerInfoItem created" + source.getPlayerInfo().toString());
-
-            this.currentPosition.set(new CoordinatesItem(source.getCurrentPosition()));
-            this.homePosition.set(new CoordinatesItem(source.getHomePosition()));
-
-            this.treasuresFound.set(FXCollections.observableArrayList(treasureItems));
-
-            this.remainingTreasureCount.set(source.getRemainingTreasureCount());
-
-            this.achievementTypes.set(FXCollections.observableArrayList(achievements));
-
-            this.availableBonusTypes.set(FXCollections.observableArrayList(bonuses));
-        };
-        if (javafx.application.Platform.isFxApplicationThread()) apply.run();
-        else javafx.application.Platform.runLater(apply);
+        Runnable apply =
+                () -> {
+                    this.playerInfo.set(new PlayerInfoItem(source.getPlayerInfo()));
+                    this.currentPosition.set(new CoordinatesItem(source.getCurrentPosition()));
+                    this.homePosition.set(new CoordinatesItem(source.getHomePosition()));
+                    this.treasuresFound.set(FXCollections.observableArrayList(treasureItems));
+                    this.remainingTreasureCount.set(source.getRemainingTreasureCount());
+                    this.achievementTypes.set(FXCollections.observableArrayList(achievements));
+                    this.availableBonusTypes.set(FXCollections.observableArrayList(bonuses));
+                };
+        JavaFXUtils.runOnFxThread(apply);
     }
 
-    public void updateFrom(PlayerState source) {
-        List<Treasure> treasures = Arrays.stream(source.getTreasuresFound()).toList();
-        List<TreasureItem> notExistingTreasures = treasures.stream()
-                .filter(t -> !this.treasuresFound.get().stream().map(i -> i.getId().get()).toList().contains(t.getId())).map(TreasureItem::new)
-                .toList();
-        Runnable apply = () -> {
-            System.out.println("PlayerStateItem: currentPosition: " + source.getPlayerInfo().getName() +"  " + source.getCurrentPosition().toString() + "");
-            this.currentPosition.get().updateFrom(source.getCurrentPosition());
-            this.treasuresFound.addAll(notExistingTreasures);
-            this.playerInfo.get().updateFrom(source.getPlayerInfo());
-        };
-
-        if (javafx.application.Platform.isFxApplicationThread()) apply.run();
-        else javafx.application.Platform.runLater(apply);
-
+    /**
+     * Update the nested player info item.
+     *
+     * @param playerInfo player info payload
+     */
+    public void updatePlayerInfoFrom(PlayerInfo playerInfo) {
+        log.debug("updatePlayerInfoFrom {}", playerInfo);
+        this.playerInfo.get().updateFrom(playerInfo);
     }
 
-    public PlayerInfoItem getPlayerInfo() {
-        return playerInfo.get();
+    /**
+     * Return the player id.
+     *
+     * @return player id
+     */
+    public String getPlayerIdAsString() {
+        return playerInfo.get().getId();
     }
 
-    public ObjectProperty<PlayerInfoItem> playerInfoProperty() {
-        return playerInfo;
+    /**
+     * Return the player name.
+     *
+     * @return player name
+     */
+    public String getPlayerNameAsString() {
+        return playerInfo.get().getName();
     }
 
-    public void setPlayerInfo(PlayerInfoItem playerInfo) {
-        this.playerInfo.set(playerInfo);
+    /**
+     * Return the player color.
+     *
+     * @return player color
+     */
+    public PlayerColor getPlayerColor() {
+        return playerInfo.get().getColor();
     }
 
-    public CoordinatesItem getCurrentPosition() {
-        return currentPosition.get();
+    /**
+     * Return the current row position of the player.
+     *
+     * @return current row
+     */
+    public int getPlayerCurrentRowAsInt() {
+        return currentPosition.get().getRowAsInt();
     }
 
-    public ObjectProperty<CoordinatesItem> currentPositionProperty() {
-        return currentPosition;
+    /**
+     * Return the current column position of the player.
+     *
+     * @return current column
+     */
+    public int getPlayerCurrentColumnAsInt() {
+        return currentPosition.get().getColumnAsInt();
     }
 
-    public void setCurrentPosition(CoordinatesItem currentPosition) {
-        this.currentPosition.set(currentPosition);
+    /**
+     * Return the remaining treasure count.
+     *
+     * @return remaining treasure count
+     */
+    public int getRemainingTreasureCountAsInt() {
+        return remainingTreasureCount.intValue();
     }
 
-    public CoordinatesItem getHomePosition() {
-        return homePosition.get();
+    /**
+     * Count available bonuses of the given type.
+     *
+     * @param type bonus type to count
+     * @return available count
+     */
+    public int getAvailableBonusCountForType(BonusType type) {
+        return Math.toIntExact(availableBonusTypes.stream().filter(type::equals).count());
     }
 
-    public ObjectProperty<CoordinatesItem> homePositionProperty() {
-        return homePosition;
+    /**
+     * Return the number of treasures found.
+     *
+     * @return number of treasures found
+     */
+    public int getTreasuresFoundAsInt() {
+        return treasuresFound.size();
     }
 
-    public void setHomePosition(CoordinatesItem homePosition) {
-        this.homePosition.set(homePosition);
+    /**
+     * Check whether the player is AI controlled.
+     *
+     * @return true if AI controlled
+     */
+    public boolean isPlayerAiControlled() {
+        return playerInfo.get().getIsAiControlled();
     }
 
-    public ObservableList<TreasureItem> getTreasuresFound() {
-        return treasuresFound.get();
-    }
-
-    public ListProperty<TreasureItem> treasuresFoundProperty() {
-        return treasuresFound;
-    }
-
-    public void setTreasuresFound(ObservableList<TreasureItem> treasuresFound) {
-        this.treasuresFound.set(treasuresFound);
-    }
-
-    public int getRemainingTreasureCount() {
-        return remainingTreasureCount.get();
-    }
-
-    public IntegerProperty remainingTreasureCountProperty() {
-        return remainingTreasureCount;
-    }
-
-    public void setRemainingTreasureCount(int remainingTreasureCount) {
-        this.remainingTreasureCount.set(remainingTreasureCount);
-    }
-
-    public ObservableList<AchievementType> getAchievementTypes() {
-        return achievementTypes.get();
-    }
-
-    public ListProperty<AchievementType> achievementTypesProperty() {
-        return achievementTypes;
-    }
-
-
-
-    public ObservableList<BonusType> getAvailableBonusTypes() {
-        return availableBonusTypes.get();
-    }
-
-    public ListProperty<BonusType> availableBonusTypesProperty() {
-        return availableBonusTypes;
-    }
-
-
-
-
-
+    /**
+     * Update player state from the latest payload.
+     *
+     * @param source player state payload
+     */
     @Override
-    public void dispose() {
+    protected void updateItemFromSource(PlayerState source) {
+        List<Treasure> treasures = Arrays.stream(source.getTreasuresFound()).toList();
+        List<TreasureItem> notExistingTreasures =
+                treasures.stream()
+                        .filter(
+                                t ->
+                                        !this.treasuresFound.get().stream()
+                                                .map(TreasureItem::getId)
+                                                .toList()
+                                                .contains(t.getId()))
+                        .map(TreasureItem::new)
+                        .toList();
+        if (this.currentPosition.get() != null) {
+            this.previousPosition.set(this.currentPosition.get());
+        }
+        this.currentPosition.set(new CoordinatesItem(source.getCurrentPosition()));
+        this.treasuresFound.addAll(notExistingTreasures);
+        this.playerInfo.get().updateFrom(source.getPlayerInfo());
+
+        this.remainingTreasureCount.set(source.getRemainingTreasureCount());
+
+        List<AchievementType> achievements = processAchievementList(source);
+        this.achievementTypes.set(FXCollections.observableArrayList(achievements));
+
+        List<BonusType> bonuses = Arrays.stream(source.getAvailableBonuses()).toList();
+        // bonuses = bonuses.stream().filter(a -> !this.availableBonusTypes.contains(a)).toList();
+        // this.availableBonusTypes.addAll(bonuses);
+        this.availableBonusTypes.set(FXCollections.observableArrayList(bonuses));
+    }
+
+    /**
+     * Dispose nested items and clear collections.
+     */
+    @Override
+    protected void disposeItem() {
         playerInfo.get().dispose();
         currentPosition.get().dispose();
         homePosition.get().dispose();
@@ -159,9 +198,19 @@ public class PlayerStateItem implements Disposable {
         treasuresFound.clear();
         achievementTypes.clear();
         availableBonusTypes.clear();
-        playerInfo.set(null);
-        currentPosition.set(null);
-        homePosition.set(null);
+
+        playerInfo.unbind();
+        currentPosition.unbind();
+        homePosition.unbind();
+    }
+
+    // "Wir hatten ausgemacht, dass die Achievements erst am Schluss mittels achievementUnlockEvent
+    // (Broadcast) "verteilt" werden und nicht während dem Spiel"
+    private List<AchievementType> processAchievementList(PlayerState source) {
+        List<AchievementType> achievements;
+        if (source.getAchievements() != null)
+            achievements = Arrays.stream(source.getAchievements()).toList();
+        else achievements = new java.util.ArrayList<>();
+        return achievements;
     }
 }
-

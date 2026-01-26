@@ -1,16 +1,20 @@
 package mci.dibse.crazylabyrinth.client.infrastructure.exceptions;
 
-
-/**
- *
- *  @author Julian Janetschek
- */
+import lombok.Getter;
+import lombok.Setter;
 
 public class GameManagementServerException extends Exception {
-    public GameManagementServerException() {}
+
+    @Getter @Setter String errorResponseBody;
 
     public GameManagementServerException(String message, Throwable cause) {
         super(message, cause);
+    }
+
+    public GameManagementServerException(
+            String message, Throwable cause, String errorResponseBody) {
+        super(message, cause);
+        this.errorResponseBody = errorResponseBody;
     }
 
     public GameManagementServerException(String message) {

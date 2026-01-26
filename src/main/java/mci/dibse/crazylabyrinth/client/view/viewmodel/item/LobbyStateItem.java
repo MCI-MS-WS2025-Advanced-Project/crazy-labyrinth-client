@@ -1,134 +1,132 @@
 package mci.dibse.crazylabyrinth.client.view.viewmodel.item;
 
+import java.util.Arrays;
+import java.util.List;
 import javafx.beans.Observable;
-import javafx.beans.property.*;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.MapChangeListener;
 import javafx.collections.ObservableList;
 import javafx.collections.ObservableMap;
+import labyrinth.contracts.models.LobbyStateEventPayload;
+import labyrinth.contracts.models.PlayerInfo;
 import lombok.Getter;
 import lombok.Setter;
-import mci.dibse.crazylabyrinth.client.domain.model.LobbyState;
-import mci.dibse.crazylabyrinth.client.domain.model.PlayerInfo;
 import mci.dibse.crazylabyrinth.client.domain.model.record.GameInfoRecord;
+import mci.dibse.crazylabyrinth.client.infrastructure.util.JavaFXUtils;
 
-import java.util.List;
-import java.util.Map;
+public class LobbyStateItem extends BaseItem<LobbyStateEventPayload> {
 
-public class LobbyStateItem implements Disposable{
-
-    private final java.util.concurrent.atomic.AtomicBoolean pendingUpdate =
-            new java.util.concurrent.atomic.AtomicBoolean(false);
-
+    @Getter private final StringProperty playerCount = new SimpleStringProperty();
+    @Getter private final StringProperty maxPlayers = new SimpleStringProperty();
+    @Getter private final StringProperty serverName = new SimpleStringProperty();
 
     private final ObservableMap<String, PlayerInfoItem> byId = FXCollections.observableHashMap();
-
-    @Setter @Getter
-    private ObservableList<PlayerInfoItem> playerList = FXCollections.observableArrayList(item -> new Observable[] {
-            item.idProperty(),
-            item.nameProperty(),
-            item.colorProperty(),
-            item.isAdminProperty(),
-            item.isAdminProperty()
-    });
-
-    // TODO observable needed?
-    private final ObjectProperty<Map<String, Object>> additionalProperties = new SimpleObjectProperty<>();
-
-    @Getter
-    private final StringProperty playerCount = new SimpleStringProperty();
-    @Getter
-    private final StringProperty maxPlayers = new SimpleStringProperty();
-    @Getter
-    private final StringProperty serverName = new SimpleStringProperty();
     private MapChangeListener<String, PlayerInfoItem> mapChangeListener;
 
+    @Setter @Getter
+    private ObservableList<PlayerInfoItem> playerList =
+            FXCollections.observableArrayList(
+                    item ->
+                            new Observable[] {
+                                item.idProperty(),
+                                item.nameProperty(),
+                                item.colorProperty(),
+                                item.isAiControlledProperty(),
+                                item.isAdminProperty()
+                            });
 
-
-    public LobbyStateItem(LobbyState source) {
-        mapChangeListener = (MapChangeListener<String, PlayerInfoItem>) change -> {
-            Runnable apply = () -> {
-                if (change.wasAdded()) playerList.add(change.getValueAdded());
-                if (change.wasRemoved()) playerList.remove(change.getValueRemoved());
-                this.playerCount.set(String.valueOf(playerList.size()));
-
-                System.out.println("LobbyStateItem: MapChangeListener: palsyerlist" + playerList.size());
-                 System.out.println("LobbyStateItem: MapChangeListener: playerCount" + playerCount.getValue());
-            };
-            if (javafx.application.Platform.isFxApplicationThread()) apply.run();
-            else javafx.application.Platform.runLater(apply);
-        };
-
-        byId.addListener(mapChangeListener);
-
-        updateFrom(source);
-
-        //TODO neded?
-      // this.strongListener = evt -> updateFrom(source);
-      // source.addListener(strongListener);
+    public LobbyStateItem(LobbyStateEventPayload source) {
+        super();
+        mapChangeListener = initMapChangeListener();
+        Runnable apply =
+                () -> {
+                    byId.addListener(this.mapChangeListener);
+                    updateFrom(source);
+                };
+        JavaFXUtils.runOnFxThread(apply);
     }
 
+    /**
+     * Dispose listener bindings and clear properties.
+     */
     @Override
-    public void dispose() {
-        // Remove listener to prevent memory leaks
+    protected void disposeItem() {
         byId.removeListener(mapChangeListener);
-
-        // Clear collections and remove listeners
         byId.clear();
         playerList.clear();
+        mapChangeListener = null;
+        playerList = null;
 
-        // Clear properties
         playerCount.set(null);
         maxPlayers.set(null);
         serverName.set(null);
-        additionalProperties.set(null);
-
-        // Clear references
-        mapChangeListener = null;
-        playerList = null;
     }
 
-
-    public void updateFrom(LobbyState source) {
-        if (pendingUpdate.compareAndSet(false, true)) {
-            if (javafx.application.Platform.isFxApplicationThread()) {
-                updateItemFromSource(source);
-                pendingUpdate.set(false);
-            } else {
-                javafx.application.Platform.runLater(() -> updateItemFromSource(source));
-                pendingUpdate.set(false);
-            }
-        }
-    }
-
+    /**
+     * Update lobby info from the game info record.
+     *
+     * @param info game info record
+     */
     public void updateFromGameInfo(GameInfoRecord info) {
         this.serverName.set(info.serverName());
         this.maxPlayers.set(info.maxPlayers());
     }
 
-    private void updateItemFromSource(LobbyState source) {
-        System.out.println("LobbyStateItem: updateFromSource");
-        List<PlayerInfo> playerInfos = source.getPlayers();
-        // Remove players that are no longer in the source list
-        byId.keySet().removeIf(playerId ->
-                playerInfos.stream().noneMatch(info -> info.getId().equals(playerId)));
-
-       System.out.println("LobbyStateItem: incoming playerInfos: " + playerInfos.size());
-
+    /**
+     * Update player list and counts from the lobby payload.
+     *
+     * @param source lobby state payload
+     */
+    protected void updateItemFromSource(LobbyStateEventPayload source) {
+        List<PlayerInfo> playerInfos = Arrays.asList(source.getPlayers());
+        byId.keySet()
+                .removeIf(
+                        playerId ->
+                                playerInfos.stream()
+                                        .noneMatch(info -> info.getId().equals(playerId)));
         this.playerCount.set(String.valueOf(playerInfos.size()));
         playerInfos.stream()
-                .map(this::playerItemFromPlayerInfo)
-                .forEach(item -> {byId.putIfAbsent(item.getId(), item);});
-
-        System.out.println("LobbyStateItem: byId: " + byId.size());
-        System.out.println("LobbyStateItem: playerList: " + playerList.size());
-
-        additionalProperties.set(source.getAdditionalProperties());
+                .map(
+                        i -> {
+                            if (byId.containsKey(i.getId())) {
+                                PlayerInfoItem item = byId.get(i.getId());
+                                item.updateFrom(i);
+                                return item;
+                            } else {
+                                return playerItemFromPlayerInfo(i);
+                            }
+                        })
+                .forEach(item -> byId.putIfAbsent(item.getId(), item));
     }
 
-    private PlayerInfoItem playerItemFromPlayerInfo(PlayerInfo playerInfo){
+    /**
+     * Create a player item from player info.
+     *
+     * @param playerInfo player info payload
+     * @return new player item
+     */
+    private PlayerInfoItem playerItemFromPlayerInfo(PlayerInfo playerInfo) {
         return new PlayerInfoItem(playerInfo);
     }
 
-
+    /**
+     * Build a listener to keep the player list in sync with the map.
+     *
+     * @return configured map change listener
+     */
+    private MapChangeListener<String, PlayerInfoItem> initMapChangeListener() {
+        return (MapChangeListener<String, PlayerInfoItem>)
+                change -> {
+                    Runnable apply =
+                            () -> {
+                                if (change.wasAdded()) playerList.add(change.getValueAdded());
+                                if (change.wasRemoved())
+                                    playerList.remove(change.getValueRemoved());
+                                this.playerCount.set(String.valueOf(playerList.size()));
+                            };
+                    JavaFXUtils.runOnFxThread(apply);
+                };
+    }
 }

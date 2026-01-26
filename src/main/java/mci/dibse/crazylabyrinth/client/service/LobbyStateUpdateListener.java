@@ -1,7 +1,8 @@
 package mci.dibse.crazylabyrinth.client.service;
 
-import mci.dibse.crazylabyrinth.client.domain.model.LobbyState;
+import labyrinth.contracts.models.LobbyStateEventPayload;
 
 public interface LobbyStateUpdateListener {
-    void onLobbyStateUpdated(LobbyState lobbyState);
+
+    void onLobbyStateUpdated(LobbyStateEventPayload lobbyState);
 }

@@ -1,21 +1,10 @@
 package mci.dibse.crazylabyrinth.client.view.viewmodel.item;
 
-import javafx.application.Platform;
 import javafx.beans.property.*;
-import javafx.scene.paint.Color;
 import labyrinth.contracts.models.PlayerColor;
-import mci.dibse.crazylabyrinth.client.domain.model.PlayerInfo;
+import labyrinth.contracts.models.PlayerInfo;
 
-public class PlayerInfoItem implements Disposable {
-
-    private final java.util.concurrent.atomic.AtomicBoolean pendingUpdate =
-            new java.util.concurrent.atomic.AtomicBoolean(false);
-
-
-    //TODO remove?
-//    private final java.beans.PropertyChangeListener strongListener;
-
-
+public class PlayerInfoItem extends BaseItem<PlayerInfo> {
 
     private final StringProperty id = new SimpleStringProperty();
     private final StringProperty name = new SimpleStringProperty();
@@ -23,107 +12,119 @@ public class PlayerInfoItem implements Disposable {
     private final BooleanProperty isAdmin = new SimpleBooleanProperty();
     private final BooleanProperty isAiControlled = new SimpleBooleanProperty();
 
-    //TODO remove mci.dibse.crazylabyrinth.client.domain.model.PlayerInfo and replace with labyrinth.contracts.models.PlayerInfo --> Workaound second constructor
     public PlayerInfoItem(PlayerInfo source) {
-
+        super();
         updateFrom(source);
-        /*
-        this.strongListener = (event) -> updateFrom(source);
-        source.addListener(strongListener);
-
-         */
-
     }
 
-    public void updateFrom(PlayerInfo source) {
-        if (pendingUpdate.compareAndSet(false, true)) {
-            if (javafx.application.Platform.isFxApplicationThread()) {
-                updateItemFromSource(source);
-                pendingUpdate.set(false);
-            } else {
-                Platform.runLater(() -> updateItemFromSource(source));
-                pendingUpdate.set(false);
-            }
-        }
-    }
-    private void updateItemFromSource(PlayerInfo source) {
-        this.id.set(source.getId());
+    /**
+     * Update item state from the source player info.
+     *
+     * @param source player info payload
+     */
+    protected void updateItemFromSource(PlayerInfo source) {
+        id.set(source.getId());
         name.set(source.getName());
         color.set(source.getColor());
         isAdmin.set(source.getIsAdmin());
         isAiControlled.set(source.getIsAiControlled());
     }
 
-
-    public PlayerInfoItem(labyrinth.contracts.models.PlayerInfo source) {
-        System.out.println("PlayerInfoItem: source: " + source);
-        this.id.set(source.getId());
-        updateFrom(source);
-    }
-    public void updateFrom(labyrinth.contracts.models.PlayerInfo source) {
-        if (pendingUpdate.compareAndSet(false, true)) {
-            if (javafx.application.Platform.isFxApplicationThread()) {
-                updateItemFromSource(source);
-                pendingUpdate.set(false);
-            } else {
-                Platform.runLater(() -> updateItemFromSource(source));
-                pendingUpdate.set(false);
-            }
-        }
-    }
-    private void updateItemFromSource(labyrinth.contracts.models.PlayerInfo source) {
-        name.set(source.getName());
-        color.set(source.getColor());
-        isAdmin.set(source.getIsAdmin());
-        isAiControlled.set(source.getIsAiControlled());
-    }
-
-
+    /**
+     * Return the player id.
+     *
+     * @return player id
+     */
     public String getId() {
         return id.get();
     }
 
-    public javafx.beans.property.StringProperty idProperty() {
+    /**
+     * Return the id property.
+     *
+     * @return id property
+     */
+    public StringProperty idProperty() {
         return id;
     }
 
+    /**
+     * Return the player name.
+     *
+     * @return player name
+     */
     public String getName() {
         return name.get();
     }
 
-    public javafx.beans.property.StringProperty nameProperty() {
+    /**
+     * Return the name property.
+     *
+     * @return name property
+     */
+    public StringProperty nameProperty() {
         return name;
     }
 
+    /**
+     * Return the player color.
+     *
+     * @return player color
+     */
     public PlayerColor getColor() {
         return color.get();
     }
 
-    public javafx.beans.property.ObjectProperty<PlayerColor> colorProperty() {
+    /**
+     * Return the color property.
+     *
+     * @return color property
+     */
+    public ObjectProperty<PlayerColor> colorProperty() {
         return color;
     }
 
+    /**
+     * Return whether the player is an admin.
+     *
+     * @return true if admin
+     */
     public Boolean getIsAdmin() {
         return isAdmin.get();
     }
 
-    public javafx.beans.property.BooleanProperty isAdminProperty() {
+    /**
+     * Return the admin property.
+     *
+     * @return admin property
+     */
+    public BooleanProperty isAdminProperty() {
         return isAdmin;
     }
 
+    /**
+     * Return whether the player is AI controlled.
+     *
+     * @return true if AI controlled
+     */
     public Boolean getIsAiControlled() {
         return isAiControlled.get();
     }
 
-    public javafx.beans.property.BooleanProperty isAiControlledProperty() {
+    /**
+     * Return the AI controlled property.
+     *
+     * @return AI controlled property
+     */
+    public BooleanProperty isAiControlledProperty() {
         return isAiControlled;
     }
 
-
-
+    /**
+     * Dispose item state; no-op for player info.
+     */
     @Override
-    public void dispose() {
-        //TODO something to do?
+    protected void disposeItem() {
+        // nothing to do here
     }
-
 }

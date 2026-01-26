@@ -26,7 +26,7 @@ import mci.dibse.crazylabyrinth.client.domain.model.enums.GameStatus;
  * </ul>
  * </p>
  *
- * @author Julian Janetschek
+ *
  */
 @Setter
 @Getter
@@ -38,7 +38,8 @@ public class GameServerDTO {
 
     @NotNull private URI uri;
 
-    @Min(2) @Max(4)
+    @Min(2)
+    @Max(4)
     private int maxPlayers;
 
     @Min(0)
@@ -46,15 +47,9 @@ public class GameServerDTO {
 
     @NotNull private GameStatus status;
 
-    // TODO: keep as Instant here & format to readable String in frontend?
-    /*
-       type: string
-       format: date-time
-       example: "2025-10-07T14:12:00Z"
-    */
     @NotNull private Instant lastSeen;
 
-    public GameServerDTO(){}
+    public GameServerDTO() {}
 
     public GameServerDTO(
             UUID id,
@@ -73,19 +68,30 @@ public class GameServerDTO {
         this.lastSeen = lastSeen;
     }
 
+    /**
+     * Return a string representation of the game server DTO.
+     *
+     * @return string representation
+     */
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder("GameServer{");
-        sb.append("id=").append(id)
-                .append(", name='").append(name).append('\'')
-                .append(", uri=").append(uri)
-                .append(", maxPlayers=").append(maxPlayers)
-                .append(", currentPlayerCount=").append(currentPlayerCount)
-                .append(", status=").append(status)
-                .append(", lastSeen=").append(lastSeen)
+        sb.append("id=")
+                .append(id)
+                .append(", name='")
+                .append(name)
+                .append('\'')
+                .append(", uri=")
+                .append(uri)
+                .append(", maxPlayers=")
+                .append(maxPlayers)
+                .append(", currentPlayerCount=")
+                .append(currentPlayerCount)
+                .append(", status=")
+                .append(status)
+                .append(", lastSeen=")
+                .append(lastSeen)
                 .append('}');
         return sb.toString();
     }
-
-
 }

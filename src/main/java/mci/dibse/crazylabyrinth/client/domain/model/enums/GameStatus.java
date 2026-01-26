@@ -7,7 +7,7 @@ package mci.dibse.crazylabyrinth.client.domain.model.enums;
  *     - `IN_GAME`: Game is currently running
  *     - `FINISHED`: Game has ended
  *
- * @author Julian Janetschek
+ *
  */
 public enum GameStatus {
     LOBBY,

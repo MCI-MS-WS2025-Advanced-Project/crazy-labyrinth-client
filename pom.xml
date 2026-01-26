@@ -29,13 +29,13 @@
 
 	<packaging>jar</packaging>
 	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<java.version>25</java.version>
 		<javafx.version>25.0.1</javafx.version>
 		<maven.failsafe.version>3.5.4</maven.failsafe.version>
 		<maven.javadoc.version>3.6.3</maven.javadoc.version>
-		<maven.surefire.version>3.5.4</maven.surefire.version>
-		<shared.model.version>0.0.5</shared.model.version>
-        <mockito.version>5.17.0</mockito.version>
+		<shared.model.version>0.0.9</shared.model.version>
+		<mockito.version>5.17.0</mockito.version>
         <jakarta.validation.version>3.1.1</jakarta.validation.version>
         <hibernate.validation.version>8.0.3.Final</hibernate.validation.version>
 	</properties>
@@ -110,13 +110,13 @@
 			<version>${shared.model.version}</version>
 		</dependency>
 		<!-- install jar in local repo
-             mvn install:install-file \
-                -Dfile=/path/to/shared-model-1.0.0.jar \
-                -DgroupId=mci.dibse.crazylabyrinth \
-                -DartifactId=shared-model \
-                -Dversion=1.0.0 \
-                -Dpackaging=jar
-         -->
+     mvn install:install-file \
+        -Dfile=/path/to/shared-model-0.0.9.jar \
+        -DgroupId=mci.dibse.crazylabyrinth \
+        -DartifactId=shared-model \
+        -Dversion=0.0.9 \
+        -Dpackaging=jar
+ 	-->
 
 
 		<!-- https://mvnrepository.com/artifact/jakarta.validation/jakarta.validation-api -->
@@ -125,11 +125,18 @@
 			<artifactId>jakarta.validation-api</artifactId>
 			<version>${jakarta.validation.version}</version>
 		</dependency>
+
 		<dependency>
 			<groupId>org.hibernate.validator</groupId>
 			<artifactId>hibernate-validator</artifactId>
 			<version>${hibernate.validation.version}</version>
 		</dependency>
+
+        <dependency>
+            <groupId>org.testfx</groupId>
+            <artifactId>openjfx-monocle</artifactId>
+            <version>jdk-12.0.1+2</version> <scope>test</scope>
+        </dependency>
 	</dependencies>
 
 	<build>
@@ -180,14 +187,6 @@
 			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-surefire-plugin</artifactId>
-				<version>${maven.surefire.version}</version>
-				<configuration>
-					<argLine>-XX:+EnableDynamicAgentLoading -Xshare:off</argLine>
-				</configuration>
-			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-failsafe-plugin</artifactId>
 				<version>${maven.failsafe.version}</version>
 				<executions>
@@ -199,7 +198,6 @@
 					</execution>
 				</executions>
 				<configuration>
-					<argLine>-XX:+EnableDynamicAgentLoading -Xshare:off</argLine>
 					<includes>
 						<include>**/*IT.java</include>
 						<include>**/*ITCase.java</include>
@@ -232,15 +230,58 @@
 			</properties>
 		</profile>
 
-		<profile>
-			<id>mac</id>
-			<activation>
-				<os><name>mac os x</name></os>
-			</activation>
-			<properties>
-				<javafx.platform>mac</javafx.platform>
-			</properties>
-		</profile>
-	</profiles>
+        <profile>
+            <id>mac-arm</id>
+            <activation>
+                <os>
+                    <family>mac</family>
+                    <arch>aarch64</arch>
+                </os>
+            </activation>
+            <properties>
+                <javafx.platform>mac-aarch64</javafx.platform>
+            </properties>
+        </profile>
+
+        <profile>
+            <id>mac-intel</id>
+            <activation>
+                <os>
+                    <family>mac</family>
+                    <arch>x86_64</arch>
+                </os>
+            </activation>
+            <properties>
+                <javafx.platform>mac</javafx.platform>
+            </properties>
+        </profile>
+
+        <profile>
+            <id>headless-test</id>
+            <activation>
+                <property>
+                    <name>env.GITHUB_ACTIONS</name>
+                    <value>true</value>
+                </property>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <configuration>
+                            <systemPropertyVariables>
+                                <prism.order>sw</prism.order>
+                                <testfx.headless>true</testfx.headless>
+                                <testfx.robot>glass</testfx.robot>
+                                <glass.platform>Monocle</glass.platform>
+                                <monocle.platform>Headless</monocle.platform>
+                            </systemPropertyVariables>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 
 </project>

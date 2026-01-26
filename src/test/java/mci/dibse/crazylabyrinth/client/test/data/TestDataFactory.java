@@ -6,9 +6,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
-import mci.dibse.crazylabyrinth.client.domain.model.GameServer;
 import mci.dibse.crazylabyrinth.client.domain.model.enums.GameStatus;
+import mci.dibse.crazylabyrinth.client.domain.model.management.GameServer;
 import mci.dibse.crazylabyrinth.client.infrastructure.api.dto.GameServerDTO;
+
 /**
  *  @author Julian Janetschek
  */

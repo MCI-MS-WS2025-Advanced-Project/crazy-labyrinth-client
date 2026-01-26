@@ -1,57 +1,91 @@
 package mci.dibse.crazylabyrinth.client.service;
 
+import static mci.dibse.crazylabyrinth.client.domain.context.ApplicationEvents.BACK_TO_GAME_SERVER_DASHBOARD;
+import static mci.dibse.crazylabyrinth.client.infrastructure.util.CommandUtils.mapCommandToMessage;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.HashMap;
 import labyrinth.contracts.models.*;
 import lombok.extern.slf4j.Slf4j;
+import mci.dibse.crazylabyrinth.client.domain.context.PushTileCommandRecord;
 import mci.dibse.crazylabyrinth.client.domain.model.record.GameInfoRecord;
 import mci.dibse.crazylabyrinth.client.domain.model.record.StartGameRecord;
-import mci.dibse.crazylabyrinth.client.infrastructure.util.ObjectMapperConfig;
+import mci.dibse.crazylabyrinth.client.infrastructure.exceptions.ConnectionException;
+import mci.dibse.crazylabyrinth.client.infrastructure.exceptions.GeneralUiException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
-
-import java.util.HashMap;
-
-import static mci.dibse.crazylabyrinth.client.domain.context.ApplicationEvents.BACK_TO_GAME_SERVER_DASHBOARD;
-
 
 @Component
 @Slf4j
 public class ClientCommandService {
 
-
-
     private final GameServerSocketService gameServerSocketService;
     private final ApplicationEventPublisher eventPublisher;
 
     @Autowired
-    public ClientCommandService(GameServerSocketService gameServerSocketService, ApplicationEventPublisher eventPublisher) {
+    public ClientCommandService(
+            GameServerSocketService gameServerSocketService,
+            ApplicationEventPublisher eventPublisher) {
         this.gameServerSocketService = gameServerSocketService;
         this.eventPublisher = eventPublisher;
     }
 
+    /**
+     * Send a connect command using the provided game info.
+     *
+     * @param gameInfo connection data for the game server
+     */
     public void sendConnectCommand(GameInfoRecord gameInfo) {
-        ConnectCommandPayload command  = new ConnectCommandPayload();
+        ConnectCommandPayload command = new ConnectCommandPayload();
         command.setType(CommandType.CONNECT);
-        //TODO impl reconnect
-      //  connectCommandPayload.setPlayerId();
         command.setUsername(gameInfo.playerName());
-        System.out.println("gameInfo " + gameInfo.toString());
+        log.debug("Sending connect command to client {}", command);
 
         try {
             String json = mapCommandToMessage(CommandType.CONNECT, command);
-            gameServerSocketService.connectToServer(gameInfo.uri().toString(), json);
+            gameServerSocketService.connectToServerAndSendMessage(gameInfo.uri().toString(), json);
 
         } catch (JsonProcessingException e) {
             log.error("Failed to map connect command to json", e);
-            return;
+            throw new GeneralUiException("Something went wrong! Please contact support!");
+        } catch (ConnectionException _) {
+            log.error("Failed to connect to server");
+            throw new GeneralUiException("Something went wrong while connecting to server");
         }
+
         eventPublisher.publishEvent(gameInfo);
     }
 
-    public void sendStartGameCommand(StartGameRecord startGameRecord) {
+    /**
+     * Send a disconnect command and reset local socket state.
+     */
+    public void sendDisconnectCommand() {
+        DisconnectCommandPayload command = new DisconnectCommandPayload();
+        command.setType(CommandType.DISCONNECT);
+        try {
+            String json = mapCommandToMessage(CommandType.DISCONNECT, command);
+            gameServerSocketService.sendCommand(json, null);
+        } catch (JsonProcessingException e) {
+            log.error("Failed to map disconnect command to json", e);
+            throw new GeneralUiException("Failed to send command");
+        } catch (GeneralUiException _) {
+            log.error("Failed to send command");
+            throw new GeneralUiException("Failed to send command");
+        } finally {
+            gameServerSocketService.setBlockForReceivingMessages(false);
+            eventPublisher.publishEvent(CommandType.DISCONNECT);
+            eventPublisher.publishEvent(BACK_TO_GAME_SERVER_DASHBOARD);
+        }
+    }
+
+    /**
+     * Send a start game command with the selected configuration.
+     *
+     * @param startGameRecord game start settings
+     * @throws GeneralUiException when the socket fails to send
+     */
+    public void sendStartGameCommand(StartGameRecord startGameRecord) throws GeneralUiException {
         StartGameCommandPayload command = new StartGameCommandPayload();
         command.setType(CommandType.START_GAME);
 
@@ -65,76 +99,156 @@ public class ClientCommandService {
         command.setTreasureCardCount(startGameRecord.treasureCardCount());
 
         command.setTotalBonusCount(startGameRecord.totalBonusCount());
+
         try {
             String json = mapCommandToMessage(CommandType.START_GAME, command);
-            System.out.println("json " + json);
-            gameServerSocketService.sendCommand(json);
+            log.debug("startGameCommand {}", json);
+            gameServerSocketService.sendCommand(json, CommandType.START_GAME);
         } catch (JsonProcessingException e) {
             log.error("Failed to map start game command to json", e);
         }
     }
 
-    public void sendDisconnectCommand() {
-        DisconnectCommandPayload command = new DisconnectCommandPayload();
-        command.setType(CommandType.DISCONNECT);
-        try {
-            String json = mapCommandToMessage(CommandType.DISCONNECT, command);
-            gameServerSocketService.sendCommand(json);
-        } catch (JsonProcessingException e) {
-            log.error("Failed to map disconnect command to json", e);
+    /**
+     * Send a push tile command based on the provided data.
+     *
+     * @param data push tile command parameters
+     */
+    public void sendPushTileCommand(PushTileCommandRecord data) {
+        Object command = null;
+        if (CommandType.PUSH_TILE.equals(data.commandType())) {
+            PushTileCommandPayload payload = new PushTileCommandPayload();
+            payload.setType(data.commandType());
+            payload.setDirection(data.pushDirection());
+            payload.setRowOrColIndex(data.index());
+            command = payload;
+        } else if (CommandType.USE_PUSH_FIXED.equals(data.commandType())) {
+            UsePushFixedCommandPayload payload = new UsePushFixedCommandPayload();
+            payload.setType(CommandType.USE_PUSH_FIXED);
+            payload.setDirection(data.pushDirection());
+            payload.setRowOrColIndex(data.index());
+            command = payload;
         }
-        eventPublisher.publishEvent(BACK_TO_GAME_SERVER_DASHBOARD);
-
+        if (command == null) return;
+        try {
+            String json = mapCommandToMessage(data.commandType(), command);
+            gameServerSocketService.sendCommand(json, data.commandType());
+        } catch (JsonProcessingException e) {
+            log.error("Failed to map push tile command to json", e);
+            throw new GeneralUiException("Failed to process push tile command");
+        } catch (GeneralUiException _) {
+            log.error("Failed to send push tile command");
+            throw new GeneralUiException("Failed to send push tile command");
+        }
     }
 
-
-    public void sendPushTileCommand(int index, Direction pushDirection, Direction[] extraTileEntrances) {
-        PushTileCommandPayload command = new PushTileCommandPayload();
-        command.setType(CommandType.PUSH_TILE);
-        command.setDirection(pushDirection);
-        command.setTileEntrances(extraTileEntrances);
-        command.setRowOrColIndex(index);
-        try {
-            String json = mapCommandToMessage(CommandType.PUSH_TILE, command);
-            gameServerSocketService.sendCommand(json);
-        } catch (JsonProcessingException e) {
-            log.error("Failed to map disconnect command to json", e);
-        }
-    }
-
+    /**
+     * Send a move pawn command to the target grid coordinate.
+     *
+     * @param finalRow target row
+     * @param finalCol target column
+     */
     public void sendMovePawnCommand(int finalRow, int finalCol) {
         MovePawnCommandPayload command = new MovePawnCommandPayload();
         command.setType(CommandType.MOVE_PAWN);
         Coordinates coordinates = new Coordinates();
-        coordinates.setX(finalCol);
-        coordinates.setY(finalRow);
+        coordinates.setColumn(finalCol);
+        coordinates.setRow(finalRow);
         coordinates.setAdditionalProperties(new HashMap<>());
         command.setTargetCoordinates(coordinates);
         command.setAdditionalProperties(new HashMap<>());
         try {
             String json = mapCommandToMessage(CommandType.MOVE_PAWN, command);
-            gameServerSocketService.sendCommand(json);
+            gameServerSocketService.sendCommand(json, null);
         } catch (JsonProcessingException e) {
             log.error("Failed to map disconnect command to json", e);
+            throw new GeneralUiException("Failed to send move command");
+        } catch (GeneralUiException _) {
+            log.error("Failed to send move command");
+            throw new GeneralUiException("Failed to send  move command");
         }
-
     }
 
-
-    //TODO
-    private String mapCommandToMessage(CommandType command, Object payload) throws JsonProcessingException {
-        ObjectMapper mapper = ObjectMapperConfig.createCustomObjectMapper();
-        return switch (command) {
-            case CommandType.CONNECT -> mapper.writeValueAsString((ConnectCommandPayload) payload);
-            case CommandType.START_GAME -> mapper.writeValueAsString((StartGameCommandPayload) payload);
-            case CommandType.DISCONNECT -> mapper.writeValueAsString((DisconnectCommandPayload) payload);
-            case CommandType.PUSH_TILE -> mapper.writeValueAsString((PushTileCommandPayload) payload);
-            case CommandType.MOVE_PAWN -> mapper.writeValueAsString((MovePawnCommandPayload) payload);
-            default -> throw new IllegalStateException("Unexpected value: " + command);
-        };
-
+    /**
+     * Send a rotate tile command.
+     */
+    public void sendRotateTileCommand() {
+        RotateTileCommandPayload rotateTileCommandPayload = new RotateTileCommandPayload();
+        rotateTileCommandPayload.setType(CommandType.ROTATE_TILE);
+        try {
+            String json = mapCommandToMessage(CommandType.ROTATE_TILE, rotateTileCommandPayload);
+            gameServerSocketService.sendCommand(json, null);
+        } catch (JsonProcessingException e) {
+            log.error("Failed to map rotate tile command to json", e);
+            throw new GeneralUiException("Failed to send rotate command");
+        } catch (GeneralUiException _) {
+            log.error("Failed to send rotate command");
+            throw new GeneralUiException("Failed to send rotate command");
+        }
     }
 
+    /**
+     * Send a command to use the "push twice" bonus.
+     */
+    public void sendUsePushTwiceComnmand() {
+        UsePushTwiceCommandPayload command = new UsePushTwiceCommandPayload();
+        command.setType(CommandType.USE_PUSH_TWICE);
+        try {
+            String json = mapCommandToMessage(CommandType.USE_PUSH_TWICE, command);
+            gameServerSocketService.sendCommand(json, CommandType.USE_PUSH_TWICE);
+        } catch (JsonProcessingException e) {
+            log.error("Failed to map use push twice command to json", e);
+            throw new GeneralUiException("Failed to send use push twice command");
+        } catch (GeneralUiException _) {
+            log.error("Failed to send use push twice command");
+            throw new GeneralUiException("Failed to send use push twice command");
+        }
+    }
 
+    /**
+     * Send a command to use the beam bonus at a target coordinate.
+     *
+     * @param finalRow target row
+     * @param finalCol target column
+     */
+    public void sendUseBeamCommand(int finalRow, int finalCol) {
+        UseBeamCommandPayload command = new UseBeamCommandPayload();
+        command.setType(CommandType.USE_BEAM);
+        Coordinates coordinates = new Coordinates();
+        coordinates.setColumn(finalCol);
+        coordinates.setRow(finalRow);
+        coordinates.setAdditionalProperties(new HashMap<>());
+        command.setTargetCoordinates(coordinates);
+        try {
+            String json = mapCommandToMessage(CommandType.USE_BEAM, command);
+            gameServerSocketService.sendCommand(json, CommandType.USE_BEAM);
+        } catch (JsonProcessingException e) {
+            log.error("Failed to map use beam command to json", e);
+            throw new GeneralUiException("Failed to send  use beam command");
+        } catch (GeneralUiException _) {
+            log.error("Failed to send  use beam command");
+            throw new GeneralUiException("Failed to send  use beam command");
+        }
+    }
 
+    /**
+     * Send a command to use the swap bonus on a target player.
+     *
+     * @param playerId target player identifier
+     */
+    public void sendUseSwapCommand(String playerId) {
+        UseSwapCommandPayload command = new UseSwapCommandPayload();
+        command.setType(CommandType.USE_SWAP);
+        command.setTargetPlayerId(playerId);
+        try {
+            String json = mapCommandToMessage(CommandType.USE_SWAP, command);
+            gameServerSocketService.sendCommand(json, CommandType.USE_SWAP);
+        } catch (JsonProcessingException e) {
+            log.error("Failed to map use swap command to json", e);
+            throw new GeneralUiException("Failed to send use swap command");
+        } catch (GeneralUiException _) {
+            log.error("Failed to send use swap command");
+            throw new GeneralUiException("Failed to send  use swap command");
+        }
+    }
 }

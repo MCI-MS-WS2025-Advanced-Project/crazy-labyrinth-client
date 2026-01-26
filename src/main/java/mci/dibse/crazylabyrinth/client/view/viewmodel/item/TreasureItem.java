@@ -1,38 +1,52 @@
 package mci.dibse.crazylabyrinth.client.view.viewmodel.item;
 
-import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
-import javafx.beans.property.SimpleStringProperty;
+import javafx.scene.image.Image;
 import labyrinth.contracts.models.Treasure;
 import lombok.Getter;
+import mci.dibse.crazylabyrinth.client.infrastructure.util.ImageResourceLoader;
+import mci.dibse.crazylabyrinth.client.infrastructure.util.JavaFXUtils;
 
-import java.util.Map;
-
-public class TreasureItem implements Disposable {
-
-    private final java.util.concurrent.atomic.AtomicBoolean pendingUpdate =
-            new java.util.concurrent.atomic.AtomicBoolean(false);
+public class TreasureItem extends BaseItem<Treasure> {
 
     @Getter
-    private final SimpleIntegerProperty id = new SimpleIntegerProperty();
-    @Getter
-    private final SimpleStringProperty name = new SimpleStringProperty();
-    @Getter
-    private final SimpleObjectProperty<Map<String, Object>> additionalProperties = new SimpleObjectProperty<>();
+    private SimpleObjectProperty<Image> treasureImageProperty = new SimpleObjectProperty<>();
+
+    @Getter private int id;
+    @Getter private String name;
 
     public TreasureItem(Treasure source) {
-        this.id.set(source.getId());
-        this.name.set(source.getName());
-        this.additionalProperties.set(source.getAdditionalProperties());
+        id = source.getId();
+        name = source.getName();
+        JavaFXUtils.runOnFxThread(
+                () -> treasureImageProperty.set(ImageResourceLoader.loadImage(id)));
     }
 
-    public void updateFrom(Treasure source) {
-        this.additionalProperties.set(source.getAdditionalProperties());
+    /**
+     * Return the treasure image.
+     *
+     * @return treasure image
+     */
+    public Image getTreasureImage() {
+        return treasureImageProperty.get();
     }
 
-
+    /**
+     * Dispose item state; no-op for treasures.
+     */
     @Override
-    public void dispose() {
-        //TODO something to do here?
+    protected void disposeItem() {
+        // nothing to do here
+    }
+
+    /**
+     * Update item state from the treasure payload.
+     *
+     * @param source treasure payload
+     */
+    @Override
+    protected void updateItemFromSource(Treasure source) {
+        id = source.getId();
+        name = source.getName();
     }
 }
