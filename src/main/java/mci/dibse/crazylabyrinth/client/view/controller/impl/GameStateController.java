@@ -270,6 +270,7 @@ public class GameStateController extends BaseViewCleanup {
 
         aiTakeoverButton.disableProperty().bind(isMyTurnBinding);
 
+
         aiTurnStateListener = (obs, oldV, newV) -> {
 
 
@@ -401,9 +402,25 @@ public class GameStateController extends BaseViewCleanup {
 
             String myId = gameViewModel.getClientPlayer().getId();
 
+            PlayerState me = null;
+            for (PlayerState p : gs.getPlayers()) {
+                if (p != null && p.getPlayerInfo() != null
+                        && myId.equals(p.getPlayerInfo().getId())) {
+                    me = p;
+                    break;
+                }
+            }
+
+            Integer remaining = me.getRemainingTreasureCount();
+
             Integer targetId = null;
-            var target = gameViewModel.getCurrentTargetTreasureForAi(); // Treasure (id==0 -> Home)
-            if (target != null) targetId = target.getId();
+            if (remaining == null || remaining == 0) {
+                System.out.println("HOME");
+                targetId = null; // HOME
+            } else {
+                var target = gameViewModel.getCurrentTargetTreasureForAi();
+                if (target != null) targetId = target.getId();
+            }
 
             AiDecision decision = aiStrategySelector.calculateFullTurn(gs, myId, targetId);
 

@@ -63,20 +63,12 @@ public class AiStrategySelector {
 
         GameBoard board = gameState.getBoard();
         PlayerState me = findPlayer(gameState.getPlayers(), myPlayerId);
-        Coordinates myHomePosition = me.getHomePosition();
-        Set<BonusType> availableBonuses = AiContractUtil.toBonusSet(me.getAvailableBonuses());
-        Coordinates currentPos = me.getCurrentPosition();
-        log.info("AI TREASURE: " + myCurrentTreasure);
-        Coordinates treasurePos = boardSimulationHelper.findTreasurePosition(board, myCurrentTreasure);
-
-
         if (board == null || me == null) return null;
 
-        // Debug last push
-        PushActionInfo lastPush = board.getLastPush();
-        if (lastPush != null) {
-            log.debug("LastPush idx={}, dir={}", lastPush.getRowOrColIndex(), lastPush.getDirection());
-        }
+        Coordinates myHomePosition = me.getHomePosition();
+        Set<BonusType> availableBonuses = AiContractUtil.toBonusSet(me.getAvailableBonuses());
+
+        log.info("AI TREASURE: " + myCurrentTreasure);
 
         Coordinates myPos = me.getCurrentPosition();
         if (myPos == null) return null;
@@ -87,6 +79,17 @@ public class AiStrategySelector {
             log.info("Bot tries to get home!");
             return offensiveMoveCalculator.calculateMoveToHome(gameState, myPlayerId, availableBonuses, myPos, myHomePosition);
         }
+
+
+        Coordinates treasurePos = boardSimulationHelper.findTreasurePosition(board, myCurrentTreasure);
+
+
+        // Debug last push
+        PushActionInfo lastPush = board.getLastPush();
+        if (lastPush != null) {
+            log.debug("LastPush idx={}, dir={}", lastPush.getRowOrColIndex(), lastPush.getDirection());
+        }
+
 
         // 2) DEFENSE
         if (opponentThreatDetector.canOpponentWinNextTurn(gameState, board, myPlayerId)) {
