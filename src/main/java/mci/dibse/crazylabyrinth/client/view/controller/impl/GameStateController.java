@@ -199,7 +199,7 @@ public class GameStateController extends BaseViewCleanup {
     private BooleanBinding isMyTurnBinding;
     private boolean aiRunning = false;
     private ClientAIExecutor clientAIExecutor;
-    private ChangeListener<TurnState> aiTurnStateListener;
+    private ChangeListener<Boolean> aiTurnStateListener;
     ChangeListener<TreasureItem> homeTreasureChangeListener;
 
     @Autowired
@@ -271,20 +271,28 @@ public class GameStateController extends BaseViewCleanup {
         aiTakeoverButton.disableProperty().bind(isMyTurnBinding);
 
         aiTurnStateListener = (obs, oldV, newV) -> {
-            clientAIExecutor.onTurnStateChanged(newV);
+
+
+            TurnState turnState = gameViewModel.getCurrentTurnStateProperty().get();
+            clientAIExecutor.onTurnStateChanged(turnState);
+
+
 
             if (!aiTakeoverEnabledProperty.get()) return;
+
             if (!isMyTurnBinding.get()) return;
+
             if (aiRunning) return;
 
+
             // Nur neue Decision berechnen, wenn keine pending Decision läuft
-            if (newV == TurnState.WAITING_FOR_PUSH && !clientAIExecutor.hasPendingDecision()) {
+            if (turnState == TurnState.WAITING_FOR_PUSH && !clientAIExecutor.hasPendingDecision()) {
                 runAiFullTurn();
             }
         };
 
 
-        gameViewModel.getCurrentTurnStateProperty().addListener(aiTurnStateListener);
+        gameViewModel.setAiTurnListener(aiTurnStateListener);
 
         // Change Text ON/OFF
         aiTakeoverButton.textProperty().bind(
@@ -550,7 +558,7 @@ public class GameStateController extends BaseViewCleanup {
         aiRunning = false;
 
         if (aiTurnStateListener != null) {
-            gameViewModel.getCurrentTurnStateProperty().removeListener(aiTurnStateListener);
+           // gameViewModel.getCurrentTurnStateProperty().removeListener(aiTurnStateListener);
             aiTurnStateListener = null;
         }
 
