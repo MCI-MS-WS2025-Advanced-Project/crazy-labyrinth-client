@@ -282,8 +282,27 @@ public class OffensiveMoveCalculator {
                 log.info("Home not possible: Bot collects bonus which is on the way!");
                 bestMoveTarget = bonusMoveTarget;
             } else {
-                bestMoveTarget = bestPosAfterPush;
+                // escape fallback
+                Coordinates escape = chooseEscapeMoveTarget(
+                        game,
+                        board,
+                        myPlayerId,
+                        bestPosAfterPush,
+                        homePosition,
+                        bestPushIndex,
+                        bestPushDirection,
+                        bestRotatedEntrances,
+                        validIndices
+                );
+
+                if (escape != null) {
+                    bestMoveTarget = escape;
+                    log.info("Home not reachable: Escaping to shiftable axis {}", escape);
+                } else {
+                    bestMoveTarget = bestPosAfterPush; // fallback
+                }
             }
+
         }
 
         return AiDecision.pushAndMove(new AiDecision.PushDecision(bestPushIndex, bestPushDirection, bestRotations),
@@ -742,9 +761,9 @@ public class OffensiveMoveCalculator {
 
                 if (escape != null) {
                     bestMoveTarget = escape;
-                    log.debug("Stuck-case detected (no path, fixed axes). Escaping to {}", escape);
+                    log.info("Stuck-case detected (no path, fixed axes). Escaping to {}", escape);
                 } else {
-                    log.debug("Stuck-case detected, but no reachable unoccupied escape found.");
+                    log.info("Stuck-case detected, but no reachable unoccupied escape found.");
                 }
             }
 
@@ -850,10 +869,40 @@ public class OffensiveMoveCalculator {
     }
 
 
+    /**
+     * Checks whether a given row or column index is shiftable on the current board.
+     *
+     * <p>An index is considered shiftable if it is contained in the list of valid push indices
+     * (e.g. on a 7×7 board typically 1, 3, 5).</p>
+     *
+     * @param idx the row or column index to check
+     * @param validPushIndices list of indices that can be shifted by a push action
+     * @return {@code true} if the index is shiftable, {@code false} otherwise
+     */
     private boolean isShiftableIndex(int idx, List<Integer> validPushIndices) {
         return validPushIndices.contains(idx);
     }
 
+
+    /**
+     * Detects a specific "stuck" situation where the AI cannot make progress towards the treasure.
+     *
+     * <p>This case is defined as:</p>
+     * <ul>
+     *   <li>No path exists after the chosen push.</li>
+     *   <li>Both the AI and the treasure are located on non-shiftable rows and columns.</li>
+     *   <li>The AI is not already aligned with the treasure (same row or column).</li>
+     * </ul>
+     *
+     * <p>In this situation, moving directly towards the treasure is ineffective and an
+     * escape move to a shiftable row or column is preferable.</p>
+     *
+     * @param aiAfterPush the AI position after the simulated push
+     * @param treasureAfterPush the treasure position after the simulated push
+     * @param bestPath the computed path after the push (may be {@code null} or empty)
+     * @param validPushIndices list of indices that can be shifted by a push action
+     * @return {@code true} if the AI is considered stuck with no meaningful path, {@code false} otherwise
+     */
     private boolean isStuckNoPathCase(
             Coordinates aiAfterPush,
             Coordinates treasureAfterPush,
@@ -877,6 +926,33 @@ public class OffensiveMoveCalculator {
         return aiFullyFixed && trFullyFixed && !alreadyAligned;
     }
 
+
+    /**
+     * Chooses an "escape" move target when the AI cannot reach the treasure directly.
+     *
+     * <p>The method evaluates all reachable and unoccupied board positions after the chosen push
+     * and scores them according to the following heuristics:</p>
+     * <ul>
+     *   <li>Prefer positions on shiftable rows or columns (enables better pushes in the next turn).</li>
+     *   <li>Prefer alignment with the treasure (same row or column).</li>
+     *   <li>Prefer positions closer to the treasure (Manhattan distance).</li>
+     *   <li>Slightly prefer actually moving instead of staying in place.</li>
+     * </ul>
+     *
+     * <p>If no suitable position is found, {@code null} is returned and the caller may fall back
+     * to staying at the current position.</p>
+     *
+     * @param game the current game state payload
+     * @param board the current game board
+     * @param myPlayerId the AI player's id
+     * @param aiAfterPush the AI position after the simulated push
+     * @param treasureAfterPush the treasure position after the simulated push
+     * @param pushIndex the push index chosen for this turn
+     * @param pushDirection the push direction chosen for this turn
+     * @param rotatedEntrances the entrances of the spare tile after rotation
+     * @param validPushIndices list of indices that can be shifted by a push action
+     * @return the chosen escape move target, or {@code null} if none is suitable
+     */
     private Coordinates chooseEscapeMoveTarget(
             GameStateEventPayload game,
             GameBoard board,
@@ -912,19 +988,19 @@ public class OffensiveMoveCalculator {
 
                 int score = 0;
 
-                // 1) strongest: get onto a shiftable row/col to enable better pushes next round
+
                 if (isShiftableIndex(cand.getRow(), validPushIndices)) score += 1000;
                 if (isShiftableIndex(cand.getColumn(), validPushIndices)) score += 1000;
 
-                // 2) alignment helps (setups)
+
                 if (cand.getRow() == treasureAfterPush.getRow()) score += 400;
                 if (cand.getColumn() == treasureAfterPush.getColumn()) score += 400;
 
-                // 3) reduce manhattan distance
+
                 int dist = boardSimulationHelper.manhattanDistance(cand, treasureAfterPush);
                 score -= dist * 10;
 
-                // tiny nudge to actually move
+
                 if (!cand.equals(aiAfterPush)) score += 5;
 
                 if (score > bestScore) {
