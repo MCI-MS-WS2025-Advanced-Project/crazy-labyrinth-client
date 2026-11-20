@@ -1,8 +1,10 @@
 package mci.dibse.crazylabyrinth.client.test.unit;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.when;
 
 import java.io.IOException;
+import java.lang.reflect.UndeclaredThrowableException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -25,6 +27,30 @@ import org.springframework.test.util.ReflectionTestUtils;
  */
 @ExtendWith(MockitoExtension.class)
 public class GameServerManagementServiceTest {
+
+    private static final String ONE_VALID_ONE_SCHEMELESS_SERVER =
+            """
+            [
+              {
+                "id": "7b5f0b3b-3d2a-4f69-a2d0-8bfa2ec1c9c1",
+                "name": "Missing scheme",
+                "uri": "172.16.20.21:42080",
+                "maxPlayers": 4,
+                "currentPlayerCount": 0,
+                "status": "LOBBY",
+                "lastSeen": "2025-12-05T12:07:21Z"
+              },
+              {
+                "id": "0f2e6d71-3a90-4d7a-9f3a-5d6d3d5b2b41",
+                "name": "Valid",
+                "uri": "wss://example.com:443/game",
+                "maxPlayers": 4,
+                "currentPlayerCount": 1,
+                "status": "LOBBY",
+                "lastSeen": "2025-12-05T11:58:03Z"
+              }
+            ]
+            """;
 
     @Mock private ManagementServerClient client;
     @InjectMocks private GameServerManagementService service;
@@ -89,26 +115,63 @@ public class GameServerManagementServiceTest {
     }
 
     @Test
-    void validate_gameServerDTOs_valid() {
+    void parse_DTO_skipsEntryWithUnparseableUri() {
+        List<GameServerDTO> dtos =
+                ReflectionTestUtils.invokeMethod(
+                        service,
+                        "parseGameServerDTOsFromBytes",
+                        (Object) ONE_VALID_ONE_SCHEMELESS_SERVER.getBytes());
+
+        assertNotNull(dtos);
+        assertEquals(1, dtos.size());
+        assertEquals("Valid", dtos.get(0).getName());
+    }
+
+    @Test
+    void parse_DTO_rejectsNonArrayBody() {
+        byte[] raw = "{\"error\":\"nope\"}".getBytes();
+        var ex =
+                assertThrows(
+                        UndeclaredThrowableException.class,
+                        () ->
+                                ReflectionTestUtils.invokeMethod(
+                                        service, "parseGameServerDTOsFromBytes", (Object) raw));
+        assertInstanceOf(IOException.class, ex.getUndeclaredThrowable());
+    }
+
+    @Test
+    void removeInvalid_gameServerDTOs_keepsValid() {
         List<GameServerDTO> dtos = TestDataFactory.createRandomGameServersDTOs(2);
-        assertDoesNotThrow(
-                () -> ReflectionTestUtils.invokeMethod(service, "validateGameServerDTOs", dtos));
+        List<GameServerDTO> result =
+                ReflectionTestUtils.invokeMethod(service, "removeInvalidGameServerDTOs", dtos);
+        assertEquals(2, result.size());
     }
 
     @Test
-    void validate_gameServerDTOs_empty() {
+    void removeInvalid_gameServerDTOs_empty() {
         List<GameServerDTO> dtos = TestDataFactory.createRandomGameServersDTOs(0);
-        assertDoesNotThrow(
-                () -> ReflectionTestUtils.invokeMethod(service, "validateGameServerDTOs", dtos));
+        List<GameServerDTO> result =
+                ReflectionTestUtils.invokeMethod(service, "removeInvalidGameServerDTOs", dtos);
+        assertTrue(result.isEmpty());
     }
 
     @Test
-    void validate_gameServerDTOs_invalid() {
-        List<GameServerDTO> dtos = List.of(TestDataFactory.createInvalidGameServersDTO());
-        // using ReflectionTestUtils.invokeMethod does not wrap runtime exceptions
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> ReflectionTestUtils.invokeMethod(service, "validateGameServerDTOs", dtos));
+    void removeInvalid_gameServerDTOs_dropsOnlyInvalid() {
+        List<GameServerDTO> dtos = new ArrayList<>(TestDataFactory.createRandomGameServersDTOs(2));
+        dtos.add(TestDataFactory.createInvalidGameServersDTO());
+        List<GameServerDTO> result =
+                ReflectionTestUtils.invokeMethod(service, "removeInvalidGameServerDTOs", dtos);
+        assertEquals(2, result.size());
+    }
+
+    @Test
+    void refreshGameServerList_oneBadEntry_keepsOtherServers() throws Exception {
+        when(client.getGameServers()).thenReturn(ONE_VALID_ONE_SCHEMELESS_SERVER);
+
+        assertDoesNotThrow(() -> service.refreshGameServerList());
+
+        assertEquals(1, service.getServers().size());
+        assertEquals("Valid", service.getServers().iterator().next().getName());
     }
 
     @Test
