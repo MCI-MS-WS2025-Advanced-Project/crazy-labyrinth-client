@@ -1,7 +1,7 @@
 package mci.dibse.crazylabyrinth.client.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validator;
@@ -16,7 +16,6 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import mci.dibse.crazylabyrinth.client.domain.model.management.ErrorResponse;
 import mci.dibse.crazylabyrinth.client.domain.model.management.GameServer;
@@ -139,8 +138,8 @@ public class GameServerManagementService {
      */
     private void processGameServerResponseBody(byte[] raw)
             throws IOException, IllegalArgumentException {
-        List<GameServerDTO> gameServersDTO = parseGameServerDTOsFromBytes(raw);
-        validateGameServerDTOs(gameServersDTO);
+        List<GameServerDTO> gameServersDTO =
+                removeInvalidGameServerDTOs(parseGameServerDTOsFromBytes(raw));
         validateGameServerUrl(gameServersDTO);
         List<GameServer> gameServers = mapToGameServers(gameServersDTO);
         refresh(gameServers);
@@ -177,32 +176,47 @@ public class GameServerManagementService {
     }
 
     /**
-     * Parse a list of game server DTOs from raw response bytes.
+     * Deserializes entries one by one: the management server is shared by all teams, so one
+     * malformed registration must not hide every other server. Unreadable entries are skipped.
      *
-     * @param raw raw response bytes
-     * @return list of game server DTOs
-     * @throws IOException when JSON parsing fails
+     * @throws IOException when the body is not a JSON array
      */
     private List<GameServerDTO> parseGameServerDTOsFromBytes(byte[] raw) throws IOException {
         ObjectMapper mapper = ObjectMapperConfig.createCustomObjectMapper();
-        return mapper.readValue(raw, new TypeReference<List<GameServerDTO>>() {});
+        JsonNode root = mapper.readTree(raw);
+        if (!root.isArray()) {
+            throw new IOException("Expected a JSON array of game servers");
+        }
+        List<GameServerDTO> gameServers = new ArrayList<>();
+        for (JsonNode entry : root) {
+            try {
+                gameServers.add(mapper.treeToValue(entry, GameServerDTO.class));
+            } catch (JsonProcessingException e) {
+                log.warn(
+                        "Skipping unreadable game server entry '{}': {}",
+                        entry.path("name").asText(),
+                        e.getOriginalMessage());
+            }
+        }
+        return gameServers;
     }
 
-    /**
-     * Validate a list of game server DTOs.
-     *
-     * @param gameServers DTOs to validate
-     * @throws IllegalArgumentException when validation fails
-     */
-    private void validateGameServerDTOs(List<GameServerDTO> gameServers)
-            throws IllegalArgumentException {
+    private List<GameServerDTO> removeInvalidGameServerDTOs(List<GameServerDTO> gameServers) {
         Validator validator = ValidatorConfig.createBeanValidator();
-        Set<ConstraintViolation<GameServerDTO>> violations =
-                gameServers.stream()
-                        .map((GameServerDTO dto) -> validator.validate(dto))
-                        .flatMap(Set::stream)
-                        .collect(Collectors.toSet());
-        if (!violations.isEmpty()) throw new IllegalArgumentException(violations.toString());
+        List<GameServerDTO> valid = new ArrayList<>();
+        for (GameServerDTO dto : gameServers) {
+            Set<ConstraintViolation<GameServerDTO>> violations = validator.validate(dto);
+            if (violations.isEmpty()) {
+                valid.add(dto);
+                continue;
+            }
+            List<String> reasons =
+                    violations.stream()
+                            .map(v -> v.getPropertyPath() + " " + v.getMessage())
+                            .toList();
+            log.warn("Skipping invalid game server entry '{}': {}", dto.getName(), reasons);
+        }
+        return valid;
     }
 
     /**
